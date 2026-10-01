@@ -116,7 +116,7 @@ class PhaseFieldBO(PhaseField):
         self.logger.info('-----------------')
         self.logger.info('Composition     meV/atom above CH')
         for c, e in zip(np.array(self.candidates)[arg], np.array(self.candidates_energies)[arg]):
-            self.logger.info(c, round(e, 2))
+            self.logger.info(f"{c}  {round(e, 2)}")
 
         if self.mode == 'path':
             observed = self.bo.X
