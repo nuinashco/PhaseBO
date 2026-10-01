@@ -24,7 +24,7 @@ dependencies = [
 ]
 
 [project.scripts]
-phasebo = "phasebo.__main__:run"
+phasebo = "phasebo.__main__:main"
 
 [dependency-groups]
 dev = [

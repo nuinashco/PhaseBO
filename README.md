@@ -41,13 +41,13 @@ Make sure you include reference compositions in the phase field.
 providing names of the file, atoms, and their oxidation states.
 3) run:
 
-`uv run python -m phasebo`
+`uv run phasebo`
 
 will use input_config.yaml by default
 
 or 
 
-`uv run python -m phasebo --config path/to/my_config.yaml`
+`uv run phasebo --config path/to/my_config.yaml`
 
 ## Example
 The default run with input_config.yaml results int the outputs in `example`
