@@ -142,8 +142,10 @@ class PhaseFieldBO(PhaseField):
                 self.logger.info(f"Next: {self.next_list[self.fcsym(n)]}")
 
     def get_uncertainty(self, mesh=False) -> None:
-        """Log variances of surrogate predictions."""
+        """Log standard deviations of surrogate predictions."""
         model = self.bo.model
+        # GPyOpt predicts the mean and standard deviation of standardised energies
+        scaler = StandardScaler().fit(self.bo.Y)
 
         if mesh:
             bounds = self.bo.acquisition.space.get_bounds()
@@ -152,24 +154,21 @@ class PhaseFieldBO(PhaseField):
             X3 = np.linspace(bounds[2][0], bounds[2][1], mesh)
             x1, x2, x3 = np.meshgrid(X1, X2, X3)
             X = np.hstack((x1.reshape(-1, 1), x2.reshape(-1, 1), x3.reshape(-1, 1)))
-            _, variance = model.predict(X)
+            _, std = model.predict(X)
+            std = std.flatten() * scaler.scale_
 
-            self.logger.info(f"Min variance: {round(min(variance)[0], 1)} meV/atom at {X[np.argmin(variance)]}")
-            self.logger.info(f"Max variance: {round(max(variance)[0], 1)} meV/atom at {X[np.argmax(variance)]}")
-            self.logger.info(f"Minimum uncertainty in prediction is {round(min(variance)[0], 1)} meV/atom at {X[np.argmin(variance)]}")
-            self.logger.info(f"Maximum uncertainty in prediction is {round(max(variance)[0], 1)} meV/atom at {X[np.argmax(variance)]}")
+            self.logger.info(f"Minimum uncertainty in prediction is {round(std.min(), 1)} meV/atom at {X[np.argmin(std)]}")
+            self.logger.info(f"Maximum uncertainty in prediction is {round(std.max(), 1)} meV/atom at {X[np.argmax(std)]}")
 
         else:
-            X = self.next_coords
-            scaler = StandardScaler().fit(self.candidates_energies[:, None])
-            mean, variance = model.predict(X)
+            mean, std = model.predict(self.next_coords)
             mean = scaler.inverse_transform(mean)
-            variance = scaler.inverse_transform(variance)
+            std = std * scaler.scale_
 
             un_df = pd.DataFrame({
                 'Candidates': self.next_formulas,
                 'Posterior mean (meV/atom)': [round(i, 1) for i in mean.flatten()],
-                'Variance (meV/atom)': [round(i, 1) for i in variance.flatten()]
+                'Posterior std (meV/atom)': [round(i, 1) for i in std.flatten()]
             })
             un_df = un_df.sort_values(['Posterior mean (meV/atom)'])
 
