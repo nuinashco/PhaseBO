@@ -1,4 +1,4 @@
-import time
+import os
 import logging
 import warnings
 import numpy as np
@@ -40,6 +40,7 @@ class PhaseFieldBO(PhaseField):
                  exceptions: Optional[List[str]] = None,
                  allow_negative: bool = False,
                  logger: logging.Logger = None,
+                 output_dir: str = '.',
                  ) -> None:
 
         super().__init__(compositions, references, ions, exceptions, allow_negative, logger)
@@ -57,6 +58,7 @@ class PhaseFieldBO(PhaseField):
         self.next_formulas = next_formulas
         self.exceptions = exceptions
         self.logger = logger or logging.getLogger(__name__)
+        self.output_dir = output_dir
 
         if self.acquisition not in ('qlogei', 'ts'):
             raise ValueError(f'Unsupported acquisition: "{self.acquisition}". Supported: "qlogei", "ts".')
@@ -94,7 +96,7 @@ class PhaseFieldBO(PhaseField):
         elif self.mode == 'generate':
             self.logger.info("Generating candidate compositions, writing to candidates_list.csv")
             self.next_formulas = generate(self.ions, self.formulas, self.exceptions, self.Ntot, self.limits)
-            with open("candidates_list.csv", 'a') as cl:
+            with open(os.path.join(self.output_dir, "candidates_list.csv"), 'a') as cl:
                 for f in self.next_formulas:
                     print(f, file=cl)
         else:
@@ -183,7 +185,7 @@ class PhaseFieldBO(PhaseField):
             energies = self.Y.ravel()
 
             pf = '-'.join(self.elements)
-            with open(f'BO_Path_in_{pf}.txt', 'a') as f:
+            with open(os.path.join(self.output_dir, f'BO_Path_in_{pf}.txt'), 'a') as f:
                 print('Seeds:', file=f)
                 print('------', file=f)
                 print('Composition     meV/atom above CH', file=f)
@@ -223,6 +225,6 @@ class PhaseFieldBO(PhaseField):
             })
             un_df = un_df.sort_values(['Posterior mean (meV/atom)'])
 
-            timestamp = time.strftime('%b-%d-%Y_%H%M', time.localtime())
-            un_df.to_csv(f'posterior_{timestamp}.csv', index=False)
-            self.logger.info(f"Posterior CSV saved: posterior_{timestamp}.csv")
+            path = os.path.join(self.output_dir, 'posterior.csv')
+            un_df.to_csv(path, index=False)
+            self.logger.info(f"Posterior CSV saved: {path}")

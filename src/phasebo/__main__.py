@@ -1,11 +1,31 @@
-import argparse
-import yaml
+import logging
+import os
+import random
+from pathlib import Path
+from typing import Dict, Optional, List
+
+import hydra
+import numpy as np
 import pandas as pd
-import time
-from typing import Dict, Optional, List, Any
+import torch
+from hydra.core.hydra_config import HydraConfig
+from hydra.types import RunMode
+from omegaconf import DictConfig, OmegaConf
 
 from phasebo.phase_field_bo import PhaseFieldBO
-from phasebo.logger import get_logger
+
+# config/ next to src/
+CONFIG_DIR = Path(__file__).resolve().parents[2] / "config"
+
+logger = logging.getLogger("phasebo")
+
+
+def save_plot(plt, path: str, show: bool) -> None:
+    plt.savefig(path, dpi=150, bbox_inches='tight')
+    if show:
+        plt.show()
+    plt.close('all')
+
 
 def run(
     compositions,
@@ -13,13 +33,15 @@ def run(
     ions: Dict[str, int],
     mode: str,
     Ntot: int,
-    seeds_type: str,
-    n_seeds: int,
-    max_iter: int,
-    log_name: str,
     logger,
+    seeds_type: str = 'random',
+    n_seeds: int = 9,
+    max_iter: int = 10,
+    output_dir: str = '.',
+    show_plots: bool = True,
     batch_size: int = 4,
     acquisition: str = 'qlogei',
+    disect: int = 3,
     limits: Optional[Dict[str, List[int]]] = None,
     next_formulas: Optional[List[str]] = None,
     exceptions: Optional[List[str]] = None,
@@ -34,6 +56,7 @@ def run(
         seeds_type=seeds_type,
         n_seeds=n_seeds,
         exclude_zeros=True,
+        disect=disect,
         Ntot=Ntot,
         limits=limits,
         max_iter=max_iter,
@@ -42,14 +65,14 @@ def run(
         acquisition=acquisition,
         exceptions=exceptions,
         allow_negative=allow_negative,
-        logger=logger
+        logger=logger,
+        output_dir=output_dir
     )
 
-    convex = bopt.plot_convex()
-    convex.show()
+    save_plot(bopt.plot_convex(), os.path.join(output_dir, 'convex_hull.png'), show_plots)
 
     if mode == 'path':
-        bopt.plot_convergence().show()
+        save_plot(bopt.plot_convergence(), os.path.join(output_dir, 'convergence.png'), show_plots)
         bopt.print_results()
     elif mode == 'suggest':
         bopt.print_results()
@@ -57,67 +80,56 @@ def run(
 
     return bopt
 
-def main():
-    parser = argparse.ArgumentParser(description="Run phasebo with a specified YAML configuration file.")
-    parser.add_argument(
-        "--config",
-        type=str,
-        default="input_config.yaml",
-        help="Path to YAML config file (default: input_config.yaml)"
-    )
-    args = parser.parse_args()
 
-    with open(args.config, "r") as f:
-        cfg: Dict[str, Any] = yaml.safe_load(f)
+def read_formulas(path: Optional[str]) -> Optional[List[str]]:
+    """First column of a CSV file of formulas, or None if no readable file is given."""
+    if not path:
+        return None
+    try:
+        return [i[0] for i in pd.read_csv(path).values]
+    except Exception as ex:
+        logger.info(f"Not using {path}: {ex}")
+        return None
 
-    df = pd.read_csv(cfg["inputfile"], header=0)
-    compositions = df.values
-    references = df.values[cfg["reference_index"]:]
 
-    next_formulas = None
-    if "compositionfile" in cfg and cfg["compositionfile"]:
-        try:
-            next_formulas = [i[0] for i in pd.read_csv(cfg["compositionfile"]).values]
-        except Exception:
-            next_formulas = None
+@hydra.main(version_base="1.3", config_path=str(CONFIG_DIR), config_name="config")
+def main(cfg: DictConfig) -> None:
+    hydra_cfg = HydraConfig.get()
 
-    exceptions = None
-    if "excludefile" in cfg and cfg["excludefile"]:
-        try:
-            exceptions = [i[0] for i in pd.read_csv(cfg["excludefile"]).values]
-        except Exception:
-            exceptions = None
-
-    # Build log file path with timestamp
-    timestamp = time.strftime('%b-%d-%Y_%H%M', time.localtime())
-    log_path = f"{cfg['log']}-{timestamp}.log"
-
-    logger = get_logger("phasebo", log_file=log_path)
-
-    # Echo config nicely
     logger.info("========== CONFIGURATION ==========")
-    for k, v in cfg.items():
-        logger.info(f"{k}: {v}")
+    for line in OmegaConf.to_yaml(cfg, resolve=True).splitlines():
+        logger.info(line)
     logger.info("===================================")
 
+    if cfg.seed is not None:
+        random.seed(cfg.seed)
+        np.random.seed(cfg.seed)
+        torch.manual_seed(cfg.seed)
+
+    system = OmegaConf.to_container(cfg.system, resolve=True)
+    mode_options = OmegaConf.to_container(cfg.mode, resolve=True)
+    mode = mode_options.pop('name')
+    df = pd.read_csv(system['inputfile'], header=0)
+
     run(
-        compositions=compositions,
-        references=references,
-        ions=cfg["ions"],
-        mode=cfg["mode"],
-        Ntot=cfg["N_atom"],
-        seeds_type=cfg["seeds_type"],
-        n_seeds=cfg["n_seeds"],
-        max_iter=cfg["max_iter"],
-        log_name=cfg["log"],
+        compositions=df.values,
+        references=df.values[system['reference_index']:],
+        ions=system['ions'],
+        mode=mode,
+        **mode_options,
+        Ntot=system['N_atom'],
         logger=logger,
-        batch_size=cfg.get("batch_size", 4),
-        acquisition=cfg.get("acquisition", "qlogei"),
-        limits=cfg.get("limits"),
-        next_formulas=next_formulas,
-        exceptions=exceptions,
+        output_dir=hydra_cfg.runtime.output_dir,
+        show_plots=cfg.show_plots and hydra_cfg.mode == RunMode.RUN,
+        batch_size=cfg.bo.batch_size,
+        acquisition=cfg.bo.acquisition,
+        limits=system['limits'],
+        next_formulas=read_formulas(system['compositionfile']),
+        exceptions=read_formulas(system['excludefile']),
         allow_negative=False
     )
+    logger.info(f"Outputs written to {hydra_cfg.runtime.output_dir}")
+
 
 if __name__ == "__main__":
     main()

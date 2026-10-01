@@ -67,12 +67,10 @@ def test_path_stops_when_every_candidate_is_evaluated(li_s_cl):
     assert set(rows(bo.X[2:])) == set(rows(bo.candidates_fc)) - set(rows(bo.X[:2]))
 
 
-def test_uncertainty_csv(li_s_cl, tmp_path, monkeypatch):
-    monkeypatch.chdir(tmp_path)
-    bo = make_bo(li_s_cl, mode='suggest', next_formulas=NEW, batch=2)
+def test_uncertainty_csv(li_s_cl, tmp_path):
+    bo = make_bo(li_s_cl, mode='suggest', next_formulas=NEW, batch=2, output_dir=tmp_path)
     bo.get_uncertainty()
-    (csv,) = tmp_path.glob('posterior_*.csv')
-    df = pd.read_csv(csv)
+    df = pd.read_csv(tmp_path / 'posterior.csv')
     assert list(df.columns) == ['Candidates', 'Posterior mean (meV/atom)', 'Posterior std (meV/atom)']
     assert sorted(df['Candidates']) == sorted(NEW)
     assert (df['Posterior std (meV/atom)'] > 0).all()

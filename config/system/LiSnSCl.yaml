@@ -1,0 +1,16 @@
+# Paths are relative to the working directory
+inputfile: data/LiSnSCl_700eV.csv            # compositions, total energies
+compositionfile: data/candidates_list.csv    # generated if missing
+excludefile: data/exclude_list.csv
+reference_index: 195                         # first reference row
+ions:
+  Li: 1
+  Sn: 4
+  S: -2
+  Cl: -1
+limits:
+  Li: [0, 10]
+  Sn: [0, 5]
+  S: [0, 10]
+  Cl: [0, 5]
+N_atom: 16

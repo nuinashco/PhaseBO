@@ -1,0 +1,20 @@
+# Override on the command line, e.g. phasebo mode=path bo.acquisition=ts
+defaults:
+  - system: LiSnSCl           # phase field
+  - mode: suggest
+  - _self_
+  - override hydra/output: phasebo
+  - override hydra/job_logging: phasebo
+  - override hydra/help: phasebo
+
+bo:
+  acquisition: qlogei         # or ts (Thompson sampling)
+  batch_size: 4
+seed: null
+show_plots: true              # single runs only; plots are always saved
+
+hydra:
+  job:
+    config:
+      override_dirname:         # paths would nest job dirs
+        exclude_keys: [show_plots, system.inputfile, system.compositionfile, system.excludefile]
