@@ -2,7 +2,7 @@
 
 inputfile: 'data/LiSnSCl_700eV.csv'    # File with compositions and total enthalpies
 compositionfile: 'data/candidates_list.csv'  # File with candidate compositions
-exludefile: 'data/exclude_list.csv'    # File with compositions to exclude
+excludefile: 'data/exclude_list.csv'    # File with compositions to exclude
 reference_index: 195                   # Index in the inputfile for reference compositons
 ions:
   Li: 1
