@@ -119,21 +119,22 @@ class PhaseFieldBO(PhaseField):
             self.logger.info(f"{c}  {round(e, 2)}")
 
         if self.mode == 'path':
-            observed = self.bo.X
-            en_observed = np.array([self.dicfc[self.fcsym(x)][0] for x in observed])
-            names = [self.dicfc[self.fcsym(x)][1] for x in observed]
+            # dicfc names a coordinate's lowest-energy composition, which may not be the seed
+            n_seeds = len(self.seeds)
+            names = list(self.seeds) + [self.dicfc[self.fcsym(x)][1] for x in self.bo.X[n_seeds:]]
+            energies = self.bo.Y.ravel()
 
             pf = '-'.join(self.elements)
             with open(f'BO_Path_in_{pf}.txt', 'a') as f:
                 print('Seeds:', file=f)
                 print('------', file=f)
                 print('Composition     meV/atom above CH', file=f)
-                for s, e in zip(self.nseeds, self.nseeds_energy):
-                    print(self.dicfc[self.fcsym(s)][1], round(e, 2), file=f)
+                for n, e in zip(names[:n_seeds], energies[:n_seeds]):
+                    print(n, round(e, 2), file=f)
                 print('\nBO Path:', file=f)
                 print('--------', file=f)
                 print('Composition     meV/atom above CH', file=f)
-                for n, e in zip(names, en_observed):
+                for n, e in zip(names, energies):
                     print(n, round(e, 2), file=f)
 
         elif self.mode == 'suggest':
