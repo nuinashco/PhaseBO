@@ -1,8 +1,6 @@
 import numpy as np
-import pandas as pd
 import pytest
 import logging
-from pathlib import Path
 from phasebo.phase_field import PhaseField
 from phasebo.phase_field_bo import PhaseFieldBO
 
@@ -70,15 +68,12 @@ def test_get_seeds_from_segments(dummy_data):
     assert len(energies) == len(pf.seeds)
 
 
-def test_shared_coordinates_take_lowest_energy():
-    df = pd.read_csv(Path(__file__).parent.parent / 'data' / 'LiSnSCl_700eV.csv', header=0)
-    ions = {'Li': 1, 'Sn': 4, 'S': -2, 'Cl': -1}
-    pf = PhaseField(df.values, df.values[195:], ions, logger=logging.getLogger('test_logger'))
-    coords, inverse, counts = np.unique(pf.pd_coords, axis=0, return_inverse=True, return_counts=True)
-    shared = np.flatnonzero(counts > 1)
-    assert len(shared) > 0
-    for i in shared:
-        at_coord = inverse.ravel() == i
-        lowest = pf.energies[at_coord].min()
-        assert pf.f(coords[i]) == lowest
-        assert pf.dicfc[pf.fcsym(coords[i])] == [lowest, np.array(pf.compositions)[at_coord][np.argmin(pf.energies[at_coord])]]
+def test_shared_coordinates_take_lowest_energy(li_s_cl):
+    compositions, references, ions = li_s_cl
+    pf = PhaseField(compositions, references, ions, allow_negative=False, logger=logging.getLogger('test_logger'))
+    # Li6S2Cl2 is Li3SCl in a larger cell, 30 meV/atom higher
+    assert pf.dic['Li6 S2 Cl2'][0] == pytest.approx(30)
+    point = pf.dic['Li3 S1 Cl1'][1]
+    energy, name = pf.dicfc[pf.fcsym(point)]
+    assert pf.f(point) == pytest.approx(0)
+    assert (energy, name) == (pytest.approx(0), 'Li3 S1 Cl1')
