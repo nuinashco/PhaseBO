@@ -1,13 +1,9 @@
-[build-system]
-requires = ["setuptools>=61", "wheel"]
-build-backend = "setuptools.build_meta"
-
 [project]
 name = "phasebo"
 version = "0.1.4"
 description = "Bayesian optimisation for accelerated exploration of phase fields"
 readme = "README.md"
-requires-python = ">=3.7,<3.10"
+requires-python = ">=3.11"
 license = { text = "MIT" }
 authors = [
     { name = "Andrij Vasylenko", email = "and.vasylenko@gmail.com" }
@@ -15,15 +11,26 @@ authors = [
 urls = { "Homepage" = "http://github.com/DrewNow/PhaseFieldsBO" }
 
 dependencies = [
-    "numpy",
-    "GPyOpt",
-    "pandas",
-    "pymatgen",
-    "scikit-learn",
+    "GPyOpt>=1.2.6",
+    "matplotlib>=3.11",
+    "numpy>=2.4",
+    "pandas>=3.0",
+    "pymatgen>=2026.9.24",
+    "pyyaml>=6.0",
+    "scikit-learn>=1.9",
+    "scipy>=1.17",
+    # GPyOpt (unmaintained since 2020) imports pkg_resources, removed in setuptools 82
+    "setuptools<82",
 ]
-
-[project.optional-dependencies]
-# If you have e.g., dev or docs extras, you can define them here
 
 [project.scripts]
 phasebo = "phasebo.__main__:run"
+
+[dependency-groups]
+dev = [
+    "pytest>=9.1",
+]
+
+[build-system]
+requires = ["uv_build>=0.12.8,<0.13"]
+build-backend = "uv_build"

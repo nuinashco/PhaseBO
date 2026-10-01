@@ -17,19 +17,21 @@ for limiting the candidates to the particular compositions only in a subsequent 
 
 ## Requirements
 
-python-3.9
+Python >= 3.11 and [uv](https://docs.astral.sh/uv/).
 
 ## Dependencies:
 numpy;
+scipy;
 pandas;
+matplotlib;
 pymatgen;
-scikit-learn
-GpyOpt
+scikit-learn;
+GPyOpt
 
-Dependencies can be installed automatically during installation.
+Dependencies are pinned in `uv.lock` and installed automatically.
 
 ## Installation
-`pip install .`
+`uv sync`
 
 ## Usage
 1) Prepare a 2-column table, where each row has a composition 
@@ -39,13 +41,13 @@ Make sure you include reference compositions in the phase field.
 providing names of the file, atoms, and their oxidation states.
 3) run:
 
-`python -m phasebo`
+`uv run python -m phasebo`
 
 will use input_config.yaml by default
 
 or 
 
-`python -m phasebo --config path/to/my_config.yaml`
+`uv run python -m phasebo --config path/to/my_config.yaml`
 
 ## Example
 The default run with input_config.yaml results int the outputs in `example`
