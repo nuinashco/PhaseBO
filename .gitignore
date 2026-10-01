@@ -13,3 +13,4 @@ lisisf_input.py
 .pytest_cache/
 dist/
 __marimo__/
+.claude/worktrees/
