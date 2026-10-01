@@ -110,6 +110,7 @@ def main():
         max_iter=cfg["max_iter"],
         log_name=cfg["log"],
         logger=logger,
+        batch_size=cfg.get("batch_size", 4),
         limits=cfg.get("limits"),
         next_formulas=next_formulas,
         exceptions=exceptions,

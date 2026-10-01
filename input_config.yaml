@@ -19,5 +19,6 @@ limits:
   Cl: [0, 5]
 N_atom: 16
 max_iter: 10
+batch_size: 4                      # Compositions suggested per iteration
 log: 'logfile'
 plot_mode: 'screen'           # 'screen' or 'web'

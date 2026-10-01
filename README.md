@@ -81,3 +81,4 @@ algorithm.
 *disect*       | (default: 4) Number of sections of the phase field (disect x disect), from which the 'segmented' seeds are selected.
 *N_atom*       | (default: 24) Maximum number of atoms per unit cell in suggested compositions (in 'suggest' and 'generate' modes)
 *max_iter*     | (default: 10) Maximum number of iterations. 
+*batch_size*   | (default: 4) Number of compositions suggested per iteration.
