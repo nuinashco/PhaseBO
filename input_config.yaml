@@ -20,5 +20,6 @@ limits:
 N_atom: 16
 max_iter: 10
 batch_size: 4                      # Compositions suggested per iteration
+acquisition: 'qlogei'              # or 'ts' (Thompson sampling)
 log: 'logfile'
 plot_mode: 'screen'           # 'screen' or 'web'

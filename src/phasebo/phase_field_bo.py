@@ -1,15 +1,21 @@
-import sys
 import time
 import logging
+import warnings
 import numpy as np
 import pandas as pd
-from sklearn.preprocessing import StandardScaler
-from numpy.random import seed
+import torch
 from pymatgen.analysis.phase_diagram import PhaseDiagram
-from GPyOpt.methods import BayesianOptimization
-import matplotlib.pyplot as plt
-from matplotlib import cm
 from typing import Optional, Tuple, List
+
+with warnings.catch_warnings():
+    # raised by linear_operator (a gpytorch dependency) on torch >= 2.14
+    warnings.filterwarnings("ignore", message="`torch.jit.script` is deprecated", category=FutureWarning)
+    from botorch.acquisition.logei import qLogExpectedImprovement
+    from botorch.fit import fit_gpytorch_mll
+    from botorch.generation import MaxPosteriorSampling
+    from botorch.models import SingleTaskGP
+    from botorch.optim import optimize_acqf_discrete
+    from gpytorch.mlls import ExactMarginalLogLikelihood
 
 from phasebo.phase_field import PhaseField
 from phasebo.list_compositions import generate
@@ -30,6 +36,7 @@ class PhaseFieldBO(PhaseField):
                  limits: Optional[List[float]] = None,
                  max_iter: int = 10,
                  batch: int = 4,
+                 acquisition: str = 'qlogei',
                  exceptions: Optional[List[str]] = None,
                  allow_negative: bool = False,
                  logger: logging.Logger = None,
@@ -46,15 +53,19 @@ class PhaseFieldBO(PhaseField):
         self.Ntot = Ntot
         self.limits = limits
         self.batch = batch
+        self.acquisition = acquisition
         self.next_formulas = next_formulas
         self.exceptions = exceptions
         self.logger = logger or logging.getLogger(__name__)
 
+        if self.acquisition not in ('qlogei', 'ts'):
+            raise ValueError(f'Unsupported acquisition: "{self.acquisition}". Supported: "qlogei", "ts".')
+
         self.setBO()
         if self.mode == 'path':
-            self.bo.run_optimization(self.iter, verbosity=False)
+            self.run_path()
         elif self.mode == 'suggest':
-            self.next = self.bo.suggest_next_locations()
+            self.next = self.suggest_batch(self.X, self.Y, self.domain)
 
     def setBO(self) -> None:
         if self.mode == 'path':
@@ -66,13 +77,11 @@ class PhaseFieldBO(PhaseField):
             else:
                 raise ValueError(f'Unsupported seeds_type: "{self.seeds_type}". Supported: "random", "segmented"')
 
-            f = self.f
             X_init = self.nseeds
             Y_init = self.nseeds_energy[:, None]
-            self.domain = [{'name': 'var_1', 'type': 'bandit', 'domain': self.candidates_fc}]
+            self.domain = self.candidates_fc
 
         elif self.mode == 'suggest':
-            f = None
             X_init = self.candidates_fc
             Y_init = self.candidates_energies[:, None]
 
@@ -80,8 +89,7 @@ class PhaseFieldBO(PhaseField):
                 self.logger.info("Generating candidate compositions ...")
                 self.next_formulas = generate(self.ions, self.formulas, self.exceptions, self.Ntot, self.limits)
 
-            dom, self.next_list = self.get_dom_phase()
-            self.domain = [{'name': 'var_1', 'type': 'bandit', 'domain': dom}]
+            self.domain, self.next_list = self.get_dom_phase()
 
         elif self.mode == 'generate':
             self.logger.info("Generating candidate compositions, writing to candidates_list.csv")
@@ -93,13 +101,63 @@ class PhaseFieldBO(PhaseField):
             raise ValueError(f'Unsupported mode: "{self.mode}". Supported: "path", "suggest", "generate".')
 
         if self.mode != 'generate':
-            self.bo = BayesianOptimization(f=f,
-                                           domain=self.domain,
-                                           X=X_init,
-                                           Y=Y_init,
-                                           evaluator_type='thompson_sampling',
-                                           batch_size=self.batch,
-                                           de_duplication=True)
+            self.X = np.asarray(X_init, dtype=float)
+            self.Y = np.asarray(Y_init, dtype=float)
+
+    @staticmethod
+    def unevaluated(choices: np.ndarray, X: np.ndarray) -> np.ndarray:
+        """Unique rows of choices that are not rows of X."""
+        seen = {tuple(x) for x in X}
+        choices = np.unique(choices, axis=0)
+        return choices[[tuple(c) not in seen for c in choices]]
+
+    def suggest_batch(self, X: np.ndarray, Y: np.ndarray, choices: np.ndarray) -> np.ndarray:
+        """Fit a GP to (X, Y) and pick up to self.batch unevaluated points from choices."""
+        choices = torch.as_tensor(self.unevaluated(choices, X))
+        if len(choices) == 0:
+            return np.empty((0, X.shape[1]))
+
+        # BoTorch maximises
+        self.model = SingleTaskGP(torch.as_tensor(X), -torch.as_tensor(Y))
+        fit_gpytorch_mll(ExactMarginalLogLikelihood(self.model.likelihood, self.model))
+
+        q = min(self.batch, len(choices))
+        if self.acquisition == 'ts':
+            with torch.no_grad():
+                X_next = MaxPosteriorSampling(self.model, replacement=False)(choices, num_samples=q)
+        else:
+            acqf = qLogExpectedImprovement(self.model, best_f=-Y.min())
+            X_next, _ = optimize_acqf_discrete(acqf, q=q, choices=choices, unique=True)
+        return X_next.detach().numpy()
+
+    def run_path(self) -> None:
+        """Run max_iter batches over the computed phase field."""
+        for _ in range(self.iter):
+            X_next = self.suggest_batch(self.X, self.Y, self.domain)
+            if len(X_next) == 0:
+                break
+            self.X = np.vstack((self.X, X_next))
+            self.Y = np.vstack((self.Y, [[self.f(x)] for x in X_next]))
+
+    def posterior(self, X: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+        """Posterior mean and standard deviation (including noise) of the energy above hull at X."""
+        with torch.no_grad():
+            post = self.model.posterior(torch.as_tensor(X, dtype=torch.float64), observation_noise=True)
+            return -post.mean.numpy().ravel(), post.variance.sqrt().numpy().ravel()
+
+    def plot_convergence(self):
+        """Plot the energy of each evaluation in the BO path and the best found so far."""
+        import matplotlib.pyplot as plt
+
+        n = np.arange(1, len(self.Y) + 1)
+        fig, ax = plt.subplots()
+        ax.plot(n, self.Y.ravel(), 'o', alpha=0.5, label='Evaluated')
+        ax.plot(n, np.minimum.accumulate(self.Y.ravel()), '-', label='Best so far')
+        ax.axvline(len(self.nseeds) + 0.5, ls='--', c='grey', label='End of seeds')
+        ax.set_xlabel('Evaluation')
+        ax.set_ylabel('Energy above hull (meV/atom)')
+        ax.legend()
+        return plt
 
     def get_dom_phase(self) -> Tuple[np.ndarray, dict]:
         """Add generated formulas to phase field to compute coordinates."""
@@ -121,8 +179,8 @@ class PhaseFieldBO(PhaseField):
         if self.mode == 'path':
             # dicfc names a coordinate's lowest-energy composition, which may not be the seed
             n_seeds = len(self.seeds)
-            names = list(self.seeds) + [self.dicfc[self.fcsym(x)][1] for x in self.bo.X[n_seeds:]]
-            energies = self.bo.Y.ravel()
+            names = list(self.seeds) + [self.dicfc[self.fcsym(x)][1] for x in self.X[n_seeds:]]
+            energies = self.Y.ravel()
 
             pf = '-'.join(self.elements)
             with open(f'BO_Path_in_{pf}.txt', 'a') as f:
@@ -143,32 +201,25 @@ class PhaseFieldBO(PhaseField):
 
     def get_uncertainty(self, mesh=False) -> None:
         """Log standard deviations of surrogate predictions."""
-        model = self.bo.model
-        # GPyOpt predicts the mean and standard deviation of standardised energies
-        scaler = StandardScaler().fit(self.bo.Y)
-
         if mesh:
-            bounds = self.bo.acquisition.space.get_bounds()
+            bounds = list(zip(self.domain.min(axis=0), self.domain.max(axis=0)))
             X1 = np.linspace(bounds[0][0], bounds[0][1], mesh)
             X2 = np.linspace(bounds[1][0], bounds[1][1], mesh)
             X3 = np.linspace(bounds[2][0], bounds[2][1], mesh)
             x1, x2, x3 = np.meshgrid(X1, X2, X3)
             X = np.hstack((x1.reshape(-1, 1), x2.reshape(-1, 1), x3.reshape(-1, 1)))
-            _, std = model.predict(X)
-            std = std.flatten() * scaler.scale_
+            _, std = self.posterior(X)
 
             self.logger.info(f"Minimum uncertainty in prediction is {round(std.min(), 1)} meV/atom at {X[np.argmin(std)]}")
             self.logger.info(f"Maximum uncertainty in prediction is {round(std.max(), 1)} meV/atom at {X[np.argmax(std)]}")
 
         else:
-            mean, std = model.predict(self.next_coords)
-            mean = scaler.inverse_transform(mean)
-            std = std * scaler.scale_
+            mean, std = self.posterior(self.next_coords)
 
             un_df = pd.DataFrame({
                 'Candidates': self.next_formulas,
-                'Posterior mean (meV/atom)': [round(i, 1) for i in mean.flatten()],
-                'Posterior std (meV/atom)': [round(i, 1) for i in std.flatten()]
+                'Posterior mean (meV/atom)': mean.round(1),
+                'Posterior std (meV/atom)': std.round(1)
             })
             un_df = un_df.sort_values(['Posterior mean (meV/atom)'])
 

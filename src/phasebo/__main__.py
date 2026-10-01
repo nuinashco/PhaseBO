@@ -19,6 +19,7 @@ def run(
     log_name: str,
     logger,
     batch_size: int = 4,
+    acquisition: str = 'qlogei',
     limits: Optional[Dict[str, List[int]]] = None,
     next_formulas: Optional[List[str]] = None,
     exceptions: Optional[List[str]] = None,
@@ -38,6 +39,7 @@ def run(
         max_iter=max_iter,
         next_formulas=next_formulas,
         batch=batch_size,
+        acquisition=acquisition,
         exceptions=exceptions,
         allow_negative=allow_negative,
         logger=logger
@@ -47,8 +49,7 @@ def run(
     convex.show()
 
     if mode == 'path':
-        bopt.bo.plot_convergence()
-        bopt.bo.plot_acquisition()
+        bopt.plot_convergence().show()
         bopt.print_results()
     elif mode == 'suggest':
         bopt.print_results()
@@ -111,6 +112,7 @@ def main():
         log_name=cfg["log"],
         logger=logger,
         batch_size=cfg.get("batch_size", 4),
+        acquisition=cfg.get("acquisition", "qlogei"),
         limits=cfg.get("limits"),
         next_formulas=next_formulas,
         exceptions=exceptions,

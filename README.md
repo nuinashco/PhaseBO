@@ -25,8 +25,7 @@ scipy;
 pandas;
 matplotlib;
 pymatgen;
-scikit-learn;
-GPyOpt
+BoTorch (PyTorch)
 
 Dependencies are pinned in `uv.lock` and installed automatically.
 
@@ -59,13 +58,13 @@ Inferring energy–composition relationships with Bayesian optimization enhances
 The Journal of Chemical Physics 160, 5, 054110 (2024)
 
 
-The code is based on GPyOpt implementation of Bayesian optimisation 
-algorithm.
-@Misc{gpyopt2016,
-  author =   {The GPyOpt authors},
-  title =    {GPyOpt: A Bayesian Optimization framework in Python},
-  howpublished = {\url{http://github.com/SheffieldML/GPyOpt}},
-  year = {2016}
+Bayesian optimisation is implemented with BoTorch
+(earlier versions, including the paper above, used GPyOpt).
+@inproceedings{balandat2020botorch,
+  author =    {Balandat, Maximilian and Karrer, Brian and Jiang, Daniel R. and Daulton, Samuel and Letham, Benjamin and Wilson, Andrew Gordon and Bakshy, Eytan},
+  title =     {{BoTorch: A Framework for Efficient Monte-Carlo Bayesian Optimization}},
+  booktitle = {Advances in Neural Information Processing Systems 33},
+  year =      {2020}
 }
 
 ## Parameters of the input configuration file 
@@ -82,3 +81,4 @@ algorithm.
 *N_atom*       | (default: 24) Maximum number of atoms per unit cell in suggested compositions (in 'suggest' and 'generate' modes)
 *max_iter*     | (default: 10) Maximum number of iterations. 
 *batch_size*   | (default: 4) Number of compositions suggested per iteration.
+*acquisition*  | (default: 'qlogei') Batch selection: 'qlogei' (batch log expected improvement) or 'ts' (Thompson sampling, as in the GPyOpt version).
