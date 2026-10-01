@@ -28,6 +28,11 @@ phasebo = "phasebo.__main__:main"
 dev = [
     "pytest>=9.1",
 ]
+notebooks = [
+    # 0.25.0 pairs KaTeX 0.18 with KaTeX 0.16 CSS, so sub- and superscripts are not shrunk
+    "marimo>=0.24.2,<0.25",
+    "plotly>=7.1",
+]
 
 [build-system]
 requires = ["uv_build>=0.12.8,<0.13"]

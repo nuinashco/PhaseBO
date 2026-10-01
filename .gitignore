@@ -12,3 +12,4 @@ lisisf_input.py
 .venv/
 .pytest_cache/
 dist/
+__marimo__/
