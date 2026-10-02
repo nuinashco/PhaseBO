@@ -79,6 +79,7 @@ Bayesian optimisation is implemented with BoTorch
 
 The configuration is composed from the files in `config/`: `config.yaml` and one option of each group,
 `system` (the phase field) and `mode`.
+Unknown keys and invalid values stop the run before it starts (see `src/phasebo/schema.py`).
 
  parameter | value 
 ---|--- 

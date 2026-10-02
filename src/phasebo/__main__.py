@@ -11,8 +11,10 @@ import torch
 from hydra.core.hydra_config import HydraConfig
 from hydra.types import RunMode
 from omegaconf import DictConfig, OmegaConf
+from pydantic import ValidationError
 
 from phasebo.phase_field_bo import PhaseFieldBO
+from phasebo.schema import PhaseBOConfig
 
 # config/ next to src/
 CONFIG_DIR = Path(__file__).resolve().parents[2] / "config"
@@ -94,6 +96,11 @@ def read_formulas(path: Optional[str]) -> Optional[List[str]]:
 
 @hydra.main(version_base="1.3", config_path=str(CONFIG_DIR), config_name="config")
 def main(cfg: DictConfig) -> None:
+    try:
+        config = PhaseBOConfig.from_hydra(cfg)
+    except ValidationError as ex:
+        logger.error(f"Invalid configuration: {ex}")
+        raise SystemExit(1)
     hydra_cfg = HydraConfig.get()
 
     logger.info("========== CONFIGURATION ==========")
@@ -101,31 +108,29 @@ def main(cfg: DictConfig) -> None:
         logger.info(line)
     logger.info("===================================")
 
-    if cfg.seed is not None:
-        random.seed(cfg.seed)
-        np.random.seed(cfg.seed)
-        torch.manual_seed(cfg.seed)
+    if config.seed is not None:
+        random.seed(config.seed)
+        np.random.seed(config.seed)
+        torch.manual_seed(config.seed)
 
-    system = OmegaConf.to_container(cfg.system, resolve=True)
-    mode_options = OmegaConf.to_container(cfg.mode, resolve=True)
-    mode = mode_options.pop('name')
-    df = pd.read_csv(system['inputfile'], header=0)
+    system = config.system
+    df = pd.read_csv(system.inputfile, header=0)
 
     run(
         compositions=df.values,
-        references=df.values[system['reference_index']:],
-        ions=system['ions'],
-        mode=mode,
-        **mode_options,
-        Ntot=system['N_atom'],
+        references=df.values[system.reference_index:],
+        ions=system.ions,
+        mode=config.mode.name,
+        **config.mode.model_dump(exclude={'name'}),
+        Ntot=system.N_atom,
         logger=logger,
         output_dir=hydra_cfg.runtime.output_dir,
-        show_plots=cfg.show_plots and hydra_cfg.mode == RunMode.RUN,
-        batch_size=cfg.bo.batch_size,
-        acquisition=cfg.bo.acquisition,
-        limits=system['limits'],
-        next_formulas=read_formulas(system['compositionfile']),
-        exceptions=read_formulas(system['excludefile']),
+        show_plots=config.show_plots and hydra_cfg.mode == RunMode.RUN,
+        batch_size=config.bo.batch_size,
+        acquisition=config.bo.acquisition,
+        limits=system.limits,
+        next_formulas=read_formulas(system.compositionfile),
+        exceptions=read_formulas(system.excludefile),
         allow_negative=False
     )
     logger.info(f"Outputs written to {hydra_cfg.runtime.output_dir}")

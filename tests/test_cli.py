@@ -7,8 +7,10 @@ import pytest
 from hydra import compose, initialize_config_dir
 from hydra.errors import ConfigCompositionException
 from omegaconf import OmegaConf
+from pydantic import ValidationError
 
 from phasebo.__main__ import CONFIG_DIR
+from phasebo.schema import PhaseBOConfig
 
 NEW = ['Li6 Sn1 S5', 'Li3 Sn1 S2 Cl3', 'Li1 Sn1 S1 Cl3']
 PATH = ['mode=path', 'mode.n_seeds=2', 'mode.max_iter=2']
@@ -19,9 +21,15 @@ def compose_config(overrides=()):
         return compose(config_name='config', overrides=list(overrides))
 
 
+def validate(tmp_path, overrides=()):
+    """The default config, with an input file that exists, plus overrides."""
+    (tmp_path / 'field.csv').touch()
+    return PhaseBOConfig.from_hydra(compose_config([f'system.inputfile={tmp_path / "field.csv"}', *overrides]))
+
+
 @pytest.mark.parametrize('mode', ['suggest', 'path', 'generate'])
-def test_mode_option_sets_its_name(mode):
-    assert compose_config([f'mode={mode}']).mode.name == mode
+def test_each_mode_is_valid(tmp_path, mode):
+    assert validate(tmp_path, [f'mode={mode}']).mode.name == mode
 
 
 @pytest.mark.parametrize('override', [
@@ -32,6 +40,19 @@ def test_mode_option_sets_its_name(mode):
 def test_config_rejects(override):
     with pytest.raises(ConfigCompositionException):
         compose_config([override])
+
+
+@pytest.mark.parametrize('overrides', [
+    ['bo.acquisition=ucb'],
+    ['mode=path', 'mode.n_seeds=0'],
+    ['mode=path', 'mode.max_iter=abc'],
+    ['system.inputfile=missing.csv'],
+    ['~system.limits.Cl'],          # limits without an ion
+    ['+system.exludefile=x'],       # misspelt key in a system file
+])
+def test_validation_rejects(tmp_path, overrides):
+    with pytest.raises(ValidationError):
+        validate(tmp_path, overrides)
 
 
 @pytest.fixture
@@ -48,12 +69,13 @@ def config_dir(li_sn_s_cl, tmp_path):
     return tmp_path / 'config'
 
 
-def phasebo(cwd, config_dir, *overrides, multirun=False):
+def phasebo(cwd, config_dir, *overrides, multirun=False, returncode=0):
     flags = ['-cd', str(config_dir)] + (['-m'] if multirun else [])
     result = subprocess.run(
         [sys.executable, '-m', 'phasebo', *flags, 'system=synthetic', 'bo.batch_size=2', *overrides],
         cwd=cwd, env={**os.environ, 'MPLBACKEND': 'Agg'}, capture_output=True, text=True)
-    assert result.returncode == 0, result.stderr
+    assert result.returncode == returncode, result.stderr
+    return result
 
 
 @pytest.mark.parametrize('mode, outputs', [
@@ -79,3 +101,8 @@ def test_multirun_seeds_each_job(tmp_path, config_dir):
     paths = [p.read_text() for p in sorted(tmp_path.glob('multirun/synthetic/*/*/*/BO_Path_in_*.txt'))]
     assert len(paths) == 3
     assert paths[0] == paths[1] != paths[2]
+
+
+def test_invalid_config_exits_with_an_error(tmp_path, config_dir):
+    result = phasebo(tmp_path, config_dir, 'bo.acquisition=ucb', returncode=1)
+    assert 'Invalid configuration' in result.stdout
