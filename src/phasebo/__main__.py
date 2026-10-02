@@ -1,13 +1,10 @@
 import logging
 import os
-import random
 from typing import Dict, Optional, List
 
 import hydra
-import numpy as np
 import pandas as pd
 import rootutils
-import torch
 from hydra.core.hydra_config import HydraConfig
 from hydra.types import RunMode
 from omegaconf import DictConfig, OmegaConf
@@ -15,6 +12,7 @@ from pydantic import ValidationError
 
 from phasebo.phase_field_bo import PhaseFieldBO
 from phasebo.schema import PhaseBOConfig
+from phasebo.utils.other import set_seeds
 
 # exports PROJECT_ROOT for config/paths
 ROOT = rootutils.setup_root(__file__, indicator=".project-root", pythonpath=True)
@@ -110,9 +108,7 @@ def main(cfg: DictConfig) -> None:
     logger.info("===================================")
 
     if config.seed is not None:
-        random.seed(config.seed)
-        np.random.seed(config.seed)
-        torch.manual_seed(config.seed)
+        set_seeds(config.seed)
 
     system = config.system
     df = pd.read_csv(system.inputfile, header=0)
