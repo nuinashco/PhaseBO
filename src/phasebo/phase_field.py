@@ -25,7 +25,7 @@ class PhaseField:
                  allow_negative: bool = True,
                  logger: logging.Logger = None):
         self.logger = logger or logging.getLogger(__name__)
-        self.references = list(references[:, 0])
+        self.references = [name.strip() for name in references[:, 0]]
         self.elements = list(ions.keys())
         self.exceptions = exceptions if exceptions else []
 

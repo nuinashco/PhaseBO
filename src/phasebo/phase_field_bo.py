@@ -67,7 +67,8 @@ class PhaseFieldBO(PhaseField):
         if self.mode == 'path':
             self.run_path()
         elif self.mode == 'suggest':
-            self.next = self.suggest_batch(self.X, self.Y, self.domain)
+            # references are computed but not in X
+            self.next = self.suggest_batch(self.X, self.Y, self.unevaluated(self.domain, self.pd_coords))
 
     def setBO(self) -> None:
         if self.mode == 'path':
@@ -84,6 +85,7 @@ class PhaseFieldBO(PhaseField):
             self.domain = self.candidates_fc
 
         elif self.mode == 'suggest':
+            # not the references: training on them made path runs find fewer stable compositions
             X_init = self.candidates_fc
             Y_init = self.candidates_energies[:, None]
 

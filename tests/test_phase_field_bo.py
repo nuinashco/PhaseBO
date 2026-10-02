@@ -44,6 +44,18 @@ def test_suggest_batch_shrinks_to_the_candidates_left(li_s_cl, acquisition):
     assert names(bo, bo.next) == set(NEW)
 
 
+@pytest.mark.parametrize('mode, options', [('suggest', {'next_formulas': NEW}), ('path', {'n_seeds': 2, 'max_iter': 1})])
+def test_references_are_not_training_data(li_s_cl, mode, options):
+    bo = make_bo(li_s_cl, mode=mode, batch=2, **options)
+    references = {tuple(bo.dic[name][1]) for name in bo.references}
+    assert not references & set(rows(bo.model.train_inputs[0].numpy()))
+
+
+def test_suggest_skips_the_references(li_s_cl):
+    bo = make_bo(li_s_cl, mode='suggest', next_formulas=NEW + ['Li2 S1', 'Li4 Cl4'], batch=5)
+    assert names(bo, bo.next) == set(NEW)
+
+
 def test_suggest_batch_is_empty_when_every_candidate_is_computed(li_s_cl):
     bo = make_bo(li_s_cl, mode='suggest', next_formulas=COMPUTED, batch=2)
     assert len(bo.next) == 0
