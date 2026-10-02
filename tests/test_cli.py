@@ -49,6 +49,7 @@ def test_config_rejects(override):
 
 @pytest.mark.parametrize('overrides', [
     ['bo.acquisition=ucb'],
+    ['bo.kernel=linear'],
     ['mode=path', 'mode.n_seeds=0'],
     ['mode=path', 'mode.max_iter=abc'],
     ['system.inputfile=missing.csv'],
@@ -97,6 +98,12 @@ def test_run_writes_outputs_to_its_directory(tmp_path, config_dir, mode, outputs
     (run_dir,) = tmp_path.glob(f'outputs/synthetic/*/*_{mode}')
     for name in outputs + ['convex_hull.png', 'phasebo.log', '.hydra/config.yaml']:
         assert (run_dir / name).exists(), name
+
+
+def test_model_options_reach_the_model(tmp_path, config_dir):
+    phasebo(tmp_path, config_dir, 'mode=suggest', 'bo.kernel=rbf', 'bo.acquisition=ts', 'show_plots=false')
+    (log,) = tmp_path.glob('outputs/synthetic/*/*_suggest/phasebo.log')
+    assert 'Model: rbf kernel, ts acquisition, batch 2' in log.read_text()
 
 
 def test_suggest_ranks_the_compositionfile_candidates(tmp_path, config_dir):

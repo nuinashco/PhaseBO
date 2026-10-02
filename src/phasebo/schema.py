@@ -51,6 +51,7 @@ class GenerateMode(Model):
 
 class BOConfig(Model):
     acquisition: Literal['qlogei', 'ts']
+    kernel: Literal['matern', 'rbf']
     batch_size: PositiveInt
 
 

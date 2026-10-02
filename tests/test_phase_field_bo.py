@@ -3,6 +3,7 @@ import logging
 import numpy as np
 import pandas as pd
 import pytest
+from gpytorch.kernels import MaternKernel, RBFKernel
 
 from phasebo.phase_field_bo import PhaseFieldBO
 from phasebo.utils.other import set_seeds
@@ -92,6 +93,17 @@ def test_path_csv(li_s_cl, tmp_path):
     assert list(df['composition'][:2]) == list(bo.seeds)
     assert list(df['seed']) == [True] * 2 + [False] * 4
     assert list(df['energy (meV/atom)']) == list(bo.Y.ravel().round(2))
+
+
+@pytest.mark.parametrize('kernel, cls', [('matern', MaternKernel), ('rbf', RBFKernel)])
+def test_kernel_option(li_s_cl, kernel, cls):
+    bo = make_bo(li_s_cl, mode='suggest', next_formulas=NEW, batch=2, kernel=kernel)
+    assert [type(k) for k in bo.model.covar_module.modules() if isinstance(k, (MaternKernel, RBFKernel))] == [cls]
+
+
+def test_unsupported_kernel(li_s_cl):
+    with pytest.raises(ValueError, match='Unsupported kernel'):
+        make_bo(li_s_cl, mode='suggest', next_formulas=NEW, kernel='linear')
 
 
 def test_unsupported_acquisition(li_s_cl):

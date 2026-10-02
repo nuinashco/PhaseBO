@@ -13,6 +13,7 @@ defaults:
 bo:
   acquisition: qlogei         # or ts (Thompson sampling)
   batch_size: 4
+  kernel: matern              # Matérn 5/2 as in the paper, or rbf (BoTorch's default)
 seed: null
 show_plots: true              # single runs only; plots are always saved
 

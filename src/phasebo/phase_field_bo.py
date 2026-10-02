@@ -15,7 +15,9 @@ with warnings.catch_warnings():
     from botorch.generation import MaxPosteriorSampling
     from botorch.models import SingleTaskGP
     from botorch.optim import optimize_acqf_discrete
+    from gpytorch.kernels import MaternKernel, ScaleKernel
     from gpytorch.mlls import ExactMarginalLogLikelihood
+    from gpytorch.priors import GammaPrior
 
 from phasebo.phase_field import PhaseField
 from phasebo.list_compositions import generate
@@ -37,6 +39,7 @@ class PhaseFieldBO(PhaseField):
                  max_iter: int = 10,
                  batch: int = 4,
                  acquisition: str = 'qlogei',
+                 kernel: str = 'matern',
                  exceptions: Optional[List[str]] = None,
                  allow_negative: bool = False,
                  logger: logging.Logger = None,
@@ -55,6 +58,7 @@ class PhaseFieldBO(PhaseField):
         self.limits = limits
         self.batch = batch
         self.acquisition = acquisition
+        self.kernel = kernel
         self.next_formulas = next_formulas
         self.exceptions = exceptions
         self.logger = logger or logging.getLogger(__name__)
@@ -62,6 +66,9 @@ class PhaseFieldBO(PhaseField):
 
         if self.acquisition not in ('qlogei', 'ts'):
             raise ValueError(f'Unsupported acquisition: "{self.acquisition}". Supported: "qlogei", "ts".')
+        if self.kernel not in ('matern', 'rbf'):
+            raise ValueError(f'Unsupported kernel: "{self.kernel}". Supported: "matern", "rbf".')
+        self.logger.info(f"Model: {self.kernel} kernel, {self.acquisition} acquisition, batch {self.batch}")
 
         self.setBO()
         if self.mode == 'path':
@@ -122,7 +129,7 @@ class PhaseFieldBO(PhaseField):
             return np.empty((0, X.shape[1]))
 
         # BoTorch maximises
-        self.model = SingleTaskGP(torch.as_tensor(X), -torch.as_tensor(Y))
+        self.model = SingleTaskGP(torch.as_tensor(X), -torch.as_tensor(Y), covar_module=self.covar_module(X.shape[1]))
         fit_gpytorch_mll(ExactMarginalLogLikelihood(self.model.likelihood, self.model))
 
         q = min(self.batch, len(choices))
@@ -133,6 +140,14 @@ class PhaseFieldBO(PhaseField):
             acqf = qLogExpectedImprovement(self.model, best_f=-Y.min())
             X_next, _ = optimize_acqf_discrete(acqf, q=q, choices=choices, unique=True)
         return X_next.detach().numpy()
+
+    def covar_module(self, dims: int) -> Optional[ScaleKernel]:
+        """Matérn 5/2 as in the paper (GPyOpt's default), or None for BoTorch's default RBF."""
+        if self.kernel == 'rbf':
+            return None
+        # priors of BoTorch's Matérn default before 0.12
+        return ScaleKernel(MaternKernel(nu=2.5, ard_num_dims=dims, lengthscale_prior=GammaPrior(3.0, 6.0)),
+                           outputscale_prior=GammaPrior(2.0, 0.15))
 
     def run_path(self) -> None:
         """Run max_iter batches over the computed phase field."""

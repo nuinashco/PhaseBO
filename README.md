@@ -107,5 +107,6 @@ Unknown keys and invalid values stop the run before it starts (see `src/phasebo/
 *mode.max_iter*     | (default: 10) Maximum number of iterations in mode == 'path'. 
 *bo.batch_size*   | (default: 4) Number of compositions suggested per iteration.
 *bo.acquisition*  | (default: 'qlogei') Batch selection: 'qlogei' (batch log expected improvement) or 'ts' (Thompson sampling, as in the GPyOpt version).
+*bo.kernel*       | (default: 'matern') Gaussian process kernel: 'matern' (Matérn 5/2, as in the paper and the GPyOpt version) or 'rbf' (BoTorch's default).
 *seed*         | (default: null) Random seed, for reproducible runs.
 *show_plots*   | (default: true) Open plot windows in single runs; plots are always saved.
