@@ -183,6 +183,11 @@ class PhaseFieldBO(PhaseField):
             n_seeds = len(self.seeds)
             names = list(self.seeds) + [self.dicfc[self.fcsym(x)][1] for x in self.X[n_seeds:]]
             energies = self.Y.ravel()
+            pd.DataFrame({
+                'composition': names,
+                'energy (meV/atom)': energies.round(2),
+                'seed': np.arange(len(names)) < n_seeds,
+            }).to_csv(os.path.join(self.output_dir, 'bo_path.csv'), index=False)
 
             pf = '-'.join(self.elements)
             with open(os.path.join(self.output_dir, f'BO_Path_in_{pf}.txt'), 'a') as f:

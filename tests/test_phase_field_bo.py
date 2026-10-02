@@ -73,6 +73,15 @@ def test_uncertainty_csv(li_s_cl, tmp_path):
     assert (df['Posterior std (meV/atom)'] > 0).all()
 
 
+def test_path_csv(li_s_cl, tmp_path):
+    bo = make_bo(li_s_cl, mode='path', n_seeds=2, max_iter=2, batch=2, output_dir=tmp_path)
+    bo.print_results()
+    df = pd.read_csv(tmp_path / 'bo_path.csv')
+    assert list(df['composition'][:2]) == list(bo.seeds)
+    assert list(df['seed']) == [True] * 2 + [False] * 4
+    assert list(df['energy (meV/atom)']) == list(bo.Y.ravel().round(2))
+
+
 def test_unsupported_acquisition(li_s_cl):
     with pytest.raises(ValueError, match='Unsupported acquisition'):
         make_bo(li_s_cl, mode='suggest', next_formulas=NEW, acquisition='ucb')

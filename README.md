@@ -56,6 +56,11 @@ To sweep over values, with one directory per run under `multirun/`:
 
 `uv run phasebo -m mode=path bo.acquisition=qlogei,ts seed=0,1,2`
 
+or, as a preset over 10 seeds, `uv run phasebo experiment=compare_acquisitions`.
+Each 'path' run also writes `bo_path.csv`, and after a sweep `summary.csv` in the sweep directory
+lists, for every 'path' run, the swept values, the number of stable compositions found
+and the best and mean energy of the BO evaluations.
+
 ## Example
 The default run, `uv run phasebo`, results in the outputs in `example`
 

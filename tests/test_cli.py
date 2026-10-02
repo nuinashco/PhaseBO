@@ -112,6 +112,14 @@ def test_multirun_seeds_each_job(tmp_path, config_dir):
     assert paths[0] == paths[1] != paths[2]
 
 
+def test_experiment_summarises_each_job(tmp_path, config_dir):
+    phasebo(tmp_path, config_dir, 'experiment=compare_acquisitions', 'mode.n_seeds=2', 'mode.max_iter=2', 'seed=0,1')
+    (summary,) = tmp_path.glob('multirun/synthetic/*/*/summary.csv')
+    df = pd.read_csv(summary)
+    assert sorted(zip(df['bo.acquisition'], df['seed'])) == [('qlogei', 0), ('qlogei', 1), ('ts', 0), ('ts', 1)]
+    assert (df['evaluations'] == 4).all()   # mode.max_iter x bo.batch_size
+
+
 def test_invalid_config_exits_with_an_error(tmp_path, config_dir):
     result = phasebo(tmp_path, config_dir, 'bo.acquisition=ucb', returncode=1)
     assert 'Invalid configuration' in result.stdout
