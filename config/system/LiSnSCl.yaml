@@ -1,8 +1,7 @@
-# Paths are relative to the working directory
-inputfile: data/LiSnSCl_700eV.csv            # compositions, total energies
-compositionfile: data/candidates_list.csv    # generated if missing
-excludefile: data/exclude_list.csv
-reference_index: 195                         # first reference row
+inputfile: ${paths.data_dir}/LiSnSCl_700eV.csv            # compositions, total energies
+compositionfile: ${paths.data_dir}/candidates_list.csv    # generated if missing
+excludefile: ${paths.data_dir}/exclude_list.csv
+reference_index: 195                                      # first reference row
 ions:
   Li: 1
   Sn: 4

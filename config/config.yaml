@@ -1,5 +1,6 @@
 # Override on the command line, e.g. phasebo mode=path bo.acquisition=ts
 defaults:
+  - paths: default
   - system: LiSnSCl           # phase field
   - mode: suggest
   - _self_
@@ -17,4 +18,5 @@ hydra:
   job:
     config:
       override_dirname:         # paths would nest job dirs
-        exclude_keys: [show_plots, system.inputfile, system.compositionfile, system.excludefile]
+        exclude_keys: [show_plots, paths.root_dir, paths.data_dir, paths.output_dir, paths.multirun_dir,
+                       system.inputfile, system.compositionfile, system.excludefile]

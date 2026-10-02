@@ -20,6 +20,7 @@ dependencies = [
     "pandas>=3.0",
     "pydantic>=2.13",
     "pymatgen>=2026.9.24",
+    "rootutils>=1.0.7",
     "scipy>=1.17",
     "torch>=2.14",
 ]

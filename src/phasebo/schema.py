@@ -1,11 +1,19 @@
+from pathlib import Path
 from typing import Annotated, Dict, Literal, Optional, Tuple, Union
 
 from omegaconf import DictConfig, OmegaConf
-from pydantic import BaseModel, ConfigDict, Field, FilePath, NonNegativeInt, PositiveInt, model_validator
+from pydantic import BaseModel, ConfigDict, DirectoryPath, Field, FilePath, NonNegativeInt, PositiveInt, model_validator
 
 
 class Model(BaseModel):
     model_config = ConfigDict(extra='forbid', frozen=True)
+
+
+class PathsConfig(Model):
+    root_dir: DirectoryPath
+    data_dir: Path
+    output_dir: Path
+    multirun_dir: Path
 
 
 class SystemConfig(Model):
@@ -48,6 +56,7 @@ class BOConfig(Model):
 
 class PhaseBOConfig(Model):
     """Defaults live in config/; this only checks the composed configuration."""
+    paths: PathsConfig
     system: SystemConfig
     mode: Annotated[Union[PathMode, SuggestMode, GenerateMode], Field(discriminator='name')]
     bo: BOConfig

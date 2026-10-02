@@ -39,7 +39,7 @@ and its value of Total Energy as a .csv file.
 Make sure you include reference compositions in the phase field.
 2) Describe the phase field in `config/system/` (see `config/system/LiSnSCl.yaml`),
 providing names of the files, atoms, and their oxidation states.
-3) From the repository root, run:
+3) From anywhere in the repository, run:
 
 `uv run phasebo`
 
@@ -50,7 +50,7 @@ and choose options or override any value of the configuration on the command lin
 `uv run phasebo --help` lists the options and shows the configuration.
 
 Each run writes its log (`phasebo.log`), results, plots and the configuration it used (`.hydra/`)
-to `outputs/<system>/<date>/<time>_<mode>/`.
+to `outputs/<system>/<date>/<time>_<mode>/` in the repository (`paths.output_dir` to change it).
 
 To sweep over values, with one directory per run under `multirun/`:
 
@@ -78,11 +78,15 @@ Bayesian optimisation is implemented with BoTorch
 ## Configuration
 
 The configuration is composed from the files in `config/`: `config.yaml` and one option of each group,
-`system` (the phase field) and `mode`.
+`paths`, `system` (the phase field) and `mode`.
+Paths start from the repository root, which is marked by the `.project-root` file.
 Unknown keys and invalid values stop the run before it starts (see `src/phasebo/schema.py`).
 
  parameter | value 
 ---|--- 
+*paths.data_dir*     | (default: data/ in the repository) Folder of the input files.
+*paths.output_dir*   | (default: outputs/ in the repository) Where single runs are written.
+*paths.multirun_dir* | (default: multirun/ in the repository) Where sweeps are written.
 *system*       | (default: LiSnSCl) Phase field, a file in `config/system/`.
 *system.inputfile*    | Input file. A table of compositions and their total energies.
 *system.compositionfile*  | Input file. A list of candidate compositions (formulas) to consider. If not found, the candidates will be generated automatically.

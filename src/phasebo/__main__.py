@@ -1,12 +1,12 @@
 import logging
 import os
 import random
-from pathlib import Path
 from typing import Dict, Optional, List
 
 import hydra
 import numpy as np
 import pandas as pd
+import rootutils
 import torch
 from hydra.core.hydra_config import HydraConfig
 from hydra.types import RunMode
@@ -16,8 +16,9 @@ from pydantic import ValidationError
 from phasebo.phase_field_bo import PhaseFieldBO
 from phasebo.schema import PhaseBOConfig
 
-# config/ next to src/
-CONFIG_DIR = Path(__file__).resolve().parents[2] / "config"
+# exports PROJECT_ROOT for config/paths
+ROOT = rootutils.setup_root(__file__, indicator=".project-root", pythonpath=True)
+CONFIG_DIR = ROOT / "config"
 
 logger = logging.getLogger("phasebo")
 

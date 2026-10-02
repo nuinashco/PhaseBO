@@ -27,6 +27,11 @@ def validate(tmp_path, overrides=()):
     return PhaseBOConfig.from_hydra(compose_config([f'system.inputfile={tmp_path / "field.csv"}', *overrides]))
 
 
+def test_default_config_is_valid_from_any_directory(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    PhaseBOConfig.from_hydra(compose_config())
+
+
 @pytest.mark.parametrize('mode', ['suggest', 'path', 'generate'])
 def test_each_mode_is_valid(tmp_path, mode):
     assert validate(tmp_path, [f'mode={mode}']).mode.name == mode
@@ -47,6 +52,7 @@ def test_config_rejects(override):
     ['mode=path', 'mode.n_seeds=0'],
     ['mode=path', 'mode.max_iter=abc'],
     ['system.inputfile=missing.csv'],
+    ['paths.root_dir=missing'],
     ['~system.limits.Cl'],          # limits without an ion
     ['+system.exludefile=x'],       # misspelt key in a system file
 ])
@@ -69,11 +75,14 @@ def config_dir(li_sn_s_cl, tmp_path):
     return tmp_path / 'config'
 
 
-def phasebo(cwd, config_dir, *overrides, multirun=False, returncode=0):
+def phasebo(tmp_path, config_dir, *overrides, multirun=False, returncode=0):
+    """Run from an empty directory, writing to tmp_path/outputs or tmp_path/multirun."""
     flags = ['-cd', str(config_dir)] + (['-m'] if multirun else [])
+    (tmp_path / 'cwd').mkdir(exist_ok=True)
     result = subprocess.run(
-        [sys.executable, '-m', 'phasebo', *flags, 'system=synthetic', 'bo.batch_size=2', *overrides],
-        cwd=cwd, env={**os.environ, 'MPLBACKEND': 'Agg'}, capture_output=True, text=True)
+        [sys.executable, '-m', 'phasebo', *flags, 'system=synthetic', 'bo.batch_size=2',
+         f'paths.output_dir={tmp_path}/outputs', f'paths.multirun_dir={tmp_path}/multirun', *overrides],
+        cwd=tmp_path / 'cwd', env={**os.environ, 'MPLBACKEND': 'Agg'}, capture_output=True, text=True)
     assert result.returncode == returncode, result.stderr
     return result
 

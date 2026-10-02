@@ -2,7 +2,7 @@
 job:
   name: phasebo
 run:
-  dir: outputs/${hydra.runtime.choices.system}/${now:%Y-%m-%d}/${now:%H-%M-%S}_${mode.name}
+  dir: ${paths.output_dir}/${hydra.runtime.choices.system}/${now:%Y-%m-%d}/${now:%H-%M-%S}_${mode.name}
 sweep:
-  dir: multirun/${hydra.runtime.choices.system}/${now:%Y-%m-%d}/${now:%H-%M-%S}
+  dir: ${paths.multirun_dir}/${hydra.runtime.choices.system}/${now:%Y-%m-%d}/${now:%H-%M-%S}
   subdir: ${hydra.job.num}_${hydra.job.override_dirname}
