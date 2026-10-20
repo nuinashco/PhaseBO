@@ -16,8 +16,9 @@ from hydra import compose, initialize_config_dir
 
 from nuikit.errors import DataError, cli_boundary
 
-from phasebo import paths, processed
+from phasebo import paths
 from phasebo.config import DataConfig, SystemConfig
+from phasebo.data import store
 
 # Loads .env and sets PROJECT_ROOT, as every entry point does (GUIDE ENV-2).
 rootutils.setup_root(__file__, indicator=".project-root")
@@ -28,7 +29,7 @@ rootutils.setup_root(__file__, indicator=".project-root")
 def main() -> None:
     failed: list[str] = []
     for system in compose_systems():
-        if found := processed.find_problems(paths.ROOT / system.processed):
+        if found := store.find_problems(paths.ROOT / system.processed):
             failed += [f"{system.processed}: {problem}" for problem in found]
         else:
             click.echo(f"ok {system.processed}")

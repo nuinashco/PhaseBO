@@ -153,7 +153,14 @@ root_packages = ["phasebo", "nuikit"]
 name = "Layers: cli on top, paths at the bottom, every module placed"
 type = "layers"
 containers = ["phasebo"]
-layers = ["cli", "config", "phase_field_bo | processed | candidates", "phase_field | table", "paths"]
+layers = ["cli", "config", "phase_field_bo | data | candidates", "phase_field", "paths"]
+exhaustive = true
+
+[[tool.importlinter.contracts]]
+name = "Data: the store reads and writes files, the pure table never imports it"
+type = "layers"
+containers = ["phasebo.data"]
+layers = ["store", "table"]
 exhaustive = true
 
 [[tool.importlinter.contracts]]

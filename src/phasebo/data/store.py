@@ -11,8 +11,9 @@ from pydantic import ValidationError
 from nuikit.config import Schema
 from nuikit.errors import DataError
 
-from phasebo import paths, table
-from phasebo.table import ProcessedTable
+from phasebo import paths
+from phasebo.data import table
+from phasebo.data.table import ProcessedTable
 
 
 class RawFile(Schema):

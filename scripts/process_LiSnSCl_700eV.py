@@ -14,8 +14,9 @@ import pandas as pd
 import rootutils
 from hydra import compose, initialize_config_dir
 
-from phasebo import paths, processed, table
+from phasebo import paths
 from phasebo.config import DataConfig
+from phasebo.data import store, table
 
 rootutils.setup_root(__file__, indicator=".project-root")
 
@@ -38,7 +39,7 @@ def main() -> None:
     )
     cleaned, dropped = table.clean(rows, elements=system.elements)
     out = paths.ROOT / system.processed
-    processed.write(out, cleaned, raw=[RAW], script=Path(__file__))
+    store.write(out, cleaned, raw=[RAW], script=Path(__file__))
     print(f"wrote {system.processed}: {len(cleaned)} rows, {dropped} off-field dropped")
 
 

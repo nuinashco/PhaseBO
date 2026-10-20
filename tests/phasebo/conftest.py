@@ -3,8 +3,8 @@
 import pandas as pd
 import pytest
 
-from phasebo import processed, table
 from phasebo.config import CandidatesConfig, ElementConfig, SystemConfig
+from phasebo.data import store, table
 
 
 @pytest.fixture
@@ -30,7 +30,7 @@ def system(li_sn_s_cl, candidates, tmp_path) -> SystemConfig:
     )
     cleaned, _ = table.clean(rows, elements=ions)
     out = tmp_path / "processed.csv"
-    processed.write(out, cleaned, raw=[raw], script=tmp_path / "process.py")
+    store.write(out, cleaned, raw=[raw], script=tmp_path / "process.py")
     return SystemConfig(
         processed=out,
         elements={

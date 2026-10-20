@@ -28,8 +28,8 @@ make data           # check data/processed/ against data/raw/; scripts/process_*
   the commands' start-up and the adapters to the pre-template class.
 - `src/phasebo/phase_field.py`, `phase_field_bo.py`: pre-template code, excluded from ruff, pyright and pre-commit
   until it is rewritten (CONTRIBUTING, Deviations). Don't extend it; new code goes into families.
-- `src/phasebo/table.py`: the canonical processed table, a pandera schema; `processed.py`: its files and sha256
-  sidecar (pydantic);
+- `src/phasebo/data/`: processed data. `table.py`, the canonical table as a pandera schema (pure); `store.py`,
+  its files and sha256 sidecar (pydantic);
   `candidates.py`: candidate generation.
 - `scripts/`: exploratory or one-time runnables, never imported; they may import the package and compose
   `configs/`. Anything `make`, CI or a test depends on is a `cli/` command; a script that is rerun or shared becomes

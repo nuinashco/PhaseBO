@@ -4,7 +4,7 @@ import pytest
 
 from nuikit.errors import DataError
 
-from phasebo import table
+from phasebo.data import table
 
 
 def rows(formulas, reference, energies):

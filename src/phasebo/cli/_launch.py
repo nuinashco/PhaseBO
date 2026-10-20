@@ -12,8 +12,9 @@ from nuikit import runs, seeding
 from nuikit.errors import DataError
 from nuikit.logging import configure_logging
 
-from phasebo import candidates, paths, processed
+from phasebo import candidates, paths
 from phasebo.config import RunConfig, SystemConfig
+from phasebo.data import store
 
 log = structlog.stdlib.get_logger()
 
@@ -30,12 +31,12 @@ def start(cfg: RunConfig, *, runs_dir: Path) -> Path:
     return run_dir
 
 
-def load_table(system: SystemConfig) -> processed.Processed:
+def load_table(system: SystemConfig) -> store.Processed:
     """Return the phase field's processed table, checked against its raw files."""
-    return processed.load(paths.ROOT / system.processed)
+    return store.load(paths.ROOT / system.processed)
 
 
-def write_data(run_dir: Path, loaded: processed.Processed) -> None:
+def write_data(run_dir: Path, loaded: store.Processed) -> None:
     """Write data.json: the processed table, its script and raw files, by sha256."""
     data = {"table": str(loaded.path), **loaded.sidecar.model_dump(mode="json")}
     text = json.dumps(data, indent=2, ensure_ascii=False)

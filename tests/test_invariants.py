@@ -9,9 +9,10 @@ from omegaconf import OmegaConf
 
 from nuikit import configgen, registry
 
-from phasebo import paths, processed
+from phasebo import paths
 from phasebo.cli import data
 from phasebo.config import GENERATED
+from phasebo.data import store
 
 MIRRORS = [f for f in GENERATED if f.path.startswith("defaults/")]
 
@@ -47,7 +48,7 @@ def test_import_layers_hold():
 
 def test_processed_tables_match_their_raw_files():
     found = {
-        str(system.processed): processed.find_problems(paths.ROOT / system.processed)
+        str(system.processed): store.find_problems(paths.ROOT / system.processed)
         for system in data.compose_systems()
     }
 

@@ -14,19 +14,21 @@ flowchart TD
         config["config.py<br/>entry config schemas"]:::pure
         bo["phase_field_bo.py<br/>GP fit and batch picks, path replay"]:::legacy
         field["phase_field.py<br/>convex hull, coordinates, starts"]:::legacy
-        processed["processed.py<br/>tables on disk, with a pydantic sha256 sidecar"]:::side
-        table["table.py<br/>ProcessedTable (pandera schema): build, clean, parse"]:::pure
+        subgraph data["data/"]
+            store["store.py<br/>tables on disk, with a pydantic sha256 sidecar"]:::side
+            table["table.py<br/>ProcessedTable (pandera schema): build, clean, parse"]:::pure
+        end
         candidates["candidates.py<br/>charge-balanced, unexplored cells"]:::pure
         paths["paths.py<br/>repository paths"]:::side
         cli --> config
         cli --> bo
-        cli --> processed
+        cli --> store
         cli --> candidates
         bo --> field
-        processed --> table
-        processed --> paths
+        store --> table
+        store --> paths
     end
-    scripts --> processed
+    scripts --> store
     scripts --> table
     scripts --> config
     nuikit["nuikit<br/>config, configgen, registry, errors,<br/>logging, runs, seeding"]:::kit
@@ -49,10 +51,11 @@ them the processed table through `_launch.to_legacy_inputs`.
 `nuikit` is the machinery every project built from the template shares: what schemas and families build on, and
 what an entry point sets up before it runs. Copier writes it; fixes go upstream and arrive with `copier update`.
 
-Dependencies point down: `cli` > `config` > `phase_field_bo` | `processed` | `candidates` > `phase_field` | `table`
-> `paths`, and any layer may import `nuikit`. Scripts sit outside the package and may import any of it. The import-linter contracts in `pyproject.toml` enforce the order and keep `nuikit` from
-importing `phasebo`. The layers contract is exhaustive, so a new subpackage fails `make check` until it is placed in
-`layers`.
+Dependencies point down: `cli` > `config` > `phase_field_bo` | `data` | `candidates` > `phase_field` > `paths`, and
+any layer may import `nuikit`; inside `data`, `store` imports `table`, never the reverse. Scripts sit outside the
+package and may import any of it. The import-linter contracts in `pyproject.toml` enforce both orders and keep
+`nuikit` from importing `phasebo`. The layers contract is exhaustive, so a new subpackage fails `make check` until it
+is placed in `layers`.
 
 ### A command
 
@@ -90,8 +93,9 @@ data/                     tracked (see Deviations)
 src/phasebo/
   cli/                    one module per console script, plus _launch.py, their shared start-up
   config.py               entry config schemas + GENERATED (files `make configs` writes)
-  table.py                the canonical processed table: its pandera schema; build, clean, render, parse
-  processed.py            tables on disk: write with a pydantic sidecar, check, load
+  data/                   processed data
+    table.py              the canonical table: its pandera schema; build, clean, render, parse (pure)
+    store.py              tables on disk: write with a pydantic sidecar, check, load
   candidates.py           charge-balanced cells, filtered to unexplored points
   paths.py                repository paths, from the .project-root marker
   phase_field.py          pre-template: hull, coordinates, starting compositions

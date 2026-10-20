@@ -65,8 +65,8 @@ script ran, naming the script to rerun.
 
    A file can extend another and change only what differs, as `LiSnSCl_multifidel.yaml` does.
 3. Write `scripts/process_<source>.py` on the model of the two there: read the raw file, build rows with
-   `table.make_rows` (flag references by row, or with `table.flag_references`), `table.clean` them against the phase
-   field's elements and `processed.write` them to the path the phase field names. Run it once with `uv run` and
+   `data.table.make_rows` (flag references by row, or with `data.table.flag_references`), `data.table.clean` them
+   against the phase field's elements and `data.store.write` them to the path the phase field names. Run it once with `uv run` and
    commit the table and its sidecar.
 4. Run a command, overriding any value Hydra-style:
 
