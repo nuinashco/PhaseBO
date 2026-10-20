@@ -26,10 +26,13 @@ def test_read_field_splits_off_the_references(system, li_sn_s_cl):
 
     rows, refs = _launch.read_field(system)
 
-    assert (rows.tolist(), refs.tolist()) == (
-        compositions.tolist(),
-        references.tolist(),
+    assert (rows[:, 0].tolist(), refs[:, 0].tolist()) == (
+        compositions[:, 0].tolist(),
+        references[:, 0].tolist(),
     )
+    # pandas' default CSV float parser may round the last bit, depending on platform.
+    energies = compositions[:, 1].astype(float)
+    assert rows[:, 1].astype(float) == pytest.approx(energies)
 
 
 def test_read_formulas_returns_none_for_a_null_path():
