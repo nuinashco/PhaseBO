@@ -13,5 +13,6 @@ bo:  # Gaussian process and batch selection
   kernel: "matern"  # matern: Matern 5/2, as in the paper; rbf
   noise_mev: 0.0  # energy noise std (meV/atom); 0: DFT is exact; null: fitted
   batch_size: 4  # compositions per batch
+
 show_plots: false  # open plot windows
 plot_dpi: 150  # resolution of saved plots
