@@ -1,0 +1,49 @@
+"""Generated YAML lists every field with its default and description."""
+
+from pydantic import Field
+
+from nuikit.config import Schema
+from nuikit.configgen import ConfigFile, render, stale, write
+
+
+class Inner(Schema):
+    """Nested block."""
+
+    timeout_s: float = Field(default=30.0, description="seconds")
+
+
+class Outer(Schema):
+    """Top-level config."""
+
+    name: str = Field(description="required, no default")
+    tags: list[str] = Field(default_factory=lambda: ["a"])
+    inner: Inner = Field(default_factory=Inner, description="nested settings")
+    optional: Inner | None = Field(default_factory=Inner)
+    disabled: Inner | None = None
+    endpoint: str = Field(description="provided by a config group")
+
+
+def test_render_writes_defaults_required_markers_comments_and_spaced_nested_blocks():
+    text = render(ConfigFile("outer.yaml", Outer, groups=("endpoint",)))
+
+    assert text.splitlines()[1:] == [
+        "# Chosen through config groups, not listed here: endpoint.",
+        "",
+        "name: ???  # required, no default",
+        'tags: ["a"]',
+        "inner:  # nested settings",
+        "  timeout_s: 30.0  # seconds",
+        "",
+        "optional:",
+        "  timeout_s: 30.0  # seconds",
+        "",
+        "disabled: null",
+    ]
+
+
+def test_write_rewrites_only_stale_files(tmp_path):
+    files = [ConfigFile("a/outer.yaml", Outer), ConfigFile("inner.yaml", Inner)]
+    (tmp_path / "inner.yaml").write_text(render(files[1]), encoding="utf-8")
+
+    assert write(files, tmp_path) == [tmp_path / "a" / "outer.yaml"]
+    assert stale(files, tmp_path) == []

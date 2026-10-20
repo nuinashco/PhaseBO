@@ -7,7 +7,7 @@ from gpytorch.kernels import MaternKernel, RBFKernel
 from gpytorch.likelihoods import FixedNoiseGaussianLikelihood, GaussianLikelihood
 
 from phasebo.phase_field_bo import PhaseFieldBO
-from phasebo.utils.other import set_seeds
+from nuikit.seeding import seed_everything
 
 NEW = ['Li9 S2 Cl5', 'Li6 S1 Cl4', 'Li11 S3 Cl5']
 COMPUTED = ['Li3 S1 Cl1', 'Li4 S1 Cl2']
@@ -15,7 +15,7 @@ COMPUTED = ['Li3 S1 Cl1', 'Li4 S1 Cl2']
 
 def make_bo(li_s_cl, **kwargs):
     compositions, references, ions = li_s_cl
-    set_seeds(0)
+    seed_everything(0)
     return PhaseFieldBO(compositions, references, ions, exclude_zeros=True, logger=logging.getLogger('test_logger'),
                         **kwargs)
 

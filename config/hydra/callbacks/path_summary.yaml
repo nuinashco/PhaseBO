@@ -1,2 +1,0 @@
-path_summary:
-  _target_: phasebo.callbacks.PathSummary

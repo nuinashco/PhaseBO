@@ -1,0 +1,22 @@
+# Li-Sn-S-Cl at a 700 eV cutoff, the phase field of J. Chem. Phys. 160, 054110 (2024).
+# Paths are relative to the repository root.
+data:
+  file: data/LiSnSCl_700eV.csv
+  reference_index: 195
+elements:
+  Li:
+    charge: 1
+    atoms: [0, 9]
+  Sn:
+    charge: 4
+    atoms: [0, 4]
+  S:
+    charge: -2
+    atoms: [0, 9]
+  Cl:
+    charge: -1
+    atoms: [0, 4]
+candidates:
+  max_atoms: 16
+  file: null  # null: generated
+  exclude: null

@@ -1,49 +1,37 @@
-# PR Description
+<!-- Title: the commit that lands on main, `type(scope): imperative subject` without articles,
+     within 65 characters: GitHub appends ` (#N)` when it squashes (GIT-1, GIT-3). -->
 
 ## Summary
 
-<!-- Provide a concise summary "Why are the changes needed"?
-Link any related issues, discussions or papers. -->
+<!-- Why the change is needed, in a few sentences. Link what it builds on: issues, runs,
+notebooks, papers. -->
 
-## Changes Made
+## Changes made
 
-<!-- Describe the specific changes that have been made in this pull
-request. Provide details on the approach taken to address the problem
-and any notable implementation details. -->
+<!-- What changed and the approach taken. Name the alternatives you rejected and why:
+commits carry no body, so this is where the reasoning lives (GIT-2). -->
 
 ## Checklist
 
-- [ ] I have added comments to code in hard-to-understand areas
-- [ ] I have made corresponding changes to the documentation
-- [ ] My changes generate no new warnings
-- [ ] I have added tests that prove my fix is effective or that my feature works
-- [ ] `uv run pytest` passes
-
-<!-- Optional Sections -->
+- [ ] `make check` passes with no new warnings
+- [ ] Tests cover the new behaviour, or the summary says why none are needed
+- [ ] Docs changed with the code; `make configs` run if a schema changed
+- [ ] Comments say only what the code cannot: constraints, reasons, units
 
 <details>
-<summary><strong>Expand for optional sections</strong></summary>
+<summary><strong>Optional sections</strong></summary>
 
-## Screenshots
+## Results
 
-<!-- If the changes are visual, including screenshots or GIFs can
-help reviewers understand them more easily. -->
+<!-- Metrics, plots or run directories that show the effect, with the config that
+produced them. -->
 
-## Related issues
+## How to reproduce
 
-<!-- A link to any related issues or bugs that the pull request
-addresses, connecting the code's context with the problem it
-solves. -->
+<!-- The commands that rerun what the results show, with their overrides. -->
 
-## Testing instructions
+## Notes for the reviewer
 
-<!-- Instructions on how to test the changes made in the pull
-request, helping reviewers validate the code. -->
-
-## Special notes for your reviewer
-
-<!-- If there are any specific instructions or considerations you
-want to highlight for the reviewer, include them in this section. -->
+<!-- What to look at first, known gaps, follow-ups left out of this PR. -->
 
 </details>
-<!-- End of Optional Sections -->
