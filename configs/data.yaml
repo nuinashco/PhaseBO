@@ -1,0 +1,6 @@
+# Entry config `phasebo-data` composes once per file in system/.
+# Every setting with its default: defaults/data.yaml (generated).
+defaults:
+  - defaults/data@_here_
+  - system: LiSnSCl
+  - _self_

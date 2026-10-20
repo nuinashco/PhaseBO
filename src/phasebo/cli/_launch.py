@@ -1,19 +1,26 @@
-"""Steps every command shares: start the run, read the phase field, save plots."""
+"""Command start-up, and adapters from the configs and table to the old BO class."""
 
+import hashlib
+import json
 from pathlib import Path
 
 import numpy as np
 import pandas as pd
 import structlog
+from pymatgen.core import Composition
 
 from nuikit import runs, seeding
 from nuikit.errors import DataError
 from nuikit.logging import configure_logging
 
-from phasebo import paths
+from phasebo import candidates, paths
 from phasebo.config import RunConfig, SystemConfig
+from phasebo.dataset import table
+from phasebo.dataset.base import DatasetFactory
 
 log = structlog.stdlib.get_logger()
+
+type Fingerprints = dict[str, object]
 
 
 def start(cfg: RunConfig, *, runs_dir: Path) -> Path:
@@ -28,33 +35,79 @@ def start(cfg: RunConfig, *, runs_dir: Path) -> Path:
     return run_dir
 
 
-def read_field(system: SystemConfig) -> tuple[np.ndarray, np.ndarray]:
-    """Return the (formula, total energy) rows of the phase field and its references."""
-    path = paths.ROOT / system.data.file
+def read_table(system: SystemConfig) -> pd.DataFrame:
+    """Return the phase field's processed table."""
+    path = paths.ROOT / system.processed
     if not path.is_file():
-        raise DataError(f"no phase field data at {path}; set system.data.file")
-    rows = pd.read_csv(path).to_numpy()
-    start = system.data.reference_index
-    if start >= len(rows):
+        raise DataError(f"no processed data at {path}; run `make data`")
+    return table.parse(path.read_text(encoding="utf-8"), source=str(path))
+
+
+def fingerprint(system: SystemConfig) -> Fingerprints:
+    """Return the sha256 of the processed table and of the raw files behind it."""
+    raw = DatasetFactory.from_config(system.dataset).list_files()
+    for path in raw:
+        if not path.is_file():
+            raise DataError(
+                f"no raw data at {path}; "
+                "fix system.dataset.raw or system.dataset.references.file"
+            )
+    return {
+        "processed": _hash(paths.ROOT / system.processed),
+        "raw": [_hash(path) for path in raw],
+    }
+
+
+def write_data(run_dir: Path, fingerprints: Fingerprints) -> None:
+    """Write data.json: the files behind the run, by sha256."""
+    text = json.dumps(fingerprints, indent=2, ensure_ascii=False)
+    (run_dir / "data.json").write_text(text + "\n", encoding="utf-8")
+
+
+def to_legacy_inputs(rows: pd.DataFrame) -> tuple[np.ndarray, np.ndarray]:
+    """Return the inputs of PhaseFieldBO: (formula, total energy) rows, references."""
+    totals = rows.loc[rows["total_energy_ev"].notna()]
+    if totals.empty:
         raise DataError(
-            f"{path} has {len(rows)} rows, so no references start at row {start}; "
-            "set system.data.reference_index"
+            "this command needs total energies until BO is rebuilt; "
+            "choose a phase field whose dataset is a total_energy_csv"
         )
-    return rows, rows[start:]
+    field = totals.loc[:, ["formula", "total_energy_ev"]].to_numpy(dtype=object)
+    return field, field[totals["reference"].to_numpy(dtype=bool)]
 
 
-def charges(system: SystemConfig) -> dict[str, int]:
+def map_charges(system: SystemConfig) -> dict[str, int]:
     """Return each element's oxidation state, in config order."""
     return {symbol: element.charge for symbol, element in system.elements.items()}
 
 
-def atom_limits(system: SystemConfig) -> dict[str, tuple[int, int]]:
-    """Return each element's atoms per cell as the half-open range of PhaseFieldBO."""
-    limits: dict[str, tuple[int, int]] = {}
-    for symbol, element in system.elements.items():
-        low, high = element.atoms or (0, system.candidates.max_atoms)
-        limits[symbol] = (low, high + 1)
-    return limits
+def generate_formulas(
+    system: SystemConfig, rows: pd.DataFrame, *, excluded: list[str] | None
+) -> list[str]:
+    """Return the charge-balanced cells at points neither computed nor excluded."""
+    top = system.candidates.max_atoms
+    ranges = {s: e.atoms or (0, top) for s, e in system.elements.items()}
+    cells = candidates.generate(map_charges(system), ranges, max_atoms=top)
+    explored = [Composition(f) for f in [*rows["formula"], *(excluded or [])]]
+    return [cell.formula for cell in candidates.drop_explored(cells, explored)]
+
+
+def select_candidates(
+    system: SystemConfig,
+    rows: pd.DataFrame,
+    *,
+    listed: list[str] | None,
+    excluded: list[str] | None,
+) -> list[str]:
+    """Return the formulas to rank: the listed ones, else the generated ones."""
+    if listed is None:
+        listed = generate_formulas(system, rows, excluded=excluded)
+    if not listed:
+        raise DataError(
+            "no candidates left to rank; widen system.elements atoms or "
+            "system.candidates.max_atoms"
+        )
+    return listed
 
 
 def read_formulas(path: Path | None, *, key: str) -> list[str] | None:
@@ -75,3 +128,9 @@ def save_plot(path: Path, *, dpi: int, show: bool) -> None:
     if show:
         plt.show()
     plt.close("all")
+
+
+def _hash(path: Path) -> dict[str, str]:
+    shown = path.relative_to(paths.ROOT) if path.is_relative_to(paths.ROOT) else path
+    digest = hashlib.sha256(path.read_bytes()).hexdigest()
+    return {"path": str(shown), "sha256": digest}

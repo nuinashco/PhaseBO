@@ -34,6 +34,7 @@ dependencies = [
 phasebo-suggest = "phasebo.cli.suggest:main"
 phasebo-benchmark = "phasebo.cli.benchmark:main"
 phasebo-generate = "phasebo.cli.generate:main"
+phasebo-data = "phasebo.cli.data:main"
 phasebo-configs = "phasebo.cli.configs:main"
 
 [dependency-groups]
@@ -74,9 +75,8 @@ line-length = 88
 src = ["src", "tests"]
 extend-exclude = [
     "CONVENTIONS.md",  # Vendored guide: fix it upstream, not here.
-    # Pre-template code, rewritten by the refactor/data and feat/bo-families branches
-    # (CONTRIBUTING, Deviations).
-    "src/phasebo/list_compositions.py",
+    # Pre-template code, rewritten by the feat/bo-families branch (CONTRIBUTING,
+    # Deviations).
     "src/phasebo/phase_field.py",
     "src/phasebo/phase_field_bo.py",
     "tests/conftest.py",
@@ -125,7 +125,6 @@ ban-relative-imports = "all"
 include = ["src", "tests", "scripts"]
 exclude = [
     # Pre-template code (CONTRIBUTING, Deviations).
-    "src/phasebo/list_compositions.py",
     "src/phasebo/phase_field.py",
     "src/phasebo/phase_field_bo.py",
     "tests/conftest.py",
@@ -149,7 +148,7 @@ root_packages = ["phasebo", "nuikit"]
 name = "Layers: cli on top, paths at the bottom, every module placed"
 type = "layers"
 containers = ["phasebo"]
-layers = ["cli", "config", "phase_field_bo", "phase_field | list_compositions", "paths"]
+layers = ["cli", "config", "phase_field_bo | dataset | candidates", "phase_field", "paths"]
 exhaustive = true
 
 [[tool.importlinter.contracts]]

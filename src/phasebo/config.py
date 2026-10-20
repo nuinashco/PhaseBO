@@ -8,6 +8,8 @@ from pydantic import (
     NonNegativeFloat,
     NonNegativeInt,
     PositiveInt,
+    SerializeAsAny,
+    field_validator,
     model_validator,
 )
 
@@ -15,14 +17,7 @@ from nuikit.config import Schema
 from nuikit.configgen import ConfigFile
 from nuikit.logging import LogFormat, LogLevel
 
-
-class DataConfig(Schema):
-    """Computed compositions of a phase field."""
-
-    file: Path = Field(
-        description="CSV of formulas and total energies (eV per cell), references last"
-    )
-    reference_index: NonNegativeInt = Field(description="first reference row")
+from phasebo.dataset.base import DatasetConfig, DatasetFactory
 
 
 class ElementConfig(Schema):
@@ -56,11 +51,21 @@ class CandidatesConfig(Schema):
 
 
 class SystemConfig(Schema):
-    """Phase field: its computed compositions, elements and candidate space."""
+    """Phase field: its data, elements and candidate space."""
 
-    data: DataConfig
+    dataset: SerializeAsAny[DatasetConfig]
+    processed: Path = Field(
+        description="table that `make data` writes from the dataset"
+    )
     elements: dict[str, ElementConfig]
     candidates: CandidatesConfig
+
+    @field_validator("dataset", mode="before")
+    @classmethod
+    def _dataset_by_kind(cls, value: object) -> object:
+        if isinstance(value, dict):
+            return DatasetFactory.validate(value)
+        return value
 
 
 class BOConfig(Schema):
@@ -129,8 +134,15 @@ class GenerateConfig(RunConfig):
     system: SystemConfig
 
 
+class DataConfig(Schema):
+    """Entry config `phasebo-data` composes once per phase field (configs/data.yaml)."""
+
+    system: SystemConfig
+
+
 GENERATED = (
     ConfigFile("defaults/suggest.yaml", SuggestConfig, groups=("system",)),
     ConfigFile("defaults/benchmark.yaml", BenchmarkConfig, groups=("system",)),
     ConfigFile("defaults/generate.yaml", GenerateConfig, groups=("system",)),
+    ConfigFile("defaults/data.yaml", DataConfig, groups=("system",)),
 )

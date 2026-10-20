@@ -38,26 +38,30 @@ def run(cfg: SuggestConfig, *, runs_dir: Path) -> Path:
     """Fit the GP to the computed compositions and pick the next batch."""
     from phasebo.phase_field_bo import PhaseFieldBO
 
-    compositions, references = _launch.read_field(cfg.system)
-    candidates = _launch.read_formulas(
-        cfg.system.candidates.file, key="system.candidates.file"
-    )
+    rows = _launch.read_table(cfg.system)
+    compositions, references = _launch.to_legacy_inputs(rows)
     excluded = _launch.read_formulas(
         cfg.system.candidates.exclude, key="system.candidates.exclude"
     )
+    listed = _launch.read_formulas(
+        cfg.system.candidates.file, key="system.candidates.file"
+    )
+    formulas = _launch.select_candidates(
+        cfg.system, rows, listed=listed, excluded=excluded
+    )
+    fingerprints = _launch.fingerprint(cfg.system)
     run_dir = _launch.start(cfg, runs_dir=runs_dir)
+    _launch.write_data(run_dir, fingerprints)
     bopt = PhaseFieldBO(
         compositions=compositions,
         references=references,
-        ions=_launch.charges(cfg.system),
+        ions=_launch.map_charges(cfg.system),
         mode="suggest",
-        Ntot=cfg.system.candidates.max_atoms,
-        limits=_launch.atom_limits(cfg.system),
         batch=cfg.bo.batch_size,
         acquisition=cfg.bo.acquisition,
         kernel=cfg.bo.kernel,
         noise=cfg.bo.noise_mev,
-        next_formulas=candidates,
+        next_formulas=formulas,
         exceptions=excluded,
         output_dir=str(run_dir),
     )

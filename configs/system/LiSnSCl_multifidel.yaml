@@ -1,0 +1,13 @@
+# LiSnSCl with a cheap second source: NNmodel's energies above the hull next to DFT's.
+# The raw file adds 46 oxygen phases, which `make data` drops.
+defaults:
+  - LiSnSCl
+  - _self_
+dataset:
+  kind: hull_energy_csv
+  raw: data/raw/LiSnSCl_multifidel.csv
+  fidelities: {DFT: dft, NNmodel: nn}
+  references:  # The file has no reference rows of its own.
+    file: data/raw/LiSnSCl_700eV.csv
+    start_row: 195
+processed: data/processed/LiSnSCl_multifidel.csv

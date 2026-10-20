@@ -10,6 +10,7 @@ from omegaconf import OmegaConf
 from nuikit import configgen, registry
 
 from phasebo import paths
+from phasebo.cli import data
 from phasebo.config import GENERATED
 
 MIRRORS = [f for f in GENERATED if f.path.startswith("defaults/")]
@@ -42,3 +43,9 @@ def test_every_kind_without_required_fields_builds_from_its_generated_yaml():
 
 def test_import_layers_hold():
     assert lint_imports() == 0
+
+
+def test_processed_data_is_fresh():
+    stale = [str(s.processed) for s, _, _ in data.find_stale(data.compose_systems())]
+
+    assert stale == [], "run `make data`"

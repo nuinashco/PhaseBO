@@ -1,20 +1,17 @@
-"""`phasebo-generate` lists charge-balanced candidates within the atom ranges."""
+"""`phasebo-generate` writes the generated candidates with a header, and data.json."""
 
-from pymatgen.core import Composition
+import pandas as pd
 
-from phasebo.cli import generate
+from phasebo.cli import _launch, generate
 from phasebo.config import GenerateConfig
 
 
-def test_generate_writes_charge_balanced_candidates(system, tmp_path):
+def test_generate_writes_the_generated_candidates(system, tmp_path):
     cfg = GenerateConfig(run_name="r", system=system)
 
     run_dir = generate.run(cfg, runs_dir=tmp_path / "runs")
 
-    lines = (run_dir / "candidates_list.csv").read_text().split()
-    charge = {"Li": 1, "Sn": 4, "S": -2, "Cl": -1}
-    for formula in lines:
-        amounts = Composition(formula).get_el_amt_dict()
-        assert sum(charge[el] * n for el, n in amounts.items()) == 0, formula
-        assert sum(amounts.values()) <= system.candidates.max_atoms, formula
-    assert lines
+    written = pd.read_csv(run_dir / "candidates_list.csv")["formula"].tolist()
+    rows = _launch.read_table(system)
+    assert written == _launch.generate_formulas(system, rows, excluded=None)
+    assert (run_dir / "data.json").is_file()

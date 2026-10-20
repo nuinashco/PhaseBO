@@ -1,0 +1,573 @@
+formula,point,fidelity,reference,total_energy_ev,e_above_hull_mev
+Cl3 Li1 Sn1 S1,Li1 Sn1 S1 Cl3,dft,False,,60.1
+Cl2 Li4 Sn1 S3,Li4 Sn1 S3 Cl2,dft,False,,47.7
+Cl1 Li1 Sn3 S6,Li1 Sn3 S6 Cl1,dft,False,,139.6
+Cl4 Li2 Sn2 S3,Li2 Sn2 S3 Cl4,dft,False,,98.3
+Cl1 Li3 Sn2 S5,Li3 Sn2 S5 Cl1,dft,False,,79.2
+Cl4 Li4 Sn1 S2,Li4 Sn1 S2 Cl4,dft,False,,106.5
+Cl1 Li5 Sn1 S4,Li5 Sn1 S4 Cl1,dft,False,,0.0
+Cl3 Li3 Sn2 S4,Li3 Sn2 S4 Cl3,dft,False,,96.9
+Cl6 Li4 Sn1 S1,Li4 Sn1 S1 Cl6,dft,False,,74.6
+Cl3 Li5 Sn1 S3,Li5 Sn1 S3 Cl3,dft,False,,1.2
+Cl5 Li1 Sn3 S4,Li1 Sn3 S4 Cl5,dft,False,,78.4
+Cl2 Li2 Sn1 S2,Li2 Sn1 S2 Cl2,dft,False,,80.1
+Cl8 Li2 Sn2 S1,Li2 Sn2 S1 Cl8,dft,False,,56.5
+Cl2 Li4 Sn2 S5,Li4 Sn2 S5 Cl2,dft,False,,77.4
+Cl5 Li5 Sn1 S2,Li5 Sn1 S2 Cl5,dft,False,,102.2
+Cl2 Li6 Sn1 S4,Li6 Sn1 S4 Cl2,dft,False,,0.4
+Cl1 Li1 Sn4 S8,Li1 Sn4 S8 Cl1,dft,False,,148.1
+Cl4 Li2 Sn3 S5,Li2 Sn3 S5 Cl4,dft,False,,98.4
+Cl7 Li3 Sn2 S2,Li3 Sn2 S2 Cl7,dft,False,,72.8
+Cl1 Li5 Sn2 S6,Li5 Sn2 S6 Cl1,dft,False,,31.2
+Cl4 Li6 Sn1 S3,Li6 Sn1 S3 Cl4,dft,False,,43.0
+Cl1 Li1 Sn2 S4,Li1 Sn2 S4 Cl1,dft,False,,120.8
+Cl1 Li7 Sn1 S5,Li7 Sn1 S5 Cl1,dft,False,,37.8
+Cl9 Li1 Sn3 S2,Li1 Sn3 S2 Cl9,dft,False,,69.0
+Cl3 Li1 Sn4 S7,Li1 Sn4 S7 Cl3,dft,False,,121.6
+Cl6 Li2 Sn3 S4,Li2 Sn3 S4 Cl6,dft,False,,80.3
+Cl9 Li3 Sn2 S1,Li3 Sn2 S1 Cl9,dft,False,,40.4
+Cl6 Li6 Sn1 S2,Li6 Sn1 S2 Cl6,dft,False,,74.6
+Cl4 Li2 Sn1 S1,Li2 Sn1 S1 Cl4,dft,False,,64.4
+Cl5 Li3 Sn3 S5,Li3 Sn3 S5 Cl5,dft,False,,93.1
+Cl2 Li4 Sn3 S7,Li4 Sn3 S7 Cl2,dft,False,,130.4
+Cl5 Li5 Sn2 S4,Li5 Sn2 S4 Cl5,dft,False,,136.5
+Cl8 Li6 Sn1 S1,Li6 Sn1 S1 Cl8,dft,False,,66.5
+Cl2 Li8 Sn1 S5,Li8 Sn1 S5 Cl2,dft,False,,21.3
+Cl7 Li1 Sn4 S5,Li1 Sn4 S5 Cl7,dft,False,,73.4
+Cl1 Li1 Sn5 S10,Li1 Sn5 S10 Cl1,dft,False,,176.9
+Cl1 Li3 Sn1 S3,Li3 Sn1 S3 Cl1,dft,False,,7.2
+Cl10 Li4 Sn2 S1,Li4 Sn2 S1 Cl10,dft,False,,112.1
+Cl4 Li4 Sn3 S6,Li4 Sn3 S6 Cl4,dft,False,,132.6
+Cl7 Li5 Sn2 S3,Li5 Sn2 S3 Cl7,dft,False,,81.1
+Cl4 Li6 Sn2 S5,Li6 Sn2 S5 Cl4,dft,False,,86.2
+Cl1 Li9 Sn1 S6,Li9 Sn1 S6 Cl1,dft,False,,47.8
+Cl9 Li1 Sn4 S4,Li1 Sn4 S4 Cl9,dft,False,,53.2
+Cl12 Li2 Sn3 S1,Li2 Sn3 S1 Cl12,dft,False,,79.0
+Cl3 Li1 Sn2 S3,Li1 Sn2 S3 Cl3,dft,False,,93.0
+Cl9 Li5 Sn2 S2,Li5 Sn2 S2 Cl9,dft,False,,76.2
+Cl3 Li5 Sn3 S7,Li5 Sn3 S7 Cl3,dft,False,,121.6
+Cl9 Li7 Sn1 S1,Li7 Sn1 S1 Cl9,dft,False,,59.6
+Cl3 Li3 Sn1 S2,Li3 Sn1 S2 Cl3,dft,False,,97.7
+Cl5 Li7 Sn2 S5,Li7 Sn2 S5 Cl5,dft,False,,84.0
+Cl5 Li9 Sn1 S4,Li9 Sn1 S4 Cl5,dft,False,,16.5
+Cl7 Li1 Sn5 S7,Li1 Sn5 S7 Cl7,dft,False,,98.4
+Cl5 Li1 Sn2 S2,Li1 Sn2 S2 Cl5,dft,False,,57.7
+Cl4 Li2 Sn5 S9,Li2 Sn5 S9 Cl4,dft,False,,151.6
+Cl7 Li7 Sn2 S4,Li7 Sn2 S4 Cl7,dft,False,,108.0
+Cl5 Li3 Sn1 S1,Li3 Sn1 S1 Cl5,dft,False,,77.2
+Sn1 S11 Cl1 Li19,Li19 Sn1 S11 Cl1,dft,False,,38.8
+Sn5 S10 Cl2 Li2,Li2 Sn5 S10 Cl2,dft,False,,151.3
+Sn1 S9 Cl3 Li17,Li17 Sn1 S9 Cl3,dft,False,,66.9
+Sn2 S9 Cl3 Li13,Li13 Sn2 S9 Cl3,dft,False,,57.3
+Sn3 S9 Cl3 Li9,Li3 Sn1 S3 Cl1,dft,False,,66.5
+Sn4 S9 Cl3 Li5,Li5 Sn4 S9 Cl3,dft,False,,129.7
+Sn5 S9 Cl3 Li1,Li1 Sn5 S9 Cl3,dft,False,,118.1
+Sn1 S8 Cl4 Li16,Li16 Sn1 S8 Cl4,dft,False,,54.1
+Sn2 S8 Cl4 Li12,Li6 Sn1 S4 Cl2,dft,False,,53.8
+Sn3 S8 Cl4 Li8,Li8 Sn3 S8 Cl4,dft,False,,75.0
+Sn4 S8 Cl4 Li4,Li1 Sn1 S2 Cl1,dft,False,,122.4
+Sn2 S11 Cl1 Li15,Li15 Sn2 S11 Cl1,dft,False,,59.6
+Sn1 S7 Cl5 Li15,Li15 Sn1 S7 Cl5,dft,False,,45.7
+Sn2 S7 Cl5 Li11,Li11 Sn2 S7 Cl5,dft,False,,16.5
+Sn3 S7 Cl5 Li7,Li7 Sn3 S7 Cl5,dft,False,,92.0
+Sn4 S7 Cl5 Li3,Li3 Sn4 S7 Cl5,dft,False,,107.2
+Sn1 S6 Cl6 Li14,Li14 Sn1 S6 Cl6,dft,False,,33.7
+Sn2 S6 Cl6 Li10,Li5 Sn1 S3 Cl3,dft,False,,50.1
+Sn3 S6 Cl6 Li6,Li2 Sn1 S2 Cl2,dft,False,,119.1
+Sn4 S6 Cl6 Li2,Li1 Sn2 S3 Cl3,dft,False,,94.2
+Sn1 S5 Cl7 Li13,Li13 Sn1 S5 Cl7,dft,False,,30.5
+Sn2 S5 Cl7 Li9,Li9 Sn2 S5 Cl7,dft,False,,68.5
+Sn3 S11 Cl1 Li11,Li11 Sn3 S11 Cl1,dft,False,,34.6
+Sn3 S5 Cl7 Li5,Li5 Sn3 S5 Cl7,dft,False,,86.1
+Sn4 S5 Cl7 Li1,Li1 Sn4 S5 Cl7,dft,False,,65.7
+Sn1 S4 Cl8 Li12,Li12 Sn1 S4 Cl8,dft,False,,22.3
+Sn2 S4 Cl8 Li8,Li4 Sn1 S2 Cl4,dft,False,,66.0
+Sn3 S4 Cl8 Li4,Li4 Sn3 S4 Cl8,dft,False,,75.0
+Sn2 S3 Cl9 Li7,Li7 Sn2 S3 Cl9,dft,False,,71.8
+Sn3 S3 Cl9 Li3,Li1 Sn1 S1 Cl3,dft,False,,43.9
+Sn1 S2 Cl10 Li10,Li10 Sn1 S2 Cl10,dft,False,,64.1
+Sn2 S2 Cl10 Li6,Li3 Sn1 S1 Cl5,dft,False,,42.8
+Sn4 S11 Cl1 Li7,Li7 Sn4 S11 Cl1,dft,False,,47.2
+Sn3 S2 Cl10 Li2,Li2 Sn3 S2 Cl10,dft,False,,55.5
+Sn1 S1 Cl11 Li9,Li9 Sn1 S1 Cl11,dft,False,,46.0
+Sn2 S1 Cl11 Li5,Li5 Sn2 S1 Cl11,dft,False,,31.8
+Sn3 S1 Cl11 Li1,Li1 Sn3 S1 Cl11,dft,False,,41.9
+Sn5 S11 Cl1 Li3,Li3 Sn5 S11 Cl1,dft,False,,116.9
+Sn1 S10 Cl2 Li18,Li18 Sn1 S10 Cl2,dft,False,,67.3
+Sn2 S10 Cl2 Li14,Li7 Sn1 S5 Cl1,dft,False,,55.8
+Sn3 S10 Cl2 Li10,Li10 Sn3 S10 Cl2,dft,False,,48.4
+Sn4 S10 Cl2 Li6,Li3 Sn2 S5 Cl1,dft,False,,64.6
+Sn1 S15 Cl1 Li27,Li27 Sn1 S15 Cl1,dft,False,,72.1
+Sn3 S14 Cl2 Li18,Li18 Sn3 S14 Cl2,dft,False,,56.4
+Sn4 S14 Cl2 Li14,Li7 Sn2 S7 Cl1,dft,False,,64.2
+Sn5 S14 Cl2 Li10,Li10 Sn5 S14 Cl2,dft,False,,59.7
+Sn6 S14 Cl2 Li6,Li3 Sn3 S7 Cl1,dft,False,,129.9
+Sn7 S14 Cl2 Li2,Li2 Sn7 S14 Cl2,dft,False,,134.2
+Sn1 S13 Cl3 Li25,Li25 Sn1 S13 Cl3,dft,False,,77.4
+Sn2 S13 Cl3 Li21,Li21 Sn2 S13 Cl3,dft,False,,65.7
+Sn3 S13 Cl3 Li17,Li17 Sn3 S13 Cl3,dft,False,,81.0
+Sn4 S13 Cl3 Li13,Li13 Sn4 S13 Cl3,dft,False,,76.2
+Sn5 S13 Cl3 Li9,Li9 Sn5 S13 Cl3,dft,False,,98.0
+Sn2 S15 Cl1 Li23,Li23 Sn2 S15 Cl1,dft,False,,71.5
+Sn6 S13 Cl3 Li5,Li5 Sn6 S13 Cl3,dft,False,,132.9
+Sn7 S13 Cl3 Li1,Li1 Sn7 S13 Cl3,dft,False,,67.8
+Sn1 S12 Cl4 Li24,Li24 Sn1 S12 Cl4,dft,False,,44.1
+Sn2 S12 Cl4 Li20,Li10 Sn1 S6 Cl2,dft,False,,67.7
+Sn3 S12 Cl4 Li16,Li16 Sn3 S12 Cl4,dft,False,,22.9
+Sn4 S12 Cl4 Li12,Li3 Sn1 S3 Cl1,dft,False,,82.2
+Sn5 S12 Cl4 Li8,Li8 Sn5 S12 Cl4,dft,False,,115.4
+Sn6 S12 Cl4 Li4,Li2 Sn3 S6 Cl2,dft,False,,142.0
+Sn1 S11 Cl5 Li23,Li23 Sn1 S11 Cl5,dft,False,,69.4
+Sn2 S11 Cl5 Li19,Li19 Sn2 S11 Cl5,dft,False,,76.4
+Sn3 S15 Cl1 Li19,Li19 Sn3 S15 Cl1,dft,False,,76.5
+Sn3 S11 Cl5 Li15,Li15 Sn3 S11 Cl5,dft,False,,89.3
+Sn4 S11 Cl5 Li11,Li11 Sn4 S11 Cl5,dft,False,,102.4
+Sn5 S11 Cl5 Li7,Li7 Sn5 S11 Cl5,dft,False,,141.2
+Sn6 S11 Cl5 Li3,Li3 Sn6 S11 Cl5,dft,False,,134.5
+Sn1 S10 Cl6 Li22,Li22 Sn1 S10 Cl6,dft,False,,48.4
+Sn2 S10 Cl6 Li18,Li9 Sn1 S5 Cl3,dft,False,,62.3
+Sn3 S10 Cl6 Li14,Li14 Sn3 S10 Cl6,dft,False,,83.8
+Sn4 S10 Cl6 Li10,Li5 Sn2 S5 Cl3,dft,False,,109.0
+Sn5 S10 Cl6 Li6,Li6 Sn5 S10 Cl6,dft,False,,148.6
+Sn6 S10 Cl6 Li2,Li1 Sn3 S5 Cl3,dft,False,,115.1
+Sn4 S15 Cl1 Li15,Li15 Sn4 S15 Cl1,dft,False,,87.2
+Sn1 S9 Cl7 Li21,Li21 Sn1 S9 Cl7,dft,False,,65.6
+Sn2 S9 Cl7 Li17,Li17 Sn2 S9 Cl7,dft,False,,71.8
+Sn3 S9 Cl7 Li13,Li13 Sn3 S9 Cl7,dft,False,,82.2
+Sn4 S9 Cl7 Li9,Li9 Sn4 S9 Cl7,dft,False,,99.0
+Sn5 S9 Cl7 Li5,Li5 Sn5 S9 Cl7,dft,False,,119.6
+Sn6 S9 Cl7 Li1,Li1 Sn6 S9 Cl7,dft,False,,101.8
+Sn1 S8 Cl8 Li20,Li20 Sn1 S8 Cl8,dft,False,,57.1
+Sn2 S8 Cl8 Li16,Li8 Sn1 S4 Cl4,dft,False,,41.9
+Sn3 S8 Cl8 Li12,Li12 Sn3 S8 Cl8,dft,False,,89.2
+Sn4 S8 Cl8 Li8,Li2 Sn1 S2 Cl2,dft,False,,140.5
+Sn5 S15 Cl1 Li11,Li11 Sn5 S15 Cl1,dft,False,,91.6
+Sn5 S8 Cl8 Li4,Li4 Sn5 S8 Cl8,dft,False,,86.5
+Sn1 S7 Cl9 Li19,Li19 Sn1 S7 Cl9,dft,False,,42.0
+Sn2 S7 Cl9 Li15,Li15 Sn2 S7 Cl9,dft,False,,70.6
+Sn3 S7 Cl9 Li11,Li11 Sn3 S7 Cl9,dft,False,,99.5
+Sn4 S7 Cl9 Li7,Li7 Sn4 S7 Cl9,dft,False,,112.4
+Sn5 S7 Cl9 Li3,Li3 Sn5 S7 Cl9,dft,False,,93.6
+Sn1 S6 Cl10 Li18,Li18 Sn1 S6 Cl10,dft,False,,47.0
+Sn2 S6 Cl10 Li14,Li7 Sn1 S3 Cl5,dft,False,,67.7
+Sn3 S6 Cl10 Li10,Li10 Sn3 S6 Cl10,dft,False,,114.3
+Sn4 S6 Cl10 Li6,Li3 Sn2 S3 Cl5,dft,False,,87.7
+Sn6 S15 Cl1 Li7,Li7 Sn6 S15 Cl1,dft,False,,88.8
+Sn5 S6 Cl10 Li2,Li2 Sn5 S6 Cl10,dft,False,,72.5
+Sn1 S5 Cl11 Li17,Li17 Sn1 S5 Cl11,dft,False,,19.8
+Sn2 S5 Cl11 Li13,Li13 Sn2 S5 Cl11,dft,False,,88.5
+Sn3 S5 Cl11 Li9,Li9 Sn3 S5 Cl11,dft,False,,85.3
+Sn4 S5 Cl11 Li5,Li5 Sn4 S5 Cl11,dft,False,,83.8
+Sn5 S5 Cl11 Li1,Li1 Sn5 S5 Cl11,dft,False,,74.7
+Sn1 S4 Cl12 Li16,Li16 Sn1 S4 Cl12,dft,False,,22.6
+Sn2 S4 Cl12 Li12,Li6 Sn1 S2 Cl6,dft,False,,96.2
+Sn3 S4 Cl12 Li8,Li8 Sn3 S4 Cl12,dft,False,,66.5
+Sn4 S4 Cl12 Li4,Li1 Sn1 S1 Cl3,dft,False,,69.5
+Sn7 S15 Cl1 Li3,Li3 Sn7 S15 Cl1,dft,False,,122.9
+Sn1 S3 Cl13 Li15,Li15 Sn1 S3 Cl13,dft,False,,49.9
+Sn2 S3 Cl13 Li11,Li11 Sn2 S3 Cl13,dft,False,,71.5
+Sn3 S3 Cl13 Li7,Li7 Sn3 S3 Cl13,dft,False,,70.5
+Sn4 S3 Cl13 Li3,Li3 Sn4 S3 Cl13,dft,False,,53.4
+Sn1 S2 Cl14 Li14,Li14 Sn1 S2 Cl14,dft,False,,41.8
+Sn2 S2 Cl14 Li10,Li5 Sn1 S1 Cl7,dft,False,,65.4
+Sn3 S2 Cl14 Li6,Li6 Sn3 S2 Cl14,dft,False,,54.0
+Sn4 S2 Cl14 Li2,Li1 Sn2 S1 Cl7,dft,False,,75.0
+Sn1 S1 Cl15 Li13,Li13 Sn1 S1 Cl15,dft,False,,39.7
+Sn2 S1 Cl15 Li9,Li9 Sn2 S1 Cl15,dft,False,,50.1
+Sn1 S14 Cl2 Li26,Li26 Sn1 S14 Cl2,dft,False,,67.8
+Sn3 S1 Cl15 Li5,Li5 Sn3 S1 Cl15,dft,False,,53.8
+Sn4 S1 Cl15 Li1,Li1 Sn4 S1 Cl15,dft,False,,44.5
+Sn2 S14 Cl2 Li22,Li11 Sn1 S7 Cl1,dft,False,,74.6
+Sn2 S4 Cl4 Li4,Li2 Sn1 S2 Cl2,dft,False,,86.8
+Sn1 S3 Cl5 Li7,Li7 Sn1 S3 Cl5,dft,False,,18.1
+Sn2 S3 Cl5 Li3,Li3 Sn2 S3 Cl5,dft,False,,49.6
+Sn1 S2 Cl6 Li6,Li6 Sn1 S2 Cl6,dft,False,,74.7
+Sn2 S2 Cl6 Li2,Li1 Sn1 S1 Cl3,dft,False,,42.6
+Sn1 S1 Cl7 Li5,Li5 Sn1 S1 Cl7,dft,False,,53.7
+Sn2 S1 Cl7 Li1,Li1 Sn2 S1 Cl7,dft,False,,44.1
+Sn2 S7 Cl1 Li7,Li7 Sn2 S7 Cl1,dft,False,,43.0
+Sn1 S6 Cl2 Li10,Li10 Sn1 S6 Cl2,dft,False,,34.6
+Sn2 S6 Cl2 Li6,Li3 Sn1 S3 Cl1,dft,False,,0.0
+Sn3 S6 Cl2 Li2,Li2 Sn3 S6 Cl2,dft,False,,83.0
+Sn1 S5 Cl3 Li9,Li9 Sn1 S5 Cl3,dft,False,,29.1
+Sn2 S5 Cl3 Li5,Li5 Sn2 S5 Cl3,dft,False,,60.2
+Sn3 S5 Cl3 Li1,Li1 Sn3 S5 Cl3,dft,False,,80.1
+Sn1 S3 Cl9 Li11,Li11 Sn1 S3 Cl9,dft,False,,6.6
+Sn1 S4 Cl4 Li8,Li8 Sn1 S4 Cl4,dft,False,,0.0
+Li1,Li1,dft,True,,0.0
+Li2 S1,Li2 S1,dft,True,,0.0
+S1,S1,dft,True,,0.0
+S8 Cl16,S1 Cl2,dft,True,,0.0
+S8 Cl8,S1 Cl1,dft,True,,0.0
+Li8 S4,Li2 S1,dft,True,,175.1
+Li2 S8,Li1 S4,dft,True,,132.6
+Cl16,Cl2,dft,True,,0.0
+Li1 Cl1,Li1 Cl1,dft,True,,0.0
+Li2,Li1,dft,True,,6.0
+Li8 S4,Li2 S1,dft,True,,0.0
+Li8 S4,Li2 S1,dft,True,,0.0
+S8,S1,dft,True,,0.0
+S32,S1,dft,True,,0.0
+S32,S1,dft,True,,0.0
+Cl16 Sn4,Sn1 Cl4,dft,True,,0.0
+Cl16 Sn8,Sn1 Cl2,dft,True,,0.0
+Li13 Sn5,Li13 Sn5,dft,True,,0.0
+Li14 Sn4,Li7 Sn2,dft,True,,0.0
+Li14 Sn6,Li7 Sn3,dft,True,,0.6
+Li1 Sn3,Li1 Sn3,dft,True,,41.6
+Li2 Sn2 Cl6,Li1 Sn1 Cl3,dft,True,,0.0
+Li3 Sn1,Li3 Sn1,dft,True,,5.4
+Li3 Sn3,Li1 Sn1,dft,True,,0.0
+Li4 Sn10,Li2 Sn5,dft,True,,0.0
+Li5 Sn2,Li5 Sn2,dft,True,,3.0
+Li6 Sn6,Li1 Sn1,dft,True,,11.0
+Li8 Sn4 S12,Li2 Sn1 S3,dft,True,,0.4
+S12 Sn8,Sn2 S3,dft,True,,5.4
+S1 Sn1,Sn1 S1,dft,True,,36.5
+S2 Sn1,Sn1 S2,dft,True,,0.0
+S4 Sn2,Sn1 S2,dft,True,,0.1
+S4 Sn4,Sn1 S1,dft,True,,0.0
+Sn10 S8 Cl4,Sn5 S4 Cl2,dft,True,,79.8
+Sn2,Sn1,dft,True,,0.0
+Sn2 S2,Sn1 S1,dft,True,,49.8
+Sn4 Cl8,Sn1 Cl2,dft,True,,0.0
+Sn4 S8,Sn1 S2,dft,True,,9.8
+Li3 Sn6 S3,Li1 Sn2 S1,dft,True,,0.0
+Li16 Sn8 S24,Li2 Sn1 S3,dft,True,,1.0
+Li16 Sn4 S16,Li4 Sn1 S4,dft,True,,0.0
+Li1 Sn1 S2,Li1 Sn1 S2,dft,True,,95.0
+Cl11 Li3 Sn2,Li3 Sn2 Cl11,dft,True,,43.3
+Cl12 Li8 Sn1,Li8 Sn1 Cl12,dft,True,,51.5
+Cl13 Li5 Sn2,Li5 Sn2 Cl13,dft,True,,94.2
+Cl13 Li1 Sn3,Li1 Sn3 Cl13,dft,True,,143.1
+Cl14 Li10 Sn1,Li10 Sn1 Cl14,dft,True,,81.0
+Cl14 Li2 Sn3,Li2 Sn3 Cl14,dft,True,,129.3
+Cl5 Li1 Sn1,Li1 Sn1 Cl5,dft,True,,38.9
+Cl15 Li7 Sn2,Li7 Sn2 Cl15,dft,True,,73.7
+Cl6 Li2 Sn1,Li2 Sn1 Cl6,dft,True,,0.0
+Cl7 Li3 Sn1,Li3 Sn1 Cl7,dft,True,,32.0
+Cl8 Li4 Sn1,Li4 Sn1 Cl8,dft,True,,21.0
+Cl9 Li5 Sn1,Li5 Sn1 Cl9,dft,True,,35.7
+Cl9 Li1 Sn2,Li1 Sn2 Cl9,dft,True,,21.8
+Cl10 Li6 Sn1,Li6 Sn1 Cl10,dft,True,,22.3
+Cl11 Li7 Sn1,Li7 Sn1 Cl11,dft,True,,43.1
+Sn5 S8 Cl4,Sn5 S8 Cl4,dft,True,,91.8
+S11 Cl1 Li23,Li23 S11 Cl1,dft,True,,66.7
+S2 Cl10 Li14,Li7 S1 Cl5,dft,True,,24.4
+Sn2 S12 Li16,Li8 Sn1 S6,dft,True,,58.6
+S10 Cl2 Li22,Li11 S5 Cl1,dft,True,,65.3
+Sn5 S12 Li4,Li4 Sn5 S12,dft,True,,53.3
+Sn1 Cl12 Li8,Li8 Sn1 Cl12,dft,True,,23.8
+Sn2 Cl12 Li4,Li2 Sn1 Cl6,dft,True,,0.0
+S1 Cl11 Li13,Li13 S1 Cl11,dft,True,,4.2
+S5 Cl7 Li17,Li17 S5 Cl7,dft,True,,48.1
+S7 Cl5 Li19,Li19 S7 Cl5,dft,True,,50.3
+Sn1 S12 Li20,Li20 Sn1 S12,dft,True,,59.1
+Sn5 S4 Cl12,Sn5 S4 Cl12,dft,True,,42.6
+Sn3 S16 Li20,Li20 Sn3 S16,dft,True,,96.8
+S7 Cl9 Li23,Li23 S7 Cl9,dft,True,,65.8
+Sn7 S12 Cl4,Sn7 S12 Cl4,dft,True,,119.0
+Sn3 Cl16 Li4,Li4 Sn3 Cl16,dft,True,,50.5
+Sn7 S16 Li4,Li4 Sn7 S16,dft,True,,118.0
+Sn1 Cl16 Li12,Li12 Sn1 Cl16,dft,True,,12.9
+Sn5 S16 Li12,Li12 Sn5 S16,dft,True,,99.7
+S3 Cl13 Li19,Li19 S3 Cl13,dft,True,,39.4
+S5 Cl11 Li21,Li21 S5 Cl11,dft,True,,50.7
+Sn7 S10 Cl8,Sn7 S10 Cl8,dft,True,,103.0
+S1 Cl7 Li9,Li9 S1 Cl7,dft,True,,20.9
+Sn1 Cl8 Li4,Li4 Sn1 Cl8,dft,True,,16.6
+Sn3 S8 Li4,Li4 Sn3 S8,dft,True,,7.3
+S3 Cl5 Li11,Li11 S3 Cl5,dft,True,,30.4
+Sn1 S8 Li12,Li12 Sn1 S8,dft,True,,55.4
+S10 Cl6 Li26,Li13 S5 Cl3,dft,True,,62.3
+S7 Cl1 Li15,Li15 S7 Cl1,dft,True,,28.1
+Sn2 S8 Li8,Li4 Sn1 S4,dft,True,,8.9
+S2 Cl6 Li10,Li5 S1 Cl3,dft,True,,32.3
+Sn3 S4 Cl4,Sn3 S4 Cl4,dft,True,,59.8
+S6 Cl2 Li14,Li7 S3 Cl1,dft,True,,30.0
+Cl3 Li1 Sn1 S1,Li1 Sn1 S1 Cl3,nn,False,,98.5
+Cl2 Li4 Sn1 S3,Li4 Sn1 S3 Cl2,nn,False,,52.8
+Cl1 Li1 Sn3 S6,Li1 Sn3 S6 Cl1,nn,False,,96.5
+Cl4 Li2 Sn2 S3,Li2 Sn2 S3 Cl4,nn,False,,96.2
+Cl1 Li3 Sn2 S5,Li3 Sn2 S5 Cl1,nn,False,,56.3
+Cl4 Li4 Sn1 S2,Li4 Sn1 S2 Cl4,nn,False,,141.0
+Cl1 Li5 Sn1 S4,Li5 Sn1 S4 Cl1,nn,False,,25.4
+Cl3 Li3 Sn2 S4,Li3 Sn2 S4 Cl3,nn,False,,121.0
+Cl6 Li4 Sn1 S1,Li4 Sn1 S1 Cl6,nn,False,,106.0
+Cl3 Li5 Sn1 S3,Li5 Sn1 S3 Cl3,nn,False,,87.8
+Cl5 Li1 Sn3 S4,Li1 Sn3 S4 Cl5,nn,False,,53.8
+Cl2 Li2 Sn1 S2,Li2 Sn1 S2 Cl2,nn,False,,159.2
+Cl8 Li2 Sn2 S1,Li2 Sn2 S1 Cl8,nn,False,,106.3
+Cl2 Li4 Sn2 S5,Li4 Sn2 S5 Cl2,nn,False,,96.3
+Cl5 Li5 Sn1 S2,Li5 Sn1 S2 Cl5,nn,False,,152.7
+Cl2 Li6 Sn1 S4,Li6 Sn1 S4 Cl2,nn,False,,60.9
+Cl1 Li1 Sn4 S8,Li1 Sn4 S8 Cl1,nn,False,,90.0
+Cl4 Li2 Sn3 S5,Li2 Sn3 S5 Cl4,nn,False,,58.5
+Cl7 Li3 Sn2 S2,Li3 Sn2 S2 Cl7,nn,False,,106.7
+Cl1 Li5 Sn2 S6,Li5 Sn2 S6 Cl1,nn,False,,40.7
+Cl4 Li6 Sn1 S3,Li6 Sn1 S3 Cl4,nn,False,,110.9
+Cl1 Li1 Sn2 S4,Li1 Sn2 S4 Cl1,nn,False,,91.0
+Cl1 Li7 Sn1 S5,Li7 Sn1 S5 Cl1,nn,False,,34.9
+Cl9 Li1 Sn3 S2,Li1 Sn3 S2 Cl9,nn,False,,73.8
+Cl3 Li1 Sn4 S7,Li1 Sn4 S7 Cl3,nn,False,,95.0
+Cl6 Li2 Sn3 S4,Li2 Sn3 S4 Cl6,nn,False,,73.6
+Cl9 Li3 Sn2 S1,Li3 Sn2 S1 Cl9,nn,False,,123.3
+Cl6 Li6 Sn1 S2,Li6 Sn1 S2 Cl6,nn,False,,136.0
+Cl4 Li2 Sn1 S1,Li2 Sn1 S1 Cl4,nn,False,,104.1
+Cl5 Li3 Sn3 S5,Li3 Sn3 S5 Cl5,nn,False,,92.6
+Cl2 Li4 Sn3 S7,Li4 Sn3 S7 Cl2,nn,False,,60.9
+Cl5 Li5 Sn2 S4,Li5 Sn2 S4 Cl5,nn,False,,173.4
+Cl8 Li6 Sn1 S1,Li6 Sn1 S1 Cl8,nn,False,,70.6
+Cl2 Li8 Sn1 S5,Li8 Sn1 S5 Cl2,nn,False,,61.9
+Cl7 Li1 Sn4 S5,Li1 Sn4 S5 Cl7,nn,False,,77.2
+Cl1 Li1 Sn5 S10,Li1 Sn5 S10 Cl1,nn,False,,88.7
+Cl1 Li3 Sn1 S3,Li3 Sn1 S3 Cl1,nn,False,,66.9
+Cl10 Li4 Sn2 S1,Li4 Sn2 S1 Cl10,nn,False,,110.4
+Cl4 Li4 Sn3 S6,Li4 Sn3 S6 Cl4,nn,False,,106.0
+Cl7 Li5 Sn2 S3,Li5 Sn2 S3 Cl7,nn,False,,140.8
+Cl4 Li6 Sn2 S5,Li6 Sn2 S5 Cl4,nn,False,,110.2
+Cl1 Li9 Sn1 S6,Li9 Sn1 S6 Cl1,nn,False,,63.0
+Cl9 Li1 Sn4 S4,Li1 Sn4 S4 Cl9,nn,False,,81.1
+Cl12 Li2 Sn3 S1,Li2 Sn3 S1 Cl12,nn,False,,96.0
+Cl3 Li1 Sn2 S3,Li1 Sn2 S3 Cl3,nn,False,,56.3
+Cl9 Li5 Sn2 S2,Li5 Sn2 S2 Cl9,nn,False,,125.3
+Cl3 Li5 Sn3 S7,Li5 Sn3 S7 Cl3,nn,False,,82.5
+Cl9 Li7 Sn1 S1,Li7 Sn1 S1 Cl9,nn,False,,61.4
+Cl3 Li3 Sn1 S2,Li3 Sn1 S2 Cl3,nn,False,,177.2
+Cl5 Li7 Sn2 S5,Li7 Sn2 S5 Cl5,nn,False,,122.4
+Cl5 Li9 Sn1 S4,Li9 Sn1 S4 Cl5,nn,False,,119.2
+Cl7 Li1 Sn5 S7,Li1 Sn5 S7 Cl7,nn,False,,63.5
+Cl5 Li1 Sn2 S2,Li1 Sn2 S2 Cl5,nn,False,,87.7
+Cl4 Li2 Sn5 S9,Li2 Sn5 S9 Cl4,nn,False,,93.5
+Cl7 Li7 Sn2 S4,Li7 Sn2 S4 Cl7,nn,False,,165.3
+Cl5 Li3 Sn1 S1,Li3 Sn1 S1 Cl5,nn,False,,145.9
+Sn1 S11 Cl1 Li19,Li19 Sn1 S11 Cl1,nn,False,,62.7
+Sn5 S10 Cl2 Li2,Li2 Sn5 S10 Cl2,nn,False,,91.6
+Sn1 S9 Cl3 Li17,Li17 Sn1 S9 Cl3,nn,False,,93.2
+Sn2 S9 Cl3 Li13,Li13 Sn2 S9 Cl3,nn,False,,48.7
+Sn3 S9 Cl3 Li9,Li3 Sn1 S3 Cl1,nn,False,,66.9
+Sn4 S9 Cl3 Li5,Li5 Sn4 S9 Cl3,nn,False,,86.1
+Sn5 S9 Cl3 Li1,Li1 Sn5 S9 Cl3,nn,False,,82.6
+Sn1 S8 Cl4 Li16,Li16 Sn1 S8 Cl4,nn,False,,82.3
+Sn2 S8 Cl4 Li12,Li6 Sn1 S4 Cl2,nn,False,,60.9
+Sn3 S8 Cl4 Li8,Li8 Sn3 S8 Cl4,nn,False,,74.3
+Sn4 S8 Cl4 Li4,Li1 Sn1 S2 Cl1,nn,False,,95.0
+Sn2 S11 Cl1 Li15,Li15 Sn2 S11 Cl1,nn,False,,40.2
+Sn1 S7 Cl5 Li15,Li15 Sn1 S7 Cl5,nn,False,,98.2
+Sn2 S7 Cl5 Li11,Li11 Sn2 S7 Cl5,nn,False,,54.7
+Sn3 S7 Cl5 Li7,Li7 Sn3 S7 Cl5,nn,False,,106.5
+Sn4 S7 Cl5 Li3,Li3 Sn4 S7 Cl5,nn,False,,66.5
+Sn1 S6 Cl6 Li14,Li14 Sn1 S6 Cl6,nn,False,,110.0
+Sn2 S6 Cl6 Li10,Li5 Sn1 S3 Cl3,nn,False,,87.8
+Sn3 S6 Cl6 Li6,Li2 Sn1 S2 Cl2,nn,False,,159.2
+Sn4 S6 Cl6 Li2,Li1 Sn2 S3 Cl3,nn,False,,56.3
+Sn1 S5 Cl7 Li13,Li13 Sn1 S5 Cl7,nn,False,,119.5
+Sn2 S5 Cl7 Li9,Li9 Sn2 S5 Cl7,nn,False,,123.1
+Sn3 S11 Cl1 Li11,Li11 Sn3 S11 Cl1,nn,False,,10.5
+Sn3 S5 Cl7 Li5,Li5 Sn3 S5 Cl7,nn,False,,123.5
+Sn4 S5 Cl7 Li1,Li1 Sn4 S5 Cl7,nn,False,,77.2
+Sn1 S4 Cl8 Li12,Li12 Sn1 S4 Cl8,nn,False,,154.4
+Sn2 S4 Cl8 Li8,Li4 Sn1 S2 Cl4,nn,False,,141.0
+Sn3 S4 Cl8 Li4,Li4 Sn3 S4 Cl8,nn,False,,155.5
+Sn2 S3 Cl9 Li7,Li7 Sn2 S3 Cl9,nn,False,,143.1
+Sn3 S3 Cl9 Li3,Li1 Sn1 S1 Cl3,nn,False,,98.5
+Sn1 S2 Cl10 Li10,Li10 Sn1 S2 Cl10,nn,False,,135.8
+Sn2 S2 Cl10 Li6,Li3 Sn1 S1 Cl5,nn,False,,145.9
+Sn4 S11 Cl1 Li7,Li7 Sn4 S11 Cl1,nn,False,,22.9
+Sn3 S2 Cl10 Li2,Li2 Sn3 S2 Cl10,nn,False,,100.2
+Sn1 S1 Cl11 Li9,Li9 Sn1 S1 Cl11,nn,False,,48.1
+Sn2 S1 Cl11 Li5,Li5 Sn2 S1 Cl11,nn,False,,122.0
+Sn3 S1 Cl11 Li1,Li1 Sn3 S1 Cl11,nn,False,,117.5
+Sn5 S11 Cl1 Li3,Li3 Sn5 S11 Cl1,nn,False,,84.0
+Sn1 S10 Cl2 Li18,Li18 Sn1 S10 Cl2,nn,False,,83.3
+Sn2 S10 Cl2 Li14,Li7 Sn1 S5 Cl1,nn,False,,34.9
+Sn3 S10 Cl2 Li10,Li10 Sn3 S10 Cl2,nn,False,,39.4
+Sn4 S10 Cl2 Li6,Li3 Sn2 S5 Cl1,nn,False,,56.3
+Sn1 S15 Cl1 Li27,Li27 Sn1 S15 Cl1,nn,False,,47.8
+Sn3 S14 Cl2 Li18,Li18 Sn3 S14 Cl2,nn,False,,42.3
+Sn4 S14 Cl2 Li14,Li7 Sn2 S7 Cl1,nn,False,,24.3
+Sn5 S14 Cl2 Li10,Li10 Sn5 S14 Cl2,nn,False,,40.3
+Sn6 S14 Cl2 Li6,Li3 Sn3 S7 Cl1,nn,False,,45.6
+Sn7 S14 Cl2 Li2,Li2 Sn7 S14 Cl2,nn,False,,89.4
+Sn1 S13 Cl3 Li25,Li25 Sn1 S13 Cl3,nn,False,,105.5
+Sn2 S13 Cl3 Li21,Li21 Sn2 S13 Cl3,nn,False,,56.7
+Sn3 S13 Cl3 Li17,Li17 Sn3 S13 Cl3,nn,False,,20.8
+Sn4 S13 Cl3 Li13,Li13 Sn4 S13 Cl3,nn,False,,53.5
+Sn5 S13 Cl3 Li9,Li9 Sn5 S13 Cl3,nn,False,,63.6
+Sn2 S15 Cl1 Li23,Li23 Sn2 S15 Cl1,nn,False,,37.8
+Sn6 S13 Cl3 Li5,Li5 Sn6 S13 Cl3,nn,False,,71.3
+Sn7 S13 Cl3 Li1,Li1 Sn7 S13 Cl3,nn,False,,62.1
+Sn1 S12 Cl4 Li24,Li24 Sn1 S12 Cl4,nn,False,,108.7
+Sn2 S12 Cl4 Li20,Li10 Sn1 S6 Cl2,nn,False,,58.8
+Sn3 S12 Cl4 Li16,Li16 Sn3 S12 Cl4,nn,False,,42.2
+Sn4 S12 Cl4 Li12,Li3 Sn1 S3 Cl1,nn,False,,66.9
+Sn5 S12 Cl4 Li8,Li8 Sn5 S12 Cl4,nn,False,,58.8
+Sn6 S12 Cl4 Li4,Li2 Sn3 S6 Cl2,nn,False,,108.8
+Sn1 S11 Cl5 Li23,Li23 Sn1 S11 Cl5,nn,False,,93.4
+Sn2 S11 Cl5 Li19,Li19 Sn2 S11 Cl5,nn,False,,71.6
+Sn3 S15 Cl1 Li19,Li19 Sn3 S15 Cl1,nn,False,,30.9
+Sn3 S11 Cl5 Li15,Li15 Sn3 S11 Cl5,nn,False,,44.6
+Sn4 S11 Cl5 Li11,Li11 Sn4 S11 Cl5,nn,False,,70.7
+Sn5 S11 Cl5 Li7,Li7 Sn5 S11 Cl5,nn,False,,78.5
+Sn6 S11 Cl5 Li3,Li3 Sn6 S11 Cl5,nn,False,,96.9
+Sn1 S10 Cl6 Li22,Li22 Sn1 S10 Cl6,nn,False,,105.7
+Sn2 S10 Cl6 Li18,Li9 Sn1 S5 Cl3,nn,False,,69.2
+Sn3 S10 Cl6 Li14,Li14 Sn3 S10 Cl6,nn,False,,32.0
+Sn4 S10 Cl6 Li10,Li5 Sn2 S5 Cl3,nn,False,,93.1
+Sn5 S10 Cl6 Li6,Li6 Sn5 S10 Cl6,nn,False,,124.5
+Sn6 S10 Cl6 Li2,Li1 Sn3 S5 Cl3,nn,False,,96.4
+Sn4 S15 Cl1 Li15,Li15 Sn4 S15 Cl1,nn,False,,16.2
+Sn1 S9 Cl7 Li21,Li21 Sn1 S9 Cl7,nn,False,,89.4
+Sn2 S9 Cl7 Li17,Li17 Sn2 S9 Cl7,nn,False,,87.7
+Sn3 S9 Cl7 Li13,Li13 Sn3 S9 Cl7,nn,False,,59.9
+Sn4 S9 Cl7 Li9,Li9 Sn4 S9 Cl7,nn,False,,120.0
+Sn5 S9 Cl7 Li5,Li5 Sn5 S9 Cl7,nn,False,,89.3
+Sn6 S9 Cl7 Li1,Li1 Sn6 S9 Cl7,nn,False,,91.8
+Sn1 S8 Cl8 Li20,Li20 Sn1 S8 Cl8,nn,False,,109.0
+Sn2 S8 Cl8 Li16,Li8 Sn1 S4 Cl4,nn,False,,113.9
+Sn3 S8 Cl8 Li12,Li12 Sn3 S8 Cl8,nn,False,,104.3
+Sn4 S8 Cl8 Li8,Li2 Sn1 S2 Cl2,nn,False,,159.2
+Sn5 S15 Cl1 Li11,Li11 Sn5 S15 Cl1,nn,False,,30.6
+Sn5 S8 Cl8 Li4,Li4 Sn5 S8 Cl8,nn,False,,59.6
+Sn1 S7 Cl9 Li19,Li19 Sn1 S7 Cl9,nn,False,,118.9
+Sn2 S7 Cl9 Li15,Li15 Sn2 S7 Cl9,nn,False,,122.3
+Sn3 S7 Cl9 Li11,Li11 Sn3 S7 Cl9,nn,False,,149.1
+Sn4 S7 Cl9 Li7,Li7 Sn4 S7 Cl9,nn,False,,141.8
+Sn5 S7 Cl9 Li3,Li3 Sn5 S7 Cl9,nn,False,,53.7
+Sn1 S6 Cl10 Li18,Li18 Sn1 S6 Cl10,nn,False,,130.1
+Sn2 S6 Cl10 Li14,Li7 Sn1 S3 Cl5,nn,False,,132.9
+Sn3 S6 Cl10 Li10,Li10 Sn3 S6 Cl10,nn,False,,168.2
+Sn4 S6 Cl10 Li6,Li3 Sn2 S3 Cl5,nn,False,,143.3
+Sn6 S15 Cl1 Li7,Li7 Sn6 S15 Cl1,nn,False,,10.3
+Sn5 S6 Cl10 Li2,Li2 Sn5 S6 Cl10,nn,False,,84.8
+Sn1 S5 Cl11 Li17,Li17 Sn1 S5 Cl11,nn,False,,135.8
+Sn2 S5 Cl11 Li13,Li13 Sn2 S5 Cl11,nn,False,,129.5
+Sn3 S5 Cl11 Li9,Li9 Sn3 S5 Cl11,nn,False,,144.1
+Sn4 S5 Cl11 Li5,Li5 Sn4 S5 Cl11,nn,False,,148.7
+Sn5 S5 Cl11 Li1,Li1 Sn5 S5 Cl11,nn,False,,92.5
+Sn1 S4 Cl12 Li16,Li16 Sn1 S4 Cl12,nn,False,,122.9
+Sn2 S4 Cl12 Li12,Li6 Sn1 S2 Cl6,nn,False,,136.0
+Sn3 S4 Cl12 Li8,Li8 Sn3 S4 Cl12,nn,False,,134.0
+Sn4 S4 Cl12 Li4,Li1 Sn1 S1 Cl3,nn,False,,98.5
+Sn7 S15 Cl1 Li3,Li3 Sn7 S15 Cl1,nn,False,,55.9
+Sn1 S3 Cl13 Li15,Li15 Sn1 S3 Cl13,nn,False,,100.9
+Sn2 S3 Cl13 Li11,Li11 Sn2 S3 Cl13,nn,False,,129.3
+Sn3 S3 Cl13 Li7,Li7 Sn3 S3 Cl13,nn,False,,122.4
+Sn4 S3 Cl13 Li3,Li3 Sn4 S3 Cl13,nn,False,,92.6
+Sn1 S2 Cl14 Li14,Li14 Sn1 S2 Cl14,nn,False,,132.5
+Sn2 S2 Cl14 Li10,Li5 Sn1 S1 Cl7,nn,False,,70.9
+Sn3 S2 Cl14 Li6,Li6 Sn3 S2 Cl14,nn,False,,94.3
+Sn4 S2 Cl14 Li2,Li1 Sn2 S1 Cl7,nn,False,,81.9
+Sn1 S1 Cl15 Li13,Li13 Sn1 S1 Cl15,nn,False,,55.2
+Sn2 S1 Cl15 Li9,Li9 Sn2 S1 Cl15,nn,False,,87.1
+Sn1 S14 Cl2 Li26,Li26 Sn1 S14 Cl2,nn,False,,72.4
+Sn3 S1 Cl15 Li5,Li5 Sn3 S1 Cl15,nn,False,,115.1
+Sn4 S1 Cl15 Li1,Li1 Sn4 S1 Cl15,nn,False,,135.3
+Sn2 S14 Cl2 Li22,Li11 Sn1 S7 Cl1,nn,False,,56.2
+Sn2 S4 Cl4 Li4,Li2 Sn1 S2 Cl2,nn,False,,159.2
+Sn1 S3 Cl5 Li7,Li7 Sn1 S3 Cl5,nn,False,,132.9
+Sn2 S3 Cl5 Li3,Li3 Sn2 S3 Cl5,nn,False,,143.3
+Sn1 S2 Cl6 Li6,Li6 Sn1 S2 Cl6,nn,False,,136.0
+Sn2 S2 Cl6 Li2,Li1 Sn1 S1 Cl3,nn,False,,98.5
+Sn1 S1 Cl7 Li5,Li5 Sn1 S1 Cl7,nn,False,,70.9
+Sn2 S1 Cl7 Li1,Li1 Sn2 S1 Cl7,nn,False,,81.9
+Sn2 S7 Cl1 Li7,Li7 Sn2 S7 Cl1,nn,False,,24.3
+Sn1 S6 Cl2 Li10,Li10 Sn1 S6 Cl2,nn,False,,58.8
+Sn2 S6 Cl2 Li6,Li3 Sn1 S3 Cl1,nn,False,,66.9
+Sn3 S6 Cl2 Li2,Li2 Sn3 S6 Cl2,nn,False,,108.8
+Sn1 S5 Cl3 Li9,Li9 Sn1 S5 Cl3,nn,False,,69.2
+Sn2 S5 Cl3 Li5,Li5 Sn2 S5 Cl3,nn,False,,93.1
+Sn3 S5 Cl3 Li1,Li1 Sn3 S5 Cl3,nn,False,,96.4
+Sn1 S3 Cl9 Li11,Li11 Sn1 S3 Cl9,nn,False,,132.0
+Sn1 S4 Cl4 Li8,Li8 Sn1 S4 Cl4,nn,False,,113.9
+Li1,Li1,nn,True,,0.0
+Li2 S1,Li2 S1,nn,True,,0.1
+S1,S1,nn,True,,0.0
+S8 Cl16,S1 Cl2,nn,True,,0.0
+S8 Cl8,S1 Cl1,nn,True,,0.0
+Li8 S4,Li2 S1,nn,True,,175.2
+Li2 S8,Li1 S4,nn,True,,132.7
+Cl16,Cl2,nn,True,,0.0
+Li1 Cl1,Li1 Cl1,nn,True,,0.0
+Li2,Li1,nn,True,,6.0
+Li8 S4,Li2 S1,nn,True,,0.0
+Li8 S4,Li2 S1,nn,True,,0.0
+S8,S1,nn,True,,0.3
+S32,S1,nn,True,,0.3
+S32,S1,nn,True,,0.3
+Cl16 Sn4,Sn1 Cl4,nn,True,,0.0
+Cl16 Sn8,Sn1 Cl2,nn,True,,0.0
+Li13 Sn5,Li13 Sn5,nn,True,,0.0
+Li14 Sn4,Li7 Sn2,nn,True,,0.0
+Li14 Sn6,Li7 Sn3,nn,True,,0.6
+Li1 Sn3,Li1 Sn3,nn,True,,41.6
+Li2 Sn2 Cl6,Li1 Sn1 Cl3,nn,True,,0.1
+Li3 Sn1,Li3 Sn1,nn,True,,5.3
+Li3 Sn3,Li1 Sn1,nn,True,,0.0
+Li4 Sn10,Li2 Sn5,nn,True,,0.0
+Li5 Sn2,Li5 Sn2,nn,True,,3.1
+Li6 Sn6,Li1 Sn1,nn,True,,11.1
+Li8 Sn4 S12,Li2 Sn1 S3,nn,True,,0.4
+S12 Sn8,Sn2 S3,nn,True,,5.5
+S1 Sn1,Sn1 S1,nn,True,,36.4
+S2 Sn1,Sn1 S2,nn,True,,0.0
+S4 Sn2,Sn1 S2,nn,True,,0.2
+S4 Sn4,Sn1 S1,nn,True,,0.0
+Sn10 S8 Cl4,Sn5 S4 Cl2,nn,True,,79.8
+Sn2,Sn1,nn,True,,0.0
+Sn2 S2,Sn1 S1,nn,True,,49.9
+Sn4 Cl8,Sn1 Cl2,nn,True,,-0.0
+Sn4 S8,Sn1 S2,nn,True,,10.0
+Li3 Sn6 S3,Li1 Sn2 S1,nn,True,,0.0
+Li16 Sn8 S24,Li2 Sn1 S3,nn,True,,1.0
+Li16 Sn4 S16,Li4 Sn1 S4,nn,True,,0.0
+Li1 Sn1 S2,Li1 Sn1 S2,nn,True,,95.1
+Cl11 Li3 Sn2,Li3 Sn2 Cl11,nn,True,,43.3
+Cl12 Li8 Sn1,Li8 Sn1 Cl12,nn,True,,51.5
+Cl13 Li5 Sn2,Li5 Sn2 Cl13,nn,True,,94.2
+Cl13 Li1 Sn3,Li1 Sn3 Cl13,nn,True,,143.1
+Cl14 Li10 Sn1,Li10 Sn1 Cl14,nn,True,,81.1
+Cl14 Li2 Sn3,Li2 Sn3 Cl14,nn,True,,129.3
+Cl5 Li1 Sn1,Li1 Sn1 Cl5,nn,True,,38.9
+Cl15 Li7 Sn2,Li7 Sn2 Cl15,nn,True,,73.7
+Cl6 Li2 Sn1,Li2 Sn1 Cl6,nn,True,,0.0
+Cl7 Li3 Sn1,Li3 Sn1 Cl7,nn,True,,32.1
+Cl8 Li4 Sn1,Li4 Sn1 Cl8,nn,True,,21.0
+Cl9 Li5 Sn1,Li5 Sn1 Cl9,nn,True,,35.7
+Cl9 Li1 Sn2,Li1 Sn2 Cl9,nn,True,,21.8
+Cl10 Li6 Sn1,Li6 Sn1 Cl10,nn,True,,22.4
+Cl11 Li7 Sn1,Li7 Sn1 Cl11,nn,True,,43.1
+Sn5 S8 Cl4,Sn5 S8 Cl4,nn,True,,91.9
+S11 Cl1 Li23,Li23 S11 Cl1,nn,True,,66.7
+S2 Cl10 Li14,Li7 S1 Cl5,nn,True,,24.5
+Sn2 S12 Li16,Li8 Sn1 S6,nn,True,,58.6
+S10 Cl2 Li22,Li11 S5 Cl1,nn,True,,65.3
+Sn5 S12 Li4,Li4 Sn5 S12,nn,True,,53.4
+Sn1 Cl12 Li8,Li8 Sn1 Cl12,nn,True,,23.9
+Sn2 Cl12 Li4,Li2 Sn1 Cl6,nn,True,,0.0
+S1 Cl11 Li13,Li13 S1 Cl11,nn,True,,4.3
+S5 Cl7 Li17,Li17 S5 Cl7,nn,True,,48.2
+S7 Cl5 Li19,Li19 S7 Cl5,nn,True,,50.3
+Sn1 S12 Li20,Li20 Sn1 S12,nn,True,,59.0
+Sn5 S4 Cl12,Sn5 S4 Cl12,nn,True,,42.7
+Sn3 S16 Li20,Li20 Sn3 S16,nn,True,,96.8
+S7 Cl9 Li23,Li23 S7 Cl9,nn,True,,65.9
+Sn7 S12 Cl4,Sn7 S12 Cl4,nn,True,,119.1
+Sn3 Cl16 Li4,Li4 Sn3 Cl16,nn,True,,50.5
+Sn7 S16 Li4,Li4 Sn7 S16,nn,True,,118.1
+Sn1 Cl16 Li12,Li12 Sn1 Cl16,nn,True,,13.0
+Sn5 S16 Li12,Li12 Sn5 S16,nn,True,,99.7
+S3 Cl13 Li19,Li19 S3 Cl13,nn,True,,39.5
+S5 Cl11 Li21,Li21 S5 Cl11,nn,True,,50.8
+Sn7 S10 Cl8,Sn7 S10 Cl8,nn,True,,103.1
+S1 Cl7 Li9,Li9 S1 Cl7,nn,True,,21.0
+Sn1 Cl8 Li4,Li4 Sn1 Cl8,nn,True,,16.6
+Sn3 S8 Li4,Li4 Sn3 S8,nn,True,,7.4
+S3 Cl5 Li11,Li11 S3 Cl5,nn,True,,30.4
+Sn1 S8 Li12,Li12 Sn1 S8,nn,True,,55.5
+S10 Cl6 Li26,Li13 S5 Cl3,nn,True,,62.3
+S7 Cl1 Li15,Li15 S7 Cl1,nn,True,,28.2
+Sn2 S8 Li8,Li4 Sn1 S4,nn,True,,8.9
+S2 Cl6 Li10,Li5 S1 Cl3,nn,True,,32.4
+Sn3 S4 Cl4,Sn3 S4 Cl4,nn,True,,59.9
+S6 Cl2 Li14,Li7 S3 Cl1,nn,True,,30.1

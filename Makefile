@@ -1,5 +1,5 @@
 .DEFAULT_GOAL := help
-.PHONY: help setup github lint format typecheck test test-integration configs lint-imports check
+.PHONY: help setup github lint format typecheck test test-integration configs data lint-imports check
 
 help:  ## show targets
 	@grep -E '^[a-z-]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  %-18s %s\n", $$1, $$2}'
@@ -33,6 +33,9 @@ test-integration:  ## end-to-end tests behind the integration marker
 
 configs:  ## regenerate configs/ from the schemas
 	uv run phasebo-configs
+
+data:  ## rebuild data/processed/ from data/raw/
+	uv run phasebo-data
 
 lint-imports:  ## import-linter layer contracts
 	uv run lint-imports

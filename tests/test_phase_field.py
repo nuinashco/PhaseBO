@@ -39,7 +39,8 @@ def test_phase_field_init(dummy_data):
 def test_phase_fieldbo_init(dummy_data):
     logger = logging.getLogger('test_logger')
     compositions, references, ions, exceptions = dummy_data
-    pfbo = PhaseFieldBO(compositions, references, ions, exceptions=exceptions, logger=logger)
+    pfbo = PhaseFieldBO(compositions, references, ions, next_formulas=[c[0] for c in compositions],
+                        exceptions=exceptions, logger=logger)
     assert isinstance(pfbo, PhaseFieldBO)
 
 def test_get_candidates(dummy_data):
