@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 import torch
 from pymatgen.analysis.phase_diagram import PhaseDiagram
-from typing import Optional, Tuple, List
+from typing import Dict, Optional, Tuple, List
 
 with warnings.catch_warnings():
     # raised by linear_operator (a gpytorch dependency) on Python >= 3.14
@@ -46,7 +46,7 @@ class PhaseFieldBO(PhaseField):
                  exclude_zeros: bool = False,
                  disect: int = 3,
                  Ntot: int = 24,
-                 limits: Optional[List[float]] = None,
+                 limits: Optional[Dict[str, Tuple[int, int]]] = None,
                  max_iter: int = 10,
                  batch: int = 4,
                  acquisition: str = 'qlogei',

@@ -1,18 +1,32 @@
+# Python
 __pycache__/
-phasebo.egg-info/
-
-sandbo/
-test_clean/
-test_zeng/
-logfile*
-TODO
-_input.py
-LiSiSF_xtalopt.csv
-lisisf_input.py
+*.py[cod]
 .venv/
-.pytest_cache/
+build/
 dist/
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Secrets and machine-specific settings (see .env.example)
+.env
+
+# Notebooks
+.ipynb_checkpoints/
 __marimo__/
+
+# Editors, OS and agents
+.DS_Store
+.idea/
+.vscode/
 .claude/worktrees/
+
+# Hydra
 outputs/
 multirun/
+
+# Run outputs; data/ is tracked (CONTRIBUTING, Deviations)
+runs/
+wandb/

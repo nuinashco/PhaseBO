@@ -1,0 +1,9 @@
+# Li-Sn-S-Cl at a 700 eV cutoff, the phase field of J. Chem. Phys. 160, 054110 (2024).
+# Paths are relative to the repository root.
+inputfile: data/LiSnSCl_700eV.csv
+reference_index: 195
+ions: {Li: 1, Sn: 4, S: -2, Cl: -1}
+max_atoms: 16
+limits: {Li: [0, 10], Sn: [0, 5], S: [0, 10], Cl: [0, 5]}
+compositionfile: null  # e.g. an edited phasebo-generate output; null: generated
+excludefile: null

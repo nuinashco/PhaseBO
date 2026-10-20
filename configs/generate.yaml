@@ -1,0 +1,7 @@
+# Entry config of `phasebo-generate`: values set below change every run of this repo.
+# Every setting, with its default and description: defaults/generate.yaml (generated).
+defaults:
+  - defaults/generate@_here_
+  - system: LiSnSCl
+  - hydra: default
+  - _self_
