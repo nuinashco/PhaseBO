@@ -28,8 +28,9 @@ phasebo-generate    # candidate compositions of the phase field
 - `src/phasebo/phase_field.py`, `phase_field_bo.py`, `list_compositions.py`: pre-template code, excluded from ruff,
   pyright and pre-commit until it is rewritten (CONTRIBUTING, Deviations). Don't extend it; new code goes into
   families.
-- `scripts/`: one-off runnables (experiments, data prep, analysis), never imported. A script that is reused or
-  needs a test becomes a `cli/` command.
+- `scripts/`: exploratory or one-time runnables, never imported; they may import the package and compose
+  `configs/`. Anything `make`, CI or a test depends on is a `cli/` command; a script that is rerun or shared becomes
+  one.
 - `src/phasebo/config.py`: entry config schemas; `paths.py`: repository paths.
 - `src/nuikit/`: shared machinery (config base, YAML generation, registry, errors, logging, runs, seeding), copied
   from the conventions template. Change it there and `copier update`; never edit it here.

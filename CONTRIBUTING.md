@@ -87,7 +87,7 @@ tests/                    mirrors src/; tests/nuikit/ comes with the template
   phasebo/                tests of the new modules
   test_phase_field*.py    pre-template tests, with conftest.py's synthetic phase fields
   integration/            end to end, `-m integration`
-scripts/                  one-off runnables, never imported; reused or tested ones become cli/ commands
+scripts/                  exploratory or one-time runnables, never imported; rerun ones become cli/ commands
 notebooks/                exploration only, outputs stripped; reference/ for third-party notebooks
 runs/                     gitignored
 ```
