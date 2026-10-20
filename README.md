@@ -17,7 +17,7 @@ for limiting the candidates to the particular compositions only in a subsequent 
 
 ## Requirements
 
-Python 3.11–3.13 and [uv](https://docs.astral.sh/uv/).
+Python 3.14+ and [uv](https://docs.astral.sh/uv/).
 
 ## Dependencies:
 numpy;
@@ -56,7 +56,7 @@ To sweep over values, with one directory per run under `multirun/`:
 
 `uv run phasebo -m mode=path bo.acquisition=qlogei,ts seed=0,1,2`
 
-or, as a preset over 10 seeds, `uv run phasebo experiment=compare_acquisitions`.
+or, as a preset over 10 seeds, `uv run phasebo -m experiment=compare_acquisitions`.
 Each 'path' run also writes `bo_path.csv`, and after a sweep `summary.csv` in the sweep directory
 lists, for every 'path' run, the swept values, the number of stable compositions found
 and the best and mean energy of the BO evaluations.

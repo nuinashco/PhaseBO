@@ -4,7 +4,6 @@ defaults:
   - override /mode: path
 
 hydra:
-  mode: MULTIRUN
   sweeper:
     params:
       bo.acquisition: qlogei,ts

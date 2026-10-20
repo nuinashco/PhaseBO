@@ -121,7 +121,8 @@ def test_multirun_seeds_each_job(tmp_path, config_dir):
 
 
 def test_experiment_summarises_each_job(tmp_path, config_dir):
-    phasebo(tmp_path, config_dir, 'experiment=compare_acquisitions', 'mode.n_seeds=2', 'mode.max_iter=2', 'seed=0,1')
+    phasebo(tmp_path, config_dir, 'experiment=compare_acquisitions', 'mode.n_seeds=2', 'mode.max_iter=2', 'seed=0,1',
+            multirun=True)
     (summary,) = tmp_path.glob('multirun/synthetic/*/*/summary.csv')
     df = pd.read_csv(summary)
     assert sorted(zip(df['bo.acquisition'], df['seed'])) == [('qlogei', 0), ('qlogei', 1), ('ts', 0), ('ts', 1)]
