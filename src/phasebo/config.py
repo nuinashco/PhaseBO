@@ -16,15 +16,6 @@ from nuikit.configgen import ConfigFile
 from nuikit.logging import LogFormat, LogLevel
 
 
-class DataConfig(Schema):
-    """Computed compositions of a phase field."""
-
-    file: Path = Field(
-        description="CSV of formulas and total energies (eV per cell), references last"
-    )
-    reference_index: NonNegativeInt = Field(description="first reference row")
-
-
 class ElementConfig(Schema):
     """One element of a phase field."""
 
@@ -56,9 +47,9 @@ class CandidatesConfig(Schema):
 
 
 class SystemConfig(Schema):
-    """Phase field: its computed compositions, elements and candidate space."""
+    """Phase field: its processed table, elements and candidate space."""
 
-    data: DataConfig
+    processed: Path = Field(description="written by a script in scripts/")
     elements: dict[str, ElementConfig]
     candidates: CandidatesConfig
 
@@ -129,8 +120,15 @@ class GenerateConfig(RunConfig):
     system: SystemConfig
 
 
+class DataConfig(Schema):
+    """Entry config composed once per phase field (configs/data.yaml)."""
+
+    system: SystemConfig
+
+
 GENERATED = (
     ConfigFile("defaults/suggest.yaml", SuggestConfig, groups=("system",)),
     ConfigFile("defaults/benchmark.yaml", BenchmarkConfig, groups=("system",)),
     ConfigFile("defaults/generate.yaml", GenerateConfig, groups=("system",)),
+    ConfigFile("defaults/data.yaml", DataConfig, groups=("system",)),
 )

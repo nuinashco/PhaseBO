@@ -1,0 +1,5 @@
+# LiSnSCl with a cheap second source: NNmodel's energies above the hull next to DFT's.
+defaults:
+  - LiSnSCl
+  - _self_
+processed: data/processed/LiSnSCl_multifidel.csv  # from scripts/process_LiSnSCl_multifidel.py

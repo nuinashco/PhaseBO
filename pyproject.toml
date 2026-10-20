@@ -21,6 +21,7 @@ dependencies = [
     "numpy>=2.5",
     "omegaconf>=2.4",
     "pandas>=3.0",
+    "pandera>=0.34.1",
     "pydantic>=2.14",
     "pymatgen>=2026.9.24",
     "rootutils>=1.0.7",
@@ -34,6 +35,7 @@ dependencies = [
 phasebo-suggest = "phasebo.cli.suggest:main"
 phasebo-benchmark = "phasebo.cli.benchmark:main"
 phasebo-generate = "phasebo.cli.generate:main"
+phasebo-data = "phasebo.cli.data:main"
 phasebo-configs = "phasebo.cli.configs:main"
 
 [dependency-groups]
@@ -53,7 +55,7 @@ notebooks = [
 
 [tool.uv.sources]
 # The conventions repo at the template's commit; `copier update` moves the pin.
-conventions-hooks = { git = "https://github.com/nuinashco/conventions.git", rev = "eb3998247287e7a808f7ae13950657c64a1ff450" }
+conventions-hooks = { git = "https://github.com/nuinashco/conventions.git", rev = "d5e5fbbf748eee354c36b1f7dbf331c395e6a021" }
 # The default Linux torch wheels pull in the CUDA toolkit.
 torch = [{ index = "pytorch-cpu", marker = "sys_platform == 'linux'" }]
 
@@ -74,9 +76,8 @@ line-length = 88
 src = ["src", "tests"]
 extend-exclude = [
     "CONVENTIONS.md",  # Vendored guide: fix it upstream, not here.
-    # Pre-template code, rewritten by the refactor/data and feat/bo-families branches
-    # (CONTRIBUTING, Deviations).
-    "src/phasebo/list_compositions.py",
+    # Pre-template code, rewritten by the feat/bo-families branch (CONTRIBUTING,
+    # Deviations).
     "src/phasebo/phase_field.py",
     "src/phasebo/phase_field_bo.py",
     "tests/conftest.py",
@@ -105,6 +106,10 @@ ignore = [
 [tool.ruff.lint.pydocstyle]
 convention = "google"
 
+[tool.ruff.lint.pep8-naming]
+# pandera turns its check decorators into classmethods.
+classmethod-decorators = ["pandera.pandas.dataframe_check", "pandera.pandas.check"]
+
 [tool.ruff.lint.mccabe]
 max-complexity = 10
 
@@ -125,7 +130,6 @@ ban-relative-imports = "all"
 include = ["src", "tests", "scripts"]
 exclude = [
     # Pre-template code (CONTRIBUTING, Deviations).
-    "src/phasebo/list_compositions.py",
     "src/phasebo/phase_field.py",
     "src/phasebo/phase_field_bo.py",
     "tests/conftest.py",
@@ -149,7 +153,14 @@ root_packages = ["phasebo", "nuikit"]
 name = "Layers: cli on top, paths at the bottom, every module placed"
 type = "layers"
 containers = ["phasebo"]
-layers = ["cli", "config", "phase_field_bo", "phase_field | list_compositions", "paths"]
+layers = ["cli", "config", "phase_field_bo | data | candidates", "phase_field", "paths"]
+exhaustive = true
+
+[[tool.importlinter.contracts]]
+name = "Data: the store reads and writes files, the pure table never imports it"
+type = "layers"
+containers = ["phasebo.data"]
+layers = ["store", "table"]
 exhaustive = true
 
 [[tool.importlinter.contracts]]

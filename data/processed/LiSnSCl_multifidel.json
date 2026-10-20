@@ -1,0 +1,17 @@
+{
+  "script": {
+    "path": "scripts/process_LiSnSCl_multifidel.py",
+    "sha256": "be5b628b58822b7a5634e22b814bc95dcff02dbd05cc24ce6218b853afdd4d01"
+  },
+  "table_sha256": "45809d54837e7e9c45e0141b2d80098744c578af8fb96e2334c22dd6449b0f49",
+  "raw": [
+    {
+      "path": "data/raw/LiSnSCl_multifidel.csv",
+      "sha256": "472c63eb418d8d616386919d5ec724d37dad723786d22ceac07412a4da1ac341"
+    },
+    {
+      "path": "data/raw/LiSnSCl_700eV.csv",
+      "sha256": "465d83e8b964beaca3c3b11248c614e21a44435b84c6b2a7e06b4fad480b1303"
+    }
+  ]
+}

@@ -12,8 +12,15 @@ All notable changes to this project will be documented in this file.
   lists every setting with its default.
 - Each run writes `runs/<run_name>/`: the resolved configuration, `run.json` (git commit, command line, start time),
   results and plots. `tracker=wandb` mirrors a run to Weights & Biases.
-- A phase field is a file in `configs/system/` with three blocks: its data, its elements (charge and an inclusive
-  range of atoms per cell) and its candidate space.
+- A phase field is a file in `configs/system/`: its processed table, its elements (charge and an inclusive range
+  of atoms per cell) and its candidate space.
+- One script per raw source (`scripts/process_<source>.py`) turns it into a committed, validated table in
+  `data/processed/`, one row per composition and fidelity, rows with elements outside the phase field dropped, with
+  a sidecar of the sha256 of the table, its script and its raw files. `phasebo-data` (`make data`) checks that no
+  table was edited and no script or raw file changed since; commands refuse such a table.
+- The `LiSnSCl_multifidel` phase field: energies above the hull from DFT and from a neural network for the same
+  compositions (its 46 oxygen phases are dropped). BO uses it once multi-fidelity BO exists.
+- Each run writes `data.json`: the processed table, its script and its raw files, by sha256.
 - `phasebo-suggest` writes the next batch to `next.csv` and prints it.
 - `bo_path.csv`: the composition and energy of each step of a benchmark run.
 - Validation with pydantic: unknown keys, invalid values and missing input files stop a run before it starts.
@@ -28,6 +35,7 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 - Bayesian optimisation uses BoTorch instead of GPyOpt, which is no longer maintained.
+- The published datasets moved, unchanged, to `data/raw/`.
 - Packaging with uv (`make setup`): dependencies pinned in `uv.lock`, sources in `src/`, Python 3.14 or newer.
 - Data paths start from the repository root (marked by `.project-root`), so the commands run from any directory.
 - Plots are saved to the run directory; `show_plots=true` also opens them.
@@ -40,6 +48,9 @@ All notable changes to this project will be documented in this file.
 - `example/`, the outputs of the old default run.
 
 ### Fixed
+- `phasebo-generate` writes a header, so reading its output back no longer drops the first candidate.
+- Generated candidates skip the points already computed or excluded; `posterior.csv` lists only them (22 of the
+  78 rows it listed for LiSnSCl).
 - Reference compositions were treated as search candidates since July 2025: their names in the data file start with
   spaces and no longer matched. Path mode spent about half of its evaluations on them and counted them as stable
   compositions found; suggest mode trained on them.

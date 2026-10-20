@@ -22,7 +22,6 @@ with warnings.catch_warnings():
     from gpytorch.utils.warnings import NumericalWarning
 
 from phasebo.phase_field import PhaseField
-from phasebo.list_compositions import generate
 
 
 @contextmanager
@@ -113,23 +112,15 @@ class PhaseFieldBO(PhaseField):
             Y_init = self.candidates_energies[:, None]
 
             if not self.next_formulas:
-                self.logger.info("Generating candidate compositions ...")
-                self.next_formulas = generate(self.ions, self.formulas, self.exceptions, self.Ntot, self.limits)
+                raise ValueError('suggest mode needs next_formulas, the candidates to rank.')
 
             self.domain, self.next_list = self.get_dom_phase()
 
-        elif self.mode == 'generate':
-            self.logger.info("Generating candidate compositions, writing to candidates_list.csv")
-            self.next_formulas = generate(self.ions, self.formulas, self.exceptions, self.Ntot, self.limits)
-            with open(os.path.join(self.output_dir, "candidates_list.csv"), 'a') as cl:
-                for f in self.next_formulas:
-                    print(f, file=cl)
         else:
-            raise ValueError(f'Unsupported mode: "{self.mode}". Supported: "path", "suggest", "generate".')
+            raise ValueError(f'Unsupported mode: "{self.mode}". Supported: "path", "suggest".')
 
-        if self.mode != 'generate':
-            self.X = np.asarray(X_init, dtype=float)
-            self.Y = np.asarray(Y_init, dtype=float)
+        self.X = np.asarray(X_init, dtype=float)
+        self.Y = np.asarray(Y_init, dtype=float)
 
     @staticmethod
     def unevaluated(choices: np.ndarray, X: np.ndarray) -> np.ndarray:
