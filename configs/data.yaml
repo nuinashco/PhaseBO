@@ -1,4 +1,4 @@
-# Entry config `phasebo-data` composes once per file in system/.
+# Composed once per file in system/ by `phasebo-data` and by the scripts in scripts/.
 # Every setting with its default: defaults/data.yaml (generated).
 defaults:
   - defaults/data@_here_

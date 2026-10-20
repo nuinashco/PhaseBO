@@ -9,7 +9,7 @@ from omegaconf import OmegaConf
 
 from nuikit import configgen, registry
 
-from phasebo import paths
+from phasebo import paths, processed
 from phasebo.cli import data
 from phasebo.config import GENERATED
 
@@ -45,7 +45,10 @@ def test_import_layers_hold():
     assert lint_imports() == 0
 
 
-def test_processed_data_is_fresh():
-    stale = [str(s.processed) for s, _, _ in data.find_stale(data.compose_systems())]
+def test_processed_tables_match_their_raw_files():
+    found = {
+        str(system.processed): processed.find_problems(paths.ROOT / system.processed)
+        for system in data.compose_systems()
+    }
 
-    assert stale == [], "run `make data`"
+    assert {path: issues for path, issues in found.items() if issues} == {}

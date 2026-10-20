@@ -1,6 +1,5 @@
 """Command start-up, and adapters from the configs and table to the old BO class."""
 
-import hashlib
 import json
 from pathlib import Path
 
@@ -13,14 +12,10 @@ from nuikit import runs, seeding
 from nuikit.errors import DataError
 from nuikit.logging import configure_logging
 
-from phasebo import candidates, paths
+from phasebo import candidates, paths, processed
 from phasebo.config import RunConfig, SystemConfig
-from phasebo.dataset import table
-from phasebo.dataset.base import DatasetFactory
 
 log = structlog.stdlib.get_logger()
-
-type Fingerprints = dict[str, object]
 
 
 def start(cfg: RunConfig, *, runs_dir: Path) -> Path:
@@ -35,32 +30,14 @@ def start(cfg: RunConfig, *, runs_dir: Path) -> Path:
     return run_dir
 
 
-def read_table(system: SystemConfig) -> pd.DataFrame:
-    """Return the phase field's processed table."""
-    path = paths.ROOT / system.processed
-    if not path.is_file():
-        raise DataError(f"no processed data at {path}; run `make data`")
-    return table.parse(path.read_text(encoding="utf-8"), source=str(path))
+def load_table(system: SystemConfig) -> processed.Processed:
+    """Return the phase field's processed table, checked against its raw files."""
+    return processed.load(paths.ROOT / system.processed)
 
 
-def fingerprint(system: SystemConfig) -> Fingerprints:
-    """Return the sha256 of the processed table and of the raw files behind it."""
-    raw = DatasetFactory.from_config(system.dataset).list_files()
-    for path in raw:
-        if not path.is_file():
-            raise DataError(
-                f"no raw data at {path}; "
-                "fix system.dataset.raw or system.dataset.references.file"
-            )
-    return {
-        "processed": _hash(paths.ROOT / system.processed),
-        "raw": [_hash(path) for path in raw],
-    }
-
-
-def write_data(run_dir: Path, fingerprints: Fingerprints) -> None:
-    """Write data.json: the files behind the run, by sha256."""
-    text = json.dumps(fingerprints, indent=2, ensure_ascii=False)
+def write_data(run_dir: Path, provenance: processed.Provenance) -> None:
+    """Write data.json: the processed table, its script and raw files, by sha256."""
+    text = json.dumps(provenance, indent=2, ensure_ascii=False)
     (run_dir / "data.json").write_text(text + "\n", encoding="utf-8")
 
 
@@ -128,9 +105,3 @@ def save_plot(path: Path, *, dpi: int, show: bool) -> None:
     if show:
         plt.show()
     plt.close("all")
-
-
-def _hash(path: Path) -> dict[str, str]:
-    shown = path.relative_to(paths.ROOT) if path.is_relative_to(paths.ROOT) else path
-    digest = hashlib.sha256(path.read_bytes()).hexdigest()
-    return {"path": str(shown), "sha256": digest}

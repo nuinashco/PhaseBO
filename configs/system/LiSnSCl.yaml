@@ -1,11 +1,6 @@
 # Li-Sn-S-Cl at a 700 eV cutoff, the phase field of J. Chem. Phys. 160, 054110 (2024).
 # Paths are relative to the repository root.
-dataset:
-  kind: total_energy_csv
-  raw: data/raw/LiSnSCl_700eV.csv
-  references:
-    start_row: 195
-processed: data/processed/LiSnSCl.csv
+processed: data/processed/LiSnSCl.csv  # from scripts/process_LiSnSCl_700eV.py
 elements:
   Li:
     charge: 1

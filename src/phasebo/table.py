@@ -1,7 +1,7 @@
-"""Processed phase field table: cleaning, validation and its CSV text."""
+"""Processed phase field table: building, cleaning, validation and its CSV text."""
 
 import io
-from collections.abc import Collection
+from collections.abc import Collection, Iterable, Sequence
 
 import pandas as pd
 from pymatgen.core import Composition
@@ -16,6 +16,43 @@ _COLUMNS = (
     "total_energy_ev",
     "e_above_hull_mev",
 )
+
+
+def make_rows(
+    formulas: Sequence[str],
+    *,
+    fidelity: str,
+    reference: Sequence[bool],
+    total_energy_ev: Sequence[float] | None = None,
+    e_above_hull_mev: Sequence[float] | None = None,
+) -> pd.DataFrame:
+    """Return one source's rows in the shape `clean` takes.
+
+    Give exactly one energy: total (eV per cell) or above the hull (meV/atom).
+    """
+    if (total_energy_ev is None) == (e_above_hull_mev is None):
+        msg = "give total_energy_ev or e_above_hull_mev, not both or neither"
+        raise ValueError(msg)
+    nan = [float("nan")] * len(formulas)
+    return pd.DataFrame(
+        {
+            "formula": [f.strip() for f in formulas],
+            "fidelity": fidelity,
+            "reference": list(reference),
+            "total_energy_ev": nan
+            if total_energy_ev is None
+            else list(total_energy_ev),
+            "e_above_hull_mev": nan
+            if e_above_hull_mev is None
+            else list(e_above_hull_mev),
+        }
+    )
+
+
+def flag_references(formulas: Iterable[str], references: Iterable[str]) -> list[bool]:
+    """Return whether each formula's composition is one of the references."""
+    known = [Composition(f) for f in references]
+    return [Composition(f) in known for f in formulas]
 
 
 def clean(rows: pd.DataFrame, *, elements: Collection[str]) -> tuple[pd.DataFrame, int]:
@@ -47,7 +84,7 @@ def parse(text: str, *, source: str) -> pd.DataFrame:
         dtype={"formula": str, "point": str, "fidelity": str, "reference": bool},
     )
     if tuple(table.columns) != _COLUMNS:
-        raise DataError(f"{source} is not a processed table; run `make data`")
+        raise DataError(f"{source} is not a processed table; rerun its script")
     _validate(table)
     return table
 
@@ -68,6 +105,5 @@ def _validate(table: pd.DataFrame) -> None:
         )
     if not table["reference"].to_numpy(dtype=bool).any():
         raise DataError(
-            "no reference compositions in the phase field; "
-            "set system.dataset.references"
+            "no reference compositions in the phase field; flag them in its script"
         )

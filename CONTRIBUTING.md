@@ -8,24 +8,27 @@ The `conventions-reviewer` subagent in `.claude/agents/` checks a branch or the 
 
 ```mermaid
 flowchart TD
+    scripts["scripts/process_*.py<br/>one per raw source"]:::side
     subgraph project["phasebo"]
         cli["cli/<br/>one module per console script"]:::side
         config["config.py<br/>entry config schemas"]:::pure
         bo["phase_field_bo.py<br/>GP fit and batch picks, path replay"]:::legacy
         field["phase_field.py<br/>convex hull, coordinates, starts"]:::legacy
-        readers["dataset/base.py, dataset/items/<br/>dataset readers, one per raw layout"]:::side
-        table["dataset/table.py<br/>clean, validate, render, parse the processed table"]:::pure
+        processed["processed.py<br/>tables on disk with a sha256 sidecar"]:::side
+        table["table.py<br/>build, clean, render, parse the table"]:::pure
         candidates["candidates.py<br/>charge-balanced, unexplored cells"]:::pure
         paths["paths.py<br/>repository paths"]:::side
         cli --> config
         cli --> bo
-        cli --> table
-        cli --> readers
+        cli --> processed
         cli --> candidates
-        config --> readers
         bo --> field
-        readers --> paths
+        processed --> table
+        processed --> paths
     end
+    scripts --> processed
+    scripts --> table
+    scripts --> config
     nuikit["nuikit<br/>config, configgen, registry, errors,<br/>logging, runs, seeding"]:::kit
     project --> nuikit
     pure["teal: decides, same input same output"]:::pure
@@ -46,8 +49,8 @@ them the processed table through `_launch.to_legacy_inputs`.
 `nuikit` is the machinery every project built from the template shares: what schemas and families build on, and
 what an entry point sets up before it runs. Copier writes it; fixes go upstream and arrive with `copier update`.
 
-Dependencies point down: `cli` > `config` > `phase_field_bo` | `dataset` | `candidates` > `phase_field` > `paths`, and
-any layer may import `nuikit`. The import-linter contracts in `pyproject.toml` enforce the order and keep `nuikit` from
+Dependencies point down: `cli` > `config` > `phase_field_bo` | `processed` | `candidates` > `phase_field` | `table`
+> `paths`, and any layer may import `nuikit`. Scripts sit outside the package and may import any of it. The import-linter contracts in `pyproject.toml` enforce the order and keep `nuikit` from
 importing `phasebo`. The layers contract is exhaustive, so a new subpackage fails `make check` until it is placed in
 `layers`.
 
@@ -61,11 +64,10 @@ sequenceDiagram
     participant B as PhaseFieldBO
     H->>C: compose configs/benchmark.yaml + overrides
     C->>C: BenchmarkConfig.from_hydra (validate)
-    C->>L: read_table: data/processed/<field>.csv, validated
+    C->>L: load_table: data/processed/<field>.csv, checked against its sidecar
     C->>L: to_legacy_inputs: (formula, total energy) rows, references
-    C->>L: fingerprint: sha256 of the processed and raw files, which must exist
     C->>L: start: logging, seed, runs/<run_name>/, W&B mirror
-    C->>L: write_data: data.json in the run directory
+    C->>L: write_data: data.json, the sidecar's provenance
     C->>B: PhaseFieldBO(mode="path", ...): hull, starts, BO batches
     C->>B: print_results, plots
     B-->>C: bo_path.csv, BO_Path_in_<field>.txt, plots in the run directory
@@ -80,16 +82,16 @@ configs/                  Hydra YAML; generated files say so in their first line
   generate.yaml
   data.yaml               composed by phasebo-data once per phase field
   defaults/               every setting of each entry config with its default (generated)
-  dataset/kinds/          every setting of each raw layout (generated)
-  system/                 phase fields: dataset, processed table, elements, candidate space
+  system/                 phase fields: processed table, elements, candidate space
   hydra/default.yaml      Hydra writes nothing; the app writes runs/
 data/                     tracked (see Deviations)
   raw/                    datasets as published, never edited
-  processed/              one table per phase field, written by `make data`
+  processed/              one table per phase field and its sha256 sidecar, written by scripts/process_*.py
 src/phasebo/
   cli/                    one module per console script, plus _launch.py, their shared start-up
   config.py               entry config schemas + GENERATED (files `make configs` writes)
-  dataset/                the dataset family (base.py, items/) and table.py, the processed table
+  table.py                the canonical processed table: build, clean, render, parse
+  processed.py            tables on disk: write with a sidecar, check, load
   candidates.py           charge-balanced cells, filtered to unexplored points
   paths.py                repository paths, from the .project-root marker
   phase_field.py          pre-template: hull, coordinates, starting compositions
@@ -97,24 +99,20 @@ src/phasebo/
 src/nuikit/               copied from the conventions template: config, configgen, registry, errors, logging,
                           runs, seeding
 tests/                    mirrors src/; tests/nuikit/ comes with the template
-  test_invariants.py      configs compose and are fresh, kinds build, import layers hold
+  test_invariants.py      configs compose and are fresh, kinds build, import layers hold, processed tables match
   phasebo/                tests of the new modules
   test_phase_field*.py    pre-template tests, with conftest.py's synthetic phase fields
   integration/            end to end, `-m integration`
 scripts/                  exploratory or one-time runnables, never imported; rerun ones become cli/ commands
+  process_<source>.py     one per raw source: writes its processed table and sidecar
 notebooks/                exploration only, outputs stripped; reference/ for third-party notebooks
 runs/                     gitignored
 ```
 
 ## Families
 
-A family is a concept with several implementations chosen by a config `kind`.
-
-| family | kinds | chosen by |
-|---|---|---|
-| `dataset` | `total_energy_csv`: formula, total energy (eV per cell); `hull_energy_csv`: formula, energy above the hull (meV/atom) per fidelity | `system.dataset.kind` |
-
-The rewrite of the pre-template modules adds the BO families.
+None yet. The rewrite of the pre-template modules adds the BO families: a family is a concept with several
+implementations chosen by a config `kind`.
 
 ```text
 src/phasebo/<family>/
@@ -131,8 +129,7 @@ writes `configs/<family>/kinds/<kind>.yaml`.
 
 | to add | create | and |
 |---|---|---|
-| a phase field | its raw file in `data/raw/` and `configs/system/<name>.yaml` | `make data`; run with `system=<name>` |
-| a raw layout | `src/phasebo/dataset/items/<kind>.py`, a `<Name>Dataset` whose `read()` returns `dataset.base.COLUMNS` | `make configs` |
+| a phase field | its raw file in `data/raw/`, `configs/system/<name>.yaml` and `scripts/process_<source>.py` | run the script once, commit the table and sidecar; run commands with `system=<name>` |
 | a family | `src/phasebo/<family>/base.py` + `items/` | place it in the import-linter `layers`; `make configs` |
 | an item | `src/phasebo/<family>/items/<kind>.py` | `make configs` |
 | an entry config | a schema in `config.py` listed in `GENERATED` as `defaults/<command>.yaml`, and `configs/<command>.yaml` composing it | a `cli/<command>.py` and a console script |
@@ -148,8 +145,9 @@ writes `configs/<family>/kinds/<kind>.yaml`.
   use the `li_sn_s_cl` fixture of `tests/conftest.py`, so the rewrite moves that fixture rather than deleting it.
 - **`data/` is tracked** (RUN-6 says gitignored). The raw datasets are small and published with the paper, and every
   number in the docs must trace back to the exact file; pre-commit's whitespace fixers leave them byte for byte.
-  Processed tables are committed too, so a reader change shows in review as the rows it changes; the invariant tests
-  fail when one is stale.
+  Processed tables and their sidecars are committed too, so a script's output shows in review row by row;
+  `make data`, the invariant tests and the commands fail when a table was edited or a raw file changed since its
+  script ran.
 - **Processed tables are CSV** (RUN-7 prefers parquet for derived tables): CSV diffs line by line in review.
 - **Notebooks are marimo files** (RUN-5 describes `.ipynb`), installed with the `notebooks` dependency group. They
   are plain Python with no stored outputs, so nbstripout has nothing to strip; `__marimo__/` caches are gitignored.

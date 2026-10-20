@@ -1,0 +1,10 @@
+{
+  "script": "scripts/process_LiSnSCl_700eV.py",
+  "table_sha256": "90a94ce999fb41d6b89abd78ed8cb68beb39f55c919590f3327609f5cd0e4d1a",
+  "raw": [
+    {
+      "path": "data/raw/LiSnSCl_700eV.csv",
+      "sha256": "465d83e8b964beaca3c3b11248c614e21a44435b84c6b2a7e06b4fad480b1303"
+    }
+  ]
+}

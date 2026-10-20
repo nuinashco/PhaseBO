@@ -148,7 +148,7 @@ root_packages = ["phasebo", "nuikit"]
 name = "Layers: cli on top, paths at the bottom, every module placed"
 type = "layers"
 containers = ["phasebo"]
-layers = ["cli", "config", "phase_field_bo | dataset | candidates", "phase_field", "paths"]
+layers = ["cli", "config", "phase_field_bo | processed | candidates", "phase_field | table", "paths"]
 exhaustive = true
 
 [[tool.importlinter.contracts]]

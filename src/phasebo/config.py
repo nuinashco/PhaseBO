@@ -8,16 +8,12 @@ from pydantic import (
     NonNegativeFloat,
     NonNegativeInt,
     PositiveInt,
-    SerializeAsAny,
-    field_validator,
     model_validator,
 )
 
 from nuikit.config import Schema
 from nuikit.configgen import ConfigFile
 from nuikit.logging import LogFormat, LogLevel
-
-from phasebo.dataset.base import DatasetConfig, DatasetFactory
 
 
 class ElementConfig(Schema):
@@ -51,21 +47,11 @@ class CandidatesConfig(Schema):
 
 
 class SystemConfig(Schema):
-    """Phase field: its data, elements and candidate space."""
+    """Phase field: its processed table, elements and candidate space."""
 
-    dataset: SerializeAsAny[DatasetConfig]
-    processed: Path = Field(
-        description="table that `make data` writes from the dataset"
-    )
+    processed: Path = Field(description="written by a script in scripts/")
     elements: dict[str, ElementConfig]
     candidates: CandidatesConfig
-
-    @field_validator("dataset", mode="before")
-    @classmethod
-    def _dataset_by_kind(cls, value: object) -> object:
-        if isinstance(value, dict):
-            return DatasetFactory.validate(value)
-        return value
 
 
 class BOConfig(Schema):
@@ -135,7 +121,11 @@ class GenerateConfig(RunConfig):
 
 
 class DataConfig(Schema):
-    """Entry config `phasebo-data` composes once per phase field (configs/data.yaml)."""
+    """Entry config composed once per phase field (configs/data.yaml).
+
+    `phasebo-data` checks every phase field's table; scripts read a phase field's
+    elements and output path from it.
+    """
 
     system: SystemConfig
 

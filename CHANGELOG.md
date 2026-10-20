@@ -12,13 +12,15 @@ All notable changes to this project will be documented in this file.
   lists every setting with its default.
 - Each run writes `runs/<run_name>/`: the resolved configuration, `run.json` (git commit, command line, start time),
   results and plots. `tracker=wandb` mirrors a run to Weights & Biases.
-- A phase field is a file in `configs/system/`: its dataset (raw layout, raw file, reference rows), its processed
-  table, its elements (charge and an inclusive range of atoms per cell) and its candidate space.
-- `phasebo-data` (`make data`) turns each raw dataset into a committed, validated table in `data/processed/`, one
-  row per composition and fidelity; rows with elements outside the phase field are dropped there.
+- A phase field is a file in `configs/system/`: its processed table, its elements (charge and an inclusive range
+  of atoms per cell) and its candidate space.
+- One script per raw source (`scripts/process_<source>.py`) turns it into a committed, validated table in
+  `data/processed/`, one row per composition and fidelity, rows with elements outside the phase field dropped, with
+  a sidecar of the script and the sha256 of the table and its raw files. `phasebo-data` (`make data`) checks that
+  no table was edited and no raw file changed since; commands refuse such a table.
 - The `LiSnSCl_multifidel` phase field: energies above the hull from DFT and from a neural network for the same
   compositions (its 46 oxygen phases are dropped). BO uses it once multi-fidelity BO exists.
-- Each run writes `data.json`, the sha256 of the processed table and the raw files it came from.
+- Each run writes `data.json`: the processed table, its script and its raw files, by sha256.
 - `phasebo-suggest` writes the next batch to `next.csv` and prints it.
 - `bo_path.csv`: the composition and energy of each step of a benchmark run.
 - Validation with pydantic: unknown keys, invalid values and missing input files stop a run before it starts.

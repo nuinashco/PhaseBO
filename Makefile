@@ -34,7 +34,7 @@ test-integration:  ## end-to-end tests behind the integration marker
 configs:  ## regenerate configs/ from the schemas
 	uv run phasebo-configs
 
-data:  ## rebuild data/processed/ from data/raw/
+data:  ## check data/processed/ against data/raw/; scripts/process_*.py rebuild it
 	uv run phasebo-data
 
 lint-imports:  ## import-linter layer contracts

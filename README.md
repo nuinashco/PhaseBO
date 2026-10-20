@@ -23,43 +23,40 @@ cp .env.example .env   # only to mirror runs to Weights & Biases
 | `phasebo-suggest` | picks the next compositions to compute from the computed ones | `next.csv`, `posterior.csv`, `convex_hull.png` |
 | `phasebo-benchmark` | replays BO over the computed compositions, as if computing them, from random starting ones | `bo_path.csv`, `BO_Path_in_<field>.txt`, `convergence.png`, `convex_hull.png` |
 | `phasebo-generate` | lists the charge-balanced cells at points not computed yet | `candidates_list.csv` |
-| `phasebo-data` (`make data`) | rebuilds `data/processed/` from `data/raw/` (`--check` only reports) | `data/processed/<field>.csv` |
+| `phasebo-data` (`make data`) | checks that every processed table still matches its raw files and its script | |
 | `phasebo-configs` (`make configs`) | regenerates `configs/defaults/` from the config schemas (`--check` only reports) | `configs/` |
 
 The first three write to `runs/<run_name>/`, along with the resolved `config.yaml`, `run.json` (git SHA, dirty flag,
-command line, start time) and `data.json` (the sha256 of the processed table and the raw files behind it). Runs are
+command line, start time) and `data.json` (the processed table, its script and its raw files, by sha256). Runs are
 seeded (`seed=42` unless overridden), so a run repeats exactly. Inputs are checked before the run directory is
 created: a missing file stops the command with an error.
 
 ## Data
 
-`data/raw/` holds the datasets as published; they are never edited. `make data` reads each phase field's raw file,
-drops the rows with elements outside the phase field, and writes `data/processed/<field>.csv`: one row per
-composition and fidelity, with its point (reduced composition), a reference flag and one energy, total (eV per cell)
-or above the hull (meV/atom). Processed tables are committed, and the tests fail when one is stale.
+`data/raw/` holds the datasets as published; they are never edited. One script per source,
+`scripts/process_<source>.py`, reads its raw file, drops the rows with elements outside the phase field and writes
+`data/processed/<field>.csv`: one row per composition and fidelity, with its point (reduced composition), a
+reference flag and one energy, total (eV per cell) or above the hull (meV/atom). Next to each table,
+`<field>.json` records the script and the sha256 of the table and of its raw files. Tables and sidecars are
+committed; `make data`, the tests and every command fail on a table edited by hand or a raw file changed since its
+script ran, naming the script to rerun.
 
-| phase field | raw | energies |
-|---|---|---|
-| `LiSnSCl` | `LiSnSCl_700eV.csv`: 286 compositions, 91 references | total, DFT at 700 eV |
-| `LiSnSCl_multifidel` | `LiSnSCl_multifidel.csv`: the same compositions, plus 46 oxygen phases that `make data` drops | above the hull: `dft`, and `nn` from a neural network |
+| phase field | raw | script | energies |
+|---|---|---|---|
+| `LiSnSCl` | `LiSnSCl_700eV.csv`: 286 compositions, 91 references | `process_LiSnSCl_700eV.py` | total, DFT at 700 eV |
+| `LiSnSCl_multifidel` | `LiSnSCl_multifidel.csv`: the same compositions, plus 46 oxygen phases its script drops | `process_LiSnSCl_multifidel.py` | above the hull: `dft`, and `nn` from a neural network |
 
 `phasebo-suggest` and `phasebo-benchmark` need total energies until BO is rebuilt, so they run on `LiSnSCl`;
 `phasebo-generate` runs on both.
 
 ## Usage
 
-1. Put the dataset in `data/raw/` as received. Two layouts are read:
-   - `total_energy_csv`: the formula, then its total energy (eV per cell); later columns are ignored;
-   - `hull_energy_csv`: the formula, then one column of energies above the hull (meV/atom) per fidelity.
+1. Put the dataset in `data/raw/` as received.
 2. Describe the phase field in `configs/system/<name>.yaml`, as `configs/system/LiSnSCl.yaml` does:
 
    | key | value |
    |---|---|
-   | `dataset.kind` | the raw layout: `total_energy_csv` or `hull_energy_csv` |
-   | `dataset.raw` | the raw CSV, relative to the repository root |
-   | `dataset.references` | `start_row` where the reference compositions start, in `file` (`null`: the raw CSV itself) |
-   | `dataset.fidelities` | `hull_energy_csv` only: column name: fidelity name |
-   | `processed` | the table `make data` writes, e.g. `data/processed/<name>.csv` |
+   | `processed` | the table its script writes, e.g. `data/processed/<name>.csv` |
    | `elements.<symbol>.charge` | oxidation state |
    | `elements.<symbol>.atoms` | `[min, max]` atoms of that element per generated cell; omit it to allow up to `candidates.max_atoms` |
    | `candidates.max_atoms` | most atoms per generated cell |
@@ -67,7 +64,10 @@ or above the hull (meV/atom). Processed tables are committed, and the tests fail
    | `candidates.exclude` | formulas left out of the data and the candidates; `null` for none |
 
    A file can extend another and change only what differs, as `LiSnSCl_multifidel.yaml` does.
-3. Run `make data` and commit `data/processed/<name>.csv`.
+3. Write `scripts/process_<source>.py` on the model of the two there: read the raw file, build rows with
+   `table.make_rows` (flag references by row, or with `table.flag_references`), `table.clean` them against the phase
+   field's elements and `processed.write` them to the path the phase field names. Run it once with `uv run` and
+   commit the table and its sidecar.
 4. Run a command, overriding any value Hydra-style:
 
    ```bash

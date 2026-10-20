@@ -1,8 +1,5 @@
 """Commands read the processed table and their inputs, and fail fast on a gap."""
 
-import hashlib
-import json
-
 import pytest
 from pymatgen.core import Composition
 
@@ -12,35 +9,10 @@ from phasebo.cli import _launch
 from phasebo.config import ElementConfig
 
 
-def test_read_table_points_to_make_data(system, tmp_path):
-    missing = system.model_copy(update={"processed": tmp_path / "missing.csv"})
-
-    with pytest.raises(DataError, match="run `make data`"):
-        _launch.read_table(missing)
-
-
-def test_fingerprint_hashes_the_processed_and_raw_files(system, tmp_path):
-    _launch.write_data(tmp_path, _launch.fingerprint(system))
-
-    recorded = json.loads((tmp_path / "data.json").read_text())
-    digest = hashlib.sha256(system.processed.read_bytes()).hexdigest()
-    assert (recorded["processed"]["sha256"], [f["path"] for f in recorded["raw"]]) == (
-        digest,
-        [str(system.dataset.raw)],
-    )
-
-
-def test_fingerprint_rejects_a_missing_raw_file(system):
-    system.dataset.raw.unlink()
-
-    with pytest.raises(DataError, match=r"fix system\.dataset\.raw"):
-        _launch.fingerprint(system)
-
-
 def test_to_legacy_inputs_split_off_the_references(system, li_sn_s_cl):
     compositions, references, _ = li_sn_s_cl
 
-    field, refs = _launch.to_legacy_inputs(_launch.read_table(system))
+    field, refs = _launch.to_legacy_inputs(_launch.load_table(system).rows)
 
     assert (field[:, 0].tolist(), refs[:, 0].tolist()) == (
         compositions[:, 0].tolist(),
@@ -50,7 +22,7 @@ def test_to_legacy_inputs_split_off_the_references(system, li_sn_s_cl):
 
 
 def test_to_legacy_inputs_need_total_energies(system):
-    rows = _launch.read_table(system).assign(
+    rows = _launch.load_table(system).rows.assign(
         total_energy_ev=float("nan"), e_above_hull_mev=0.0
     )
 
@@ -68,7 +40,7 @@ def test_map_charges_keeps_the_config_order(system):
 
 
 def test_generate_formulas_skips_computed_and_excluded_points(system):
-    rows = _launch.read_table(system)
+    rows = _launch.load_table(system).rows
     point = Composition("Li1 Sn1 S1 Cl3").reduced_composition
 
     every = _launch.generate_formulas(system, rows, excluded=None)
@@ -81,7 +53,7 @@ def test_generate_formulas_skips_computed_and_excluded_points(system):
 
 
 def test_select_candidates_prefers_the_listed_formulas(system, candidates):
-    rows = _launch.read_table(system)
+    rows = _launch.load_table(system).rows
 
     selected = _launch.select_candidates(system, rows, listed=candidates, excluded=None)
 
@@ -100,7 +72,7 @@ def test_select_candidates_refuses_an_empty_list(system):
 
     with pytest.raises(DataError, match="no candidates left"):
         _launch.select_candidates(
-            empty, _launch.read_table(empty), listed=None, excluded=None
+            empty, _launch.load_table(empty).rows, listed=None, excluded=None
         )
 
 

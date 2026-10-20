@@ -40,11 +40,11 @@ def run(cfg: GenerateConfig, *, runs_dir: Path) -> Path:
     excluded = _launch.read_formulas(
         cfg.system.candidates.exclude, key="system.candidates.exclude"
     )
-    rows = _launch.read_table(cfg.system)
+    loaded = _launch.load_table(cfg.system)
+    rows = loaded.rows
     formulas = _launch.generate_formulas(cfg.system, rows, excluded=excluded)
-    fingerprints = _launch.fingerprint(cfg.system)
     run_dir = _launch.start(cfg, runs_dir=runs_dir)
-    _launch.write_data(run_dir, fingerprints)
+    _launch.write_data(run_dir, loaded.provenance)
     path = run_dir / "candidates_list.csv"
     pd.DataFrame({"formula": formulas}).to_csv(path, index=False)
     click.echo(f"{len(formulas)} candidates written to {path}")

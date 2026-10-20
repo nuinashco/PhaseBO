@@ -38,13 +38,13 @@ def run(cfg: BenchmarkConfig, *, runs_dir: Path) -> Path:
     """Pick max_iter batches from the computed compositions after n_starts at random."""
     from phasebo.phase_field_bo import PhaseFieldBO
 
-    compositions, references = _launch.to_legacy_inputs(_launch.read_table(cfg.system))
+    loaded = _launch.load_table(cfg.system)
+    compositions, references = _launch.to_legacy_inputs(loaded.rows)
     excluded = _launch.read_formulas(
         cfg.system.candidates.exclude, key="system.candidates.exclude"
     )
-    fingerprints = _launch.fingerprint(cfg.system)
     run_dir = _launch.start(cfg, runs_dir=runs_dir)
-    _launch.write_data(run_dir, fingerprints)
+    _launch.write_data(run_dir, loaded.provenance)
     bopt = PhaseFieldBO(
         compositions=compositions,
         references=references,
