@@ -29,8 +29,8 @@ make data           # check data/processed/ against data/raw/; scripts/process_*
 - `src/phasebo/phase_field.py`, `phase_field_bo.py`: pre-template code, excluded from ruff, pyright and pre-commit
   until it is rewritten (CONTRIBUTING, Deviations). Don't extend it; new code goes into families.
 - `src/phasebo/data/`: processed data. `table.py`, the canonical table as a pandera schema (pure); `store.py`,
-  its files and sha256 sidecar (pydantic);
-  `candidates.py`: candidate generation.
+  its files and the sha256 sidecar (pydantic) that pins the table, its script and its raw files.
+- `src/phasebo/candidates.py`: candidate generation.
 - `scripts/`: exploratory or one-time runnables, never imported; they may import the package and compose
   `configs/`. Anything `make`, CI or a test depends on is a `cli/` command; a script that is rerun or shared becomes
   one. A one-time conversion whose committed output is pinned by the sha256 of its inputs and itself stays a script.
@@ -47,7 +47,7 @@ make data           # check data/processed/ against data/raw/; scripts/process_*
 
 - Configs: every tunable value has a default on a schema; no tunable constants in code. A `description` only lists
   the options or says what the name can't: units, what `null` means, side effects (DOC-7).
-- Classes: attrs (`@frozen` values, `@define` stateful) everywhere except config schemas (pydantic). No hand-written
+- Classes: attrs (`@frozen` values, `@define` stateful) everywhere except config and file schemas (pydantic, pandera). No hand-written
   `__init__`; derive state in a classmethod constructor.
 - Families: `base.py` + `items/<kind>.py`; `@Factory.register("kind")` goes above `@define`.
 - Each seam has a pure half that decides and an effectful half that acts.

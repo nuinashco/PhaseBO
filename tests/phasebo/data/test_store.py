@@ -11,7 +11,7 @@ def test_load_returns_the_rows_and_their_sidecar(system):
     loaded = store.load(system.processed)
 
     raw = [r.path.name for r in loaded.sidecar.raw]
-    assert (len(loaded.rows), raw, loaded.sidecar.script.name) == (
+    assert (len(loaded.rows), raw, loaded.sidecar.script.path.name) == (
         22,
         ["raw.csv"],
         "process.py",
@@ -31,11 +31,18 @@ def test_find_problems_is_empty_for_a_fresh_table(system):
 def test_find_problems_names_the_script_when_a_raw_file_changed(system):
     raw = system.processed.parent / "raw.csv"
     raw.write_text(raw.read_text() + "Li1,-2.0\n")
+    script = system.processed.parent / "process.py"
 
     assert store.find_problems(system.processed) == [
-        "raw file "
-        f"{raw} changed; rerun `uv run {system.processed.parent / 'process.py'}`"
+        f"{raw} changed since the table was written; rerun `uv run {script}`"
     ]
+
+
+def test_find_problems_catches_a_script_edited_without_a_rerun(system):
+    script = system.processed.parent / "process.py"
+    script.write_text(script.read_text() + "FIRST_REFERENCE_ROW = 0\n")
+
+    assert f"{script} changed since" in store.find_problems(system.processed)[0]
 
 
 def test_find_problems_catches_a_table_edited_by_hand(system):
@@ -59,5 +66,5 @@ def test_find_problems_catches_a_missing_table(tmp_path):
 def test_load_refuses_an_untrustworthy_table(system):
     (system.processed.parent / "raw.csv").unlink()
 
-    with pytest.raises(DataError, match=r"raw file .* is missing"):
+    with pytest.raises(DataError, match=r"raw\.csv is missing"):
         store.load(system.processed)

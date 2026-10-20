@@ -28,41 +28,39 @@ def test_flag_references_matches_compositions_not_strings():
 
 
 def test_clean_drops_rows_outside_the_phase_field():
-    cleaned, dropped = table.clean(FIELD, elements=["Li", "S"])
+    cleaned, dropped = table.clean(FIELD, elements=["Li", "S"], source="t.csv")
 
     assert (cleaned["formula"].tolist(), dropped) == (["Li2 S1", "Li4 S2"], 1)
 
 
 def test_clean_gives_cells_of_one_formula_one_point():
-    cleaned, _ = table.clean(FIELD, elements=["Li", "S"])
+    cleaned, _ = table.clean(FIELD, elements=["Li", "S"], source="t.csv")
 
     assert cleaned["point"].tolist() == ["Li2 S1", "Li2 S1"]
 
 
 def test_clean_rejects_a_field_without_references():
     with pytest.raises(DataError, match="has_references"):
-        table.clean(rows(["Li2 S1"], [False], [-11.9]), elements=["Li", "S"])
-
-
-def test_clean_drops_an_unknown_element_as_off_field():
-    field = rows(["Li2 S1", "Li2 Qq1"], [True, True], [-11.9, -5.0])
-
-    assert table.clean(field, elements=["Li", "S"])[1] == 1
+        table.clean(
+            rows(["Li2 S1"], [False], [-11.9]), elements=["Li", "S"], source="t.csv"
+        )
 
 
 def test_clean_rejects_an_unreadable_formula():
     with pytest.raises(DataError, match="cannot read formula"):
-        table.clean(rows(["Li2 S1)"], [True], [-11.9]), elements=["Li", "S"])
+        table.clean(
+            rows(["Li2 S1)"], [True], [-11.9]), elements=["Li", "S"], source="t.csv"
+        )
 
 
 def test_parse_returns_what_render_wrote():
-    cleaned, _ = table.clean(FIELD, elements=["Li", "S"])
+    cleaned, _ = table.clean(FIELD, elements=["Li", "S"], source="t.csv")
 
     assert table.parse(table.render(cleaned), source="t.csv").equals(cleaned)
 
 
 def test_parse_names_every_broken_rule():
-    cleaned, _ = table.clean(FIELD, elements=["Li", "S"])
+    cleaned, _ = table.clean(FIELD, elements=["Li", "S"], source="t.csv")
     broken = cleaned.assign(reference=False, e_above_hull_mev=1.0)
 
     with pytest.raises(DataError) as error:

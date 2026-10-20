@@ -27,14 +27,17 @@ rootutils.setup_root(__file__, indicator=".project-root")
 @click.command(help=__doc__)
 @cli_boundary
 def main() -> None:
-    failed: list[str] = []
+    failed = 0
     for system in compose_systems():
-        if found := store.find_problems(paths.ROOT / system.processed):
-            failed += [f"{system.processed}: {problem}" for problem in found]
-        else:
+        found = store.find_problems(paths.ROOT / system.processed)
+        for problem in found:
+            click.echo(f"{system.processed}: {problem}", err=True)
+        if not found:
             click.echo(f"ok {system.processed}")
+        failed += len(found)
     if failed:
-        raise DataError("untrustworthy processed data: " + "; ".join(failed))
+        noun = "problem" if failed == 1 else "problems"
+        raise DataError(f"{failed} {noun} in processed data; see the lines above")
 
 
 def compose_systems() -> list[SystemConfig]:

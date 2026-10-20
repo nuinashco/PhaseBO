@@ -5,7 +5,7 @@ from collections.abc import Collection, Iterable, Sequence
 
 import pandas as pd
 import pandera.pandas as pa
-from pandera.errors import SchemaError, SchemaErrors
+from pandera.errors import SchemaErrors
 from pandera.typing import DataFrame, Series
 from pymatgen.core import Composition
 
@@ -70,10 +70,15 @@ def flag_references(formulas: Iterable[str], references: Iterable[str]) -> list[
 
 
 def clean(
-    rows: pd.DataFrame, *, elements: Collection[str]
+    rows: pd.DataFrame, *, elements: Collection[str], source: str
 ) -> tuple[DataFrame[ProcessedTable], int]:
-    """Return the rows made only of `elements`, with their point; count the others."""
-    compositions = [_parse_formula(formula) for formula in rows["formula"]]
+    """Return the rows made only of `elements`, with their point; count the others.
+
+    `source` names the raw file the rows came from, in errors.
+    """
+    compositions = [
+        _parse_formula(formula, source=source) for formula in rows["formula"]
+    ]
     keep = [{el.symbol for el in c.elements} <= set(elements) for c in compositions]
     table = rows.loc[keep].reset_index(drop=True)
     table.insert(
@@ -86,7 +91,9 @@ def clean(
         ],
     )
     checked = validate(
-        table, source="the rows built from the raw file", remedy="fix its script"
+        table,
+        source=f"the table built from {source}",
+        remedy="fix the script that reads it",
     )
     return checked, len(rows) - len(table)
 
@@ -108,16 +115,13 @@ def validate(
     """Return `frame` coerced to ProcessedTable; fail naming every broken rule."""
     try:
         return ProcessedTable.validate(frame, lazy=True)
-    # A strict schema raises SchemaErrors for an extra column even when not lazy.
-    except (SchemaError, SchemaErrors) as e:
+    except SchemaErrors as e:
         raise DataError(
             f"{source} is not a processed table ({_describe(e)}); {remedy}"
         ) from e
 
 
-def _describe(error: SchemaError | SchemaErrors) -> str:
-    if isinstance(error, SchemaError):
-        return str(error).splitlines()[0]
+def _describe(error: SchemaErrors) -> str:
     cases = error.failure_cases
     rows = cases.groupby("check", sort=True)["index"].nunique()
     return ", ".join(
@@ -125,8 +129,8 @@ def _describe(error: SchemaError | SchemaErrors) -> str:
     )
 
 
-def _parse_formula(formula: str) -> Composition:
+def _parse_formula(formula: str, *, source: str) -> Composition:
     try:
         return Composition(formula)
     except ValueError as e:
-        raise DataError(f"cannot read formula {formula!r}; fix the raw file") from e
+        raise DataError(f"cannot read formula {formula!r} in {source}; fix it") from e

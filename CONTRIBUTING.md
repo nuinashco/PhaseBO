@@ -89,7 +89,7 @@ configs/                  Hydra YAML; generated files say so in their first line
   hydra/default.yaml      Hydra writes nothing; the app writes runs/
 data/                     tracked (see Deviations)
   raw/                    datasets as published, never edited
-  processed/              one table per phase field and its sha256 sidecar, written by scripts/process_*.py
+  processed/              one table per phase field and the sidecar pinning it, written by scripts/process_*.py
 src/phasebo/
   cli/                    one module per console script, plus _launch.py, their shared start-up
   config.py               entry config schemas + GENERATED (files `make configs` writes)
@@ -147,17 +147,17 @@ writes `configs/<family>/kinds/<kind>.yaml`.
   LOG-2 (f-string events) and STY-8 (non-ASCII). Making them pass would be thrown away: the `feat/bo-families`
   branch replaces them, then drops these exclusions. The new command tests
   use the `li_sn_s_cl` fixture of `tests/conftest.py`, so the rewrite moves that fixture rather than deleting it.
-- **`data/` is tracked** (RUN-6 says gitignored). The raw datasets are small and published with the paper, and every
+- **`data/` is tracked** (LAY-4, GIT-5 and RUN-6 say gitignored). The raw datasets are small and published with the paper, and every
   number in the docs must trace back to the exact file; pre-commit's whitespace fixers leave them byte for byte.
   Processed tables and their sidecars are committed too, so a script's output shows in review row by row;
-  `make data`, the invariant tests and the commands fail when a table was edited or a raw file changed since its
-  script ran.
+  `make data`, the invariant tests and the commands fail when a table was edited, or its script or a raw file
+  changed, since the table was written.
 - **Processed tables are CSV** (RUN-7 prefers parquet for derived tables): CSV diffs line by line in review.
 - **Notebooks are marimo files** (RUN-5 describes `.ipynb`), installed with the `notebooks` dependency group. They
   are plain Python with no stored outputs, so nbstripout has nothing to strip; `__marimo__/` caches are gitignored.
-- **`cli/_launch.py`** is a module in `cli/` that is not a console script (LAY-7). It holds the commands' shared
-  start-up, which needs the config schemas and so sits in the only layer above `config`, and the adapters from the
-  configs and the processed table to the pre-template class, which go when that class goes.
+- **`cli/_launch.py`** is a module in `cli/` that is not a console script (LAY-7). It holds what the commands share
+  and what needs the config schemas, so it sits in the only layer above `config`: start-up, loading the processed
+  table, reading the candidate files, and the adapters to the pre-template class, which go when that class goes.
 
 ## Tests
 

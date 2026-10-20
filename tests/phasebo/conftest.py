@@ -28,8 +28,9 @@ def system(li_sn_s_cl, candidates, tmp_path) -> SystemConfig:
         reference=[row >= first_reference for row in range(len(compositions))],
         total_energy_ev=[float(e) for e in compositions[:, 1]],
     )
-    cleaned, _ = table.clean(rows, elements=ions)
+    cleaned, _ = table.clean(rows, elements=ions, source=str(raw))
     out = tmp_path / "processed.csv"
+    (tmp_path / "process.py").write_text("# The script that wrote the table.\n")
     store.write(out, cleaned, raw=[raw], script=tmp_path / "process.py")
     return SystemConfig(
         processed=out,

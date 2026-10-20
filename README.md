@@ -37,9 +37,9 @@ created: a missing file stops the command with an error.
 `scripts/process_<source>.py`, reads its raw file, drops the rows with elements outside the phase field and writes
 `data/processed/<field>.csv`: one row per composition and fidelity, with its point (reduced composition), a
 reference flag and one energy, total (eV per cell) or above the hull (meV/atom). Next to each table,
-`<field>.json` records the script and the sha256 of the table and of its raw files. Tables and sidecars are
-committed; `make data`, the tests and every command fail on a table edited by hand or a raw file changed since its
-script ran, naming the script to rerun.
+`<field>.json` records the sha256 of the table, of its script and of its raw files. Tables and sidecars are
+committed; `make data`, the tests and every command fail on a table edited by hand, or on a script or raw file
+changed since the table was written, naming the script to rerun.
 
 | phase field | raw | script | energies |
 |---|---|---|---|

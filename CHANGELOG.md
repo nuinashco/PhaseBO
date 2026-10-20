@@ -16,8 +16,8 @@ All notable changes to this project will be documented in this file.
   of atoms per cell) and its candidate space.
 - One script per raw source (`scripts/process_<source>.py`) turns it into a committed, validated table in
   `data/processed/`, one row per composition and fidelity, rows with elements outside the phase field dropped, with
-  a sidecar of the script and the sha256 of the table and its raw files. `phasebo-data` (`make data`) checks that
-  no table was edited and no raw file changed since; commands refuse such a table.
+  a sidecar of the sha256 of the table, its script and its raw files. `phasebo-data` (`make data`) checks that no
+  table was edited and no script or raw file changed since; commands refuse such a table.
 - The `LiSnSCl_multifidel` phase field: energies above the hull from DFT and from a neural network for the same
   compositions (its 46 oxygen phases are dropped). BO uses it once multi-fidelity BO exists.
 - Each run writes `data.json`: the processed table, its script and its raw files, by sha256.

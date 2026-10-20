@@ -14,6 +14,8 @@ import pandas as pd
 import rootutils
 from hydra import compose, initialize_config_dir
 
+from nuikit.errors import cli_boundary
+
 from phasebo import paths
 from phasebo.config import DataConfig
 from phasebo.data import store, table
@@ -25,6 +27,7 @@ RAW = paths.ROOT / "data/raw/LiSnSCl_700eV.csv"
 FIRST_REFERENCE_ROW = 195
 
 
+@cli_boundary
 def main() -> None:
     with initialize_config_dir(str(paths.CONFIGS_DIR)):
         system = DataConfig.from_hydra(compose("data", ["system=LiSnSCl"])).system
@@ -37,7 +40,8 @@ def main() -> None:
         reference=[row >= FIRST_REFERENCE_ROW for row in range(len(raw))],
         total_energy_ev=raw.iloc[:, 1].astype(float).tolist(),
     )
-    cleaned, dropped = table.clean(rows, elements=system.elements)
+    source = str(RAW.relative_to(paths.ROOT))
+    cleaned, dropped = table.clean(rows, elements=system.elements, source=source)
     out = paths.ROOT / system.processed
     store.write(out, cleaned, raw=[RAW], script=Path(__file__))
     print(f"wrote {system.processed}: {len(cleaned)} rows, {dropped} off-field dropped")

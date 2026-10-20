@@ -17,6 +17,8 @@ import pandas as pd
 import rootutils
 from hydra import compose, initialize_config_dir
 
+from nuikit.errors import cli_boundary
+
 from phasebo import paths
 from phasebo.config import DataConfig
 from phasebo.data import store, table
@@ -30,6 +32,7 @@ FIRST_REFERENCE_ROW = 195
 FIDELITIES = {"DFT": "dft", "NNmodel": "nn"}
 
 
+@cli_boundary
 def main() -> None:
     with initialize_config_dir(str(paths.CONFIGS_DIR)):
         composed = compose("data", ["system=LiSnSCl_multifidel"])
@@ -52,7 +55,8 @@ def main() -> None:
         ],
         ignore_index=True,
     )
-    cleaned, dropped = table.clean(rows, elements=system.elements)
+    source = str(RAW.relative_to(paths.ROOT))
+    cleaned, dropped = table.clean(rows, elements=system.elements, source=source)
     out = paths.ROOT / system.processed
     store.write(out, cleaned, raw=[RAW, REFERENCES], script=Path(__file__))
     print(f"wrote {system.processed}: {len(cleaned)} rows, {dropped} off-field dropped")

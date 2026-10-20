@@ -1,5 +1,8 @@
 {
-  "script": "scripts/process_LiSnSCl_700eV.py",
+  "script": {
+    "path": "scripts/process_LiSnSCl_700eV.py",
+    "sha256": "6c437202a2aef7971780638eddf30b079c6f6f434a2b8a2a83e461119cad117a"
+  },
   "table_sha256": "90a94ce999fb41d6b89abd78ed8cb68beb39f55c919590f3327609f5cd0e4d1a",
   "raw": [
     {

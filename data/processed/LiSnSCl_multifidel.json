@@ -1,5 +1,8 @@
 {
-  "script": "scripts/process_LiSnSCl_multifidel.py",
+  "script": {
+    "path": "scripts/process_LiSnSCl_multifidel.py",
+    "sha256": "be5b628b58822b7a5634e22b814bc95dcff02dbd05cc24ce6218b853afdd4d01"
+  },
   "table_sha256": "45809d54837e7e9c45e0141b2d80098744c578af8fb96e2334c22dd6449b0f49",
   "raw": [
     {

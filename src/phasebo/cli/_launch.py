@@ -31,12 +31,12 @@ def start(cfg: RunConfig, *, runs_dir: Path) -> Path:
     return run_dir
 
 
-def load_table(system: SystemConfig) -> store.Processed:
+def load_table(system: SystemConfig) -> store.LoadedTable:
     """Return the phase field's processed table, checked against its raw files."""
     return store.load(paths.ROOT / system.processed)
 
 
-def write_data(run_dir: Path, loaded: store.Processed) -> None:
+def write_data(run_dir: Path, loaded: store.LoadedTable) -> None:
     """Write data.json: the processed table, its script and raw files, by sha256."""
     data = {"table": str(loaded.path), **loaded.sidecar.model_dump(mode="json")}
     text = json.dumps(data, indent=2, ensure_ascii=False)
@@ -49,7 +49,7 @@ def to_legacy_inputs(rows: pd.DataFrame) -> tuple[np.ndarray, np.ndarray]:
     if totals.empty:
         raise DataError(
             "this command needs total energies until BO is rebuilt; "
-            "choose a phase field whose dataset is a total_energy_csv"
+            "choose a phase field that has them, e.g. system=LiSnSCl"
         )
     field = totals.loc[:, ["formula", "total_energy_ev"]].to_numpy(dtype=object)
     return field, field[totals["reference"].to_numpy(dtype=bool)]

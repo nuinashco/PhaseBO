@@ -121,11 +121,7 @@ class GenerateConfig(RunConfig):
 
 
 class DataConfig(Schema):
-    """Entry config composed once per phase field (configs/data.yaml).
-
-    `phasebo-data` checks every phase field's table; scripts read a phase field's
-    elements and output path from it.
-    """
+    """Entry config composed once per phase field (configs/data.yaml)."""
 
     system: SystemConfig
 
