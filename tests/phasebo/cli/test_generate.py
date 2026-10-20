@@ -1,4 +1,4 @@
-"""`phasebo-generate` lists charge-balanced candidates within the limits."""
+"""`phasebo-generate` lists charge-balanced candidates within the atom ranges."""
 
 from pymatgen.core import Composition
 
@@ -16,5 +16,5 @@ def test_generate_writes_charge_balanced_candidates(system, tmp_path):
     for formula in lines:
         amounts = Composition(formula).get_el_amt_dict()
         assert sum(charge[el] * n for el, n in amounts.items()) == 0, formula
-        assert sum(amounts.values()) <= system.max_atoms, formula
+        assert sum(amounts.values()) <= system.candidates.max_atoms, formula
     assert lines

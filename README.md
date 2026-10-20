@@ -37,13 +37,13 @@ directory is created: a missing file stops the command with an error.
 
    | key | value |
    |---|---|
-   | `inputfile` | the CSV, relative to the repository root |
-   | `reference_index` | row where the reference compositions start |
-   | `ions` | element: oxidation state, e.g. `{Li: 1, Sn: 4, S: -2, Cl: -1}` |
-   | `max_atoms` | most atoms per cell in generated candidates |
-   | `limits` | element: `[min, max)` atoms per generated cell; `null` allows up to `max_atoms` |
-   | `compositionfile` | candidate formulas to rank, e.g. an edited `phasebo-generate` output; `null` generates them |
-   | `excludefile` | formulas left out of the hull and the candidates; `null` for none |
+   | `data.file` | the CSV, relative to the repository root |
+   | `data.reference_index` | row where the reference compositions start |
+   | `elements.<symbol>.charge` | oxidation state |
+   | `elements.<symbol>.atoms` | `[min, max]` atoms of that element per generated cell; omit it to allow up to `candidates.max_atoms` |
+   | `candidates.max_atoms` | most atoms per generated cell |
+   | `candidates.file` | candidate formulas to rank, e.g. an edited `phasebo-generate` output; `null` generates them |
+   | `candidates.exclude` | formulas left out of the data and the candidates; `null` for none |
 
 3. Run a command, overriding any value Hydra-style:
 

@@ -5,20 +5,21 @@ import pytest
 from nuikit.errors import DataError
 
 from phasebo.cli import _launch
+from phasebo.config import ElementConfig
 
 
 def test_read_field_rejects_a_missing_file(system, tmp_path):
-    missing = system.model_copy(update={"inputfile": tmp_path / "missing.csv"})
+    data = system.data.model_copy(update={"file": tmp_path / "missing.csv"})
 
-    with pytest.raises(DataError, match=r"set system\.inputfile"):
-        _launch.read_field(missing)
+    with pytest.raises(DataError, match=r"set system\.data\.file"):
+        _launch.read_field(system.model_copy(update={"data": data}))
 
 
 def test_read_field_rejects_references_past_the_last_row(system):
-    past = system.model_copy(update={"reference_index": 10_000})
+    data = system.data.model_copy(update={"reference_index": 10_000})
 
-    with pytest.raises(DataError, match=r"set system\.reference_index"):
-        _launch.read_field(past)
+    with pytest.raises(DataError, match=r"set system\.data\.reference_index"):
+        _launch.read_field(system.model_copy(update={"data": data}))
 
 
 def test_read_field_splits_off_the_references(system, li_sn_s_cl):
@@ -33,6 +34,26 @@ def test_read_field_splits_off_the_references(system, li_sn_s_cl):
     # `pandas` may round the last bit of a CSV float, depending on the platform.
     energies = compositions[:, 1].astype(float)
     assert rows[:, 1].astype(float) == pytest.approx(energies)
+
+
+def test_charges_keep_the_config_order(system):
+    assert list(_launch.charges(system).items()) == [
+        ("Li", 1),
+        ("Sn", 4),
+        ("S", -2),
+        ("Cl", -1),
+    ]
+
+
+def test_atom_limits_make_inclusive_ranges_half_open(system):
+    elements = {
+        "Li": ElementConfig(charge=1, atoms=(1, 3)),
+        "Cl": ElementConfig(charge=-1),
+    }
+
+    limits = _launch.atom_limits(system.model_copy(update={"elements": elements}))
+
+    assert limits == {"Li": (1, 4), "Cl": (0, system.candidates.max_atoms + 1)}
 
 
 def test_read_formulas_returns_none_for_a_null_path():

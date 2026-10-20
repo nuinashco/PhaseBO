@@ -30,16 +30,31 @@ def start(cfg: RunConfig, *, runs_dir: Path) -> Path:
 
 def read_field(system: SystemConfig) -> tuple[np.ndarray, np.ndarray]:
     """Return the (formula, total energy) rows of the phase field and its references."""
-    path = paths.ROOT / system.inputfile
+    path = paths.ROOT / system.data.file
     if not path.is_file():
-        raise DataError(f"no phase field data at {path}; set system.inputfile")
+        raise DataError(f"no phase field data at {path}; set system.data.file")
     rows = pd.read_csv(path).to_numpy()
-    if system.reference_index >= len(rows):
+    start = system.data.reference_index
+    if start >= len(rows):
         raise DataError(
-            f"{path} has {len(rows)} rows, so no references start at row "
-            f"{system.reference_index}; set system.reference_index"
+            f"{path} has {len(rows)} rows, so no references start at row {start}; "
+            "set system.data.reference_index"
         )
-    return rows, rows[system.reference_index :]
+    return rows, rows[start:]
+
+
+def charges(system: SystemConfig) -> dict[str, int]:
+    """Return each element's oxidation state, in config order."""
+    return {symbol: element.charge for symbol, element in system.elements.items()}
+
+
+def atom_limits(system: SystemConfig) -> dict[str, tuple[int, int]]:
+    """Return each element's atoms per cell as the half-open range of PhaseFieldBO."""
+    limits: dict[str, tuple[int, int]] = {}
+    for symbol, element in system.elements.items():
+        low, high = element.atoms or (0, system.candidates.max_atoms)
+        limits[symbol] = (low, high + 1)
+    return limits
 
 
 def read_formulas(path: Path | None, *, key: str) -> list[str] | None:

@@ -16,36 +16,51 @@ from nuikit.configgen import ConfigFile
 from nuikit.logging import LogFormat, LogLevel
 
 
-class SystemConfig(Schema):
-    """Phase field: its computed compositions, ions and candidate space."""
+class DataConfig(Schema):
+    """Computed compositions of a phase field."""
 
-    inputfile: Path = Field(
+    file: Path = Field(
         description="CSV of formulas and total energies (eV per cell), references last"
     )
     reference_index: NonNegativeInt = Field(description="first reference row")
-    ions: dict[str, int] = Field(description="element: oxidation state")
-    max_atoms: PositiveInt = Field(description="most atoms per generated cell")
-    limits: dict[str, tuple[NonNegativeInt, NonNegativeInt]] | None = Field(
+
+
+class ElementConfig(Schema):
+    """One element of a phase field."""
+
+    charge: int = Field(description="oxidation state")
+    atoms: tuple[NonNegativeInt, NonNegativeInt] | None = Field(
         default=None,
-        description="element: [min, max) atoms per generated cell; null: max_atoms",
-    )
-    compositionfile: Path | None = Field(
-        default=None, description="candidates to rank; null: generated"
-    )
-    excludefile: Path | None = Field(
-        default=None, description="compositions left out everywhere; null: none"
+        description="[min, max] atoms per generated cell; null: up to max_atoms",
     )
 
     @model_validator(mode="after")
-    def _limits_name_the_ions(self) -> Self:
-        if self.limits is not None and set(self.limits) != set(self.ions):
-            ions, given = sorted(self.ions), sorted(self.limits)
-            msg = (
-                f"limits must name exactly the ions {ions}, got {given}; give "
-                "system.limits one entry per ion or set it to null"
-            )
+    def _atoms_ascend(self) -> Self:
+        if self.atoms is not None and self.atoms[0] > self.atoms[1]:
+            msg = f"atoms {list(self.atoms)} is not [min, max]; put the minimum first"
             raise ValueError(msg)
         return self
+
+
+class CandidatesConfig(Schema):
+    """Compositions BO may pick from."""
+
+    max_atoms: PositiveInt = Field(description="most atoms per generated cell")
+    file: Path | None = Field(
+        default=None, description="CSV of formulas to rank; null: generated"
+    )
+    exclude: Path | None = Field(
+        default=None,
+        description="CSV of formulas left out of the data and candidates; null: none",
+    )
+
+
+class SystemConfig(Schema):
+    """Phase field: its computed compositions, elements and candidate space."""
+
+    data: DataConfig = Field(description="computed compositions")
+    elements: dict[str, ElementConfig] = Field(description="symbol: element settings")
+    candidates: CandidatesConfig = Field(description="compositions BO may pick from")
 
 
 class BOConfig(Schema):

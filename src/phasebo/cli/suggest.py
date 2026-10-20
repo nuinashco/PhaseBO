@@ -40,17 +40,19 @@ def run(cfg: SuggestConfig, *, runs_dir: Path) -> Path:
 
     compositions, references = _launch.read_field(cfg.system)
     candidates = _launch.read_formulas(
-        cfg.system.compositionfile, key="system.compositionfile"
+        cfg.system.candidates.file, key="system.candidates.file"
     )
-    excluded = _launch.read_formulas(cfg.system.excludefile, key="system.excludefile")
+    excluded = _launch.read_formulas(
+        cfg.system.candidates.exclude, key="system.candidates.exclude"
+    )
     run_dir = _launch.start(cfg, runs_dir=runs_dir)
     bopt = PhaseFieldBO(
         compositions=compositions,
         references=references,
-        ions=cfg.system.ions,
+        ions=_launch.charges(cfg.system),
         mode="suggest",
-        Ntot=cfg.system.max_atoms,
-        limits=cfg.system.limits,
+        Ntot=cfg.system.candidates.max_atoms,
+        limits=_launch.atom_limits(cfg.system),
         batch=cfg.bo.batch_size,
         acquisition=cfg.bo.acquisition,
         kernel=cfg.bo.kernel,

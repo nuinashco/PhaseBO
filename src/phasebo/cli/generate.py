@@ -4,10 +4,10 @@ Usage:
 
     phasebo-generate                 # configs/generate.yaml as it is
 
-    phasebo-generate system.max_atoms=12
+    phasebo-generate system.candidates.max_atoms=12
 
 Writes runs/<run_name>/candidates_list.csv, which can be edited and passed to
-`phasebo-suggest` as system.compositionfile.
+`phasebo-suggest` as system.candidates.file.
 """
 
 from pathlib import Path
@@ -38,15 +38,17 @@ def run(cfg: GenerateConfig, *, runs_dir: Path) -> Path:
     from phasebo.phase_field_bo import PhaseFieldBO
 
     compositions, references = _launch.read_field(cfg.system)
-    excluded = _launch.read_formulas(cfg.system.excludefile, key="system.excludefile")
+    excluded = _launch.read_formulas(
+        cfg.system.candidates.exclude, key="system.candidates.exclude"
+    )
     run_dir = _launch.start(cfg, runs_dir=runs_dir)
     bopt = PhaseFieldBO(
         compositions=compositions,
         references=references,
-        ions=cfg.system.ions,
+        ions=_launch.charges(cfg.system),
         mode="generate",
-        Ntot=cfg.system.max_atoms,
-        limits=cfg.system.limits,
+        Ntot=cfg.system.candidates.max_atoms,
+        limits=_launch.atom_limits(cfg.system),
         exceptions=excluded,
         output_dir=str(run_dir),
     )

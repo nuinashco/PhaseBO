@@ -6,7 +6,7 @@ from phasebo.cli import suggest
 from phasebo.config import BOConfig, SuggestConfig
 
 
-def test_suggest_picks_the_batch_from_the_compositionfile(
+def test_suggest_picks_the_batch_from_the_candidates_file(
     system, candidates, tmp_path, capsys
 ):
     cfg = SuggestConfig(run_name="r", system=system, bo=BOConfig(batch_size=2))

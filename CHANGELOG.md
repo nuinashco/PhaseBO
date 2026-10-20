@@ -12,6 +12,8 @@ All notable changes to this project will be documented in this file.
   lists every setting with its default.
 - Each run writes `runs/<run_name>/`: the resolved configuration, `run.json` (git commit, command line, start time),
   results and plots. `tracker=wandb` mirrors a run to Weights & Biases.
+- A phase field is a file in `configs/system/` with three blocks: its data, its elements (charge and an inclusive
+  range of atoms per cell) and its candidate space.
 - `phasebo-suggest` writes the next batch to `next.csv` and prints it.
 - `bo_path.csv`: the composition and energy of each step of a benchmark run.
 - Validation with pydantic: unknown keys, invalid values and missing input files stop a run before it starts.

@@ -70,7 +70,7 @@ configs/                  Hydra YAML; generated files say so in their first line
   benchmark.yaml
   generate.yaml
   defaults/               every setting of each entry config with its default (generated)
-  system/LiSnSCl.yaml     a phase field: data file, references, ions, candidate space
+  system/LiSnSCl.yaml     a phase field: its data, elements and candidate space
   hydra/default.yaml      Hydra writes nothing; the app writes runs/
 data/                     published datasets, tracked (see Deviations)
 src/phasebo/
