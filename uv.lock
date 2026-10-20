@@ -327,7 +327,7 @@ wheels = [
 [[package]]
 name = "conventions-hooks"
 version = "0.1.0"
-source = { git = "https://github.com/nuinashco/conventions.git?rev=bede248ad917959de4cc556cff6d345fa3ee74f6#bede248ad917959de4cc556cff6d345fa3ee74f6" }
+source = { git = "https://github.com/nuinashco/conventions.git?rev=d5e5fbbf748eee354c36b1f7dbf331c395e6a021#d5e5fbbf748eee354c36b1f7dbf331c395e6a021" }
 dependencies = [
     { name = "attrs" },
 ]
@@ -1500,7 +1500,7 @@ requires-dist = [
 
 [package.metadata.requires-dev]
 dev = [
-    { name = "conventions-hooks", git = "https://github.com/nuinashco/conventions.git?rev=bede248ad917959de4cc556cff6d345fa3ee74f6" },
+    { name = "conventions-hooks", git = "https://github.com/nuinashco/conventions.git?rev=d5e5fbbf748eee354c36b1f7dbf331c395e6a021" },
     { name = "import-linter", specifier = ">=2.15" },
     { name = "pre-commit", specifier = ">=4.7" },
     { name = "pyright", extras = ["nodejs"], specifier = ">=1.1.414" },
