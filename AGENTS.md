@@ -41,7 +41,7 @@ phasebo-generate    # candidate compositions of the phase field
 ## Rules that tools do not check
 
 - Configs: every tunable value has a default on a schema; no tunable constants in code. A `description` only lists
-  the options or says what the name can't (units, what `null` means, side effects).
+  the options or says what the name can't: units, what `null` means, side effects (DOC-7).
 - Classes: attrs (`@frozen` values, `@define` stateful) everywhere except config schemas (pydantic). No hand-written
   `__init__`; derive state in a classmethod constructor.
 - Families: `base.py` + `items/<kind>.py`; `@Factory.register("kind")` goes above `@define`.

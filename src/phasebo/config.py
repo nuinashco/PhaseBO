@@ -87,10 +87,13 @@ class RunConfig(Schema):
         default="${now:%Y-%m-%d_%H-%M-%S}", description="directory under runs/"
     )
     seed: int = 42
-    deterministic: bool = Field(default=False, description="torch kernels; slower")
+    deterministic: bool = Field(
+        default=False, description="true: deterministic torch kernels, slower"
+    )
     log_level: LogLevel = Field(default="info", description="debug|info|warning|error")
     log_format: LogFormat = Field(
-        default="auto", description="auto|console|json; auto: console in a terminal"
+        default="auto",
+        description="auto|console|json; auto: console in a terminal, JSON otherwise",
     )
     tracker: Literal["wandb"] | None = Field(
         default=None, description="wandb: mirror the run to W&B; null: run dir only"
