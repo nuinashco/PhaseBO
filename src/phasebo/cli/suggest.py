@@ -51,7 +51,7 @@ def run(cfg: SuggestConfig, *, runs_dir: Path) -> Path:
         cfg.system, rows, listed=listed, excluded=excluded
     )
     run_dir = _launch.start(cfg, runs_dir=runs_dir)
-    _launch.write_data(run_dir, loaded.provenance)
+    _launch.write_data(run_dir, loaded)
     bopt = PhaseFieldBO(
         compositions=compositions,
         references=references,

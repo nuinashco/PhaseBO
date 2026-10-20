@@ -35,9 +35,10 @@ def load_table(system: SystemConfig) -> processed.Processed:
     return processed.load(paths.ROOT / system.processed)
 
 
-def write_data(run_dir: Path, provenance: processed.Provenance) -> None:
+def write_data(run_dir: Path, loaded: processed.Processed) -> None:
     """Write data.json: the processed table, its script and raw files, by sha256."""
-    text = json.dumps(provenance, indent=2, ensure_ascii=False)
+    data = {"table": str(loaded.path), **loaded.sidecar.model_dump(mode="json")}
+    text = json.dumps(data, indent=2, ensure_ascii=False)
     (run_dir / "data.json").write_text(text + "\n", encoding="utf-8")
 
 

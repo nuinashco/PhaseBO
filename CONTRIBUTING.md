@@ -14,8 +14,8 @@ flowchart TD
         config["config.py<br/>entry config schemas"]:::pure
         bo["phase_field_bo.py<br/>GP fit and batch picks, path replay"]:::legacy
         field["phase_field.py<br/>convex hull, coordinates, starts"]:::legacy
-        processed["processed.py<br/>tables on disk with a sha256 sidecar"]:::side
-        table["table.py<br/>build, clean, render, parse the table"]:::pure
+        processed["processed.py<br/>tables on disk, with a pydantic sha256 sidecar"]:::side
+        table["table.py<br/>ProcessedTable (pandera schema): build, clean, parse"]:::pure
         candidates["candidates.py<br/>charge-balanced, unexplored cells"]:::pure
         paths["paths.py<br/>repository paths"]:::side
         cli --> config
@@ -90,8 +90,8 @@ data/                     tracked (see Deviations)
 src/phasebo/
   cli/                    one module per console script, plus _launch.py, their shared start-up
   config.py               entry config schemas + GENERATED (files `make configs` writes)
-  table.py                the canonical processed table: build, clean, render, parse
-  processed.py            tables on disk: write with a sidecar, check, load
+  table.py                the canonical processed table: its pandera schema; build, clean, render, parse
+  processed.py            tables on disk: write with a pydantic sidecar, check, load
   candidates.py           charge-balanced cells, filtered to unexplored points
   paths.py                repository paths, from the .project-root marker
   phase_field.py          pre-template: hull, coordinates, starting compositions

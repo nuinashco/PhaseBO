@@ -21,6 +21,7 @@ dependencies = [
     "numpy>=2.5",
     "omegaconf>=2.4",
     "pandas>=3.0",
+    "pandera>=0.34.1",
     "pydantic>=2.14",
     "pymatgen>=2026.9.24",
     "rootutils>=1.0.7",
@@ -104,6 +105,10 @@ ignore = [
 
 [tool.ruff.lint.pydocstyle]
 convention = "google"
+
+[tool.ruff.lint.pep8-naming]
+# pandera turns its check decorators into classmethods.
+classmethod-decorators = ["pandera.pandas.dataframe_check", "pandera.pandas.check"]
 
 [tool.ruff.lint.mccabe]
 max-complexity = 10

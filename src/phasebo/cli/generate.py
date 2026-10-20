@@ -44,7 +44,7 @@ def run(cfg: GenerateConfig, *, runs_dir: Path) -> Path:
     rows = loaded.rows
     formulas = _launch.generate_formulas(cfg.system, rows, excluded=excluded)
     run_dir = _launch.start(cfg, runs_dir=runs_dir)
-    _launch.write_data(run_dir, loaded.provenance)
+    _launch.write_data(run_dir, loaded)
     path = run_dir / "candidates_list.csv"
     pd.DataFrame({"formula": formulas}).to_csv(path, index=False)
     click.echo(f"{len(formulas)} candidates written to {path}")

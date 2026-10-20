@@ -7,11 +7,21 @@ from nuikit.errors import DataError
 from phasebo import processed
 
 
-def test_load_returns_the_rows_and_their_provenance(system):
+def test_load_returns_the_rows_and_their_sidecar(system):
     loaded = processed.load(system.processed)
 
-    raw = loaded.provenance["raw"]
-    assert (len(loaded.rows), isinstance(raw, list) and len(raw)) == (22, 1)
+    raw = [r.path.name for r in loaded.sidecar.raw]
+    assert (len(loaded.rows), raw, loaded.sidecar.script.name) == (
+        22,
+        ["raw.csv"],
+        "process.py",
+    )
+
+
+def test_find_problems_catches_a_malformed_sidecar(system):
+    system.processed.with_suffix(".json").write_text("{}")
+
+    assert "is malformed" in processed.find_problems(system.processed)[0]
 
 
 def test_find_problems_is_empty_for_a_fresh_table(system):

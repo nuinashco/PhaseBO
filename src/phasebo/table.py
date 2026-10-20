@@ -1,21 +1,39 @@
-"""Processed phase field table: building, cleaning, validation and its CSV text."""
+"""Processed phase field table: its schema, and building, cleaning and CSV text."""
 
 import io
 from collections.abc import Collection, Iterable, Sequence
 
 import pandas as pd
+import pandera.pandas as pa
+from pandera.errors import SchemaError, SchemaErrors
+from pandera.typing import DataFrame, Series
 from pymatgen.core import Composition
 
 from nuikit.errors import DataError
 
-_COLUMNS = (
-    "formula",
-    "point",
-    "fidelity",
-    "reference",
-    "total_energy_ev",
-    "e_above_hull_mev",
-)
+
+class ProcessedTable(pa.DataFrameModel):
+    """One row per composition and fidelity, carrying exactly one energy."""
+
+    formula: Series[str]
+    point: Series[str]  # The reduced composition: cells of one formula share it.
+    fidelity: Series[str]
+    reference: Series[bool]
+    total_energy_ev: Series[float] = pa.Field(nullable=True)  # Per cell.
+    e_above_hull_mev: Series[float] = pa.Field(nullable=True)  # Per atom.
+
+    class Config(pa.DataFrameModel.Config):
+        strict = True
+        ordered = True
+        coerce = True
+
+    @pa.dataframe_check
+    def one_energy_per_row(cls, df: pd.DataFrame) -> pd.Series:
+        return df[["total_energy_ev", "e_above_hull_mev"]].notna().sum(axis=1) == 1
+
+    @pa.dataframe_check
+    def has_references(cls, df: pd.DataFrame) -> bool:
+        return bool(df["reference"].any())
 
 
 def make_rows(
@@ -39,12 +57,8 @@ def make_rows(
             "formula": [f.strip() for f in formulas],
             "fidelity": fidelity,
             "reference": list(reference),
-            "total_energy_ev": nan
-            if total_energy_ev is None
-            else list(total_energy_ev),
-            "e_above_hull_mev": nan
-            if e_above_hull_mev is None
-            else list(e_above_hull_mev),
+            "total_energy_ev": nan if total_energy_ev is None else total_energy_ev,
+            "e_above_hull_mev": nan if e_above_hull_mev is None else e_above_hull_mev,
         }
     )
 
@@ -55,55 +69,64 @@ def flag_references(formulas: Iterable[str], references: Iterable[str]) -> list[
     return [Composition(f) in known for f in formulas]
 
 
-def clean(rows: pd.DataFrame, *, elements: Collection[str]) -> tuple[pd.DataFrame, int]:
+def clean(
+    rows: pd.DataFrame, *, elements: Collection[str]
+) -> tuple[DataFrame[ProcessedTable], int]:
     """Return the rows made only of `elements`, with their point; count the others."""
-    compositions = [_parse(formula) for formula in rows["formula"]]
+    compositions = [_parse_formula(formula) for formula in rows["formula"]]
     keep = [{el.symbol for el in c.elements} <= set(elements) for c in compositions]
     table = rows.loc[keep].reset_index(drop=True)
-    # A point is the reduced composition: cells of one formula share it.
-    table["point"] = [
-        c.reduced_composition.formula
-        for c, kept in zip(compositions, keep, strict=True)
-        if kept
-    ]
-    table = table.loc[:, list(_COLUMNS)]
-    _validate(table)
-    return table, len(rows) - len(table)
+    table.insert(
+        1,
+        "point",
+        [
+            c.reduced_composition.formula
+            for c, k in zip(compositions, keep, strict=True)
+            if k
+        ],
+    )
+    checked = validate(
+        table, source="the rows built from the raw file", remedy="fix its script"
+    )
+    return checked, len(rows) - len(table)
 
 
-def render(table: pd.DataFrame) -> str:
+def render(table: DataFrame[ProcessedTable]) -> str:
     """Return the CSV text of a processed table."""
     return table.to_csv(index=False, lineterminator="\n")
 
 
-def parse(text: str, *, source: str) -> pd.DataFrame:
+def parse(text: str, *, source: str) -> DataFrame[ProcessedTable]:
     """Return the validated table that `render` wrote; `source` names it in errors."""
-    table = pd.read_csv(
-        io.StringIO(text),
-        float_precision="round_trip",
-        dtype={"formula": str, "point": str, "fidelity": str, "reference": bool},
+    frame = pd.read_csv(io.StringIO(text), float_precision="round_trip")
+    return validate(frame, source=source, remedy="rerun its script")
+
+
+def validate(
+    frame: pd.DataFrame, *, source: str, remedy: str
+) -> DataFrame[ProcessedTable]:
+    """Return `frame` coerced to ProcessedTable; fail naming every broken rule."""
+    try:
+        return ProcessedTable.validate(frame, lazy=True)
+    # A strict schema raises SchemaErrors for an extra column even when not lazy.
+    except (SchemaError, SchemaErrors) as e:
+        raise DataError(
+            f"{source} is not a processed table ({_describe(e)}); {remedy}"
+        ) from e
+
+
+def _describe(error: SchemaError | SchemaErrors) -> str:
+    if isinstance(error, SchemaError):
+        return str(error).splitlines()[0]
+    cases = error.failure_cases
+    rows = cases.groupby("check", sort=True)["index"].nunique()
+    return ", ".join(
+        f"{check}: {n} rows" if n else str(check) for check, n in rows.items()
     )
-    if tuple(table.columns) != _COLUMNS:
-        raise DataError(f"{source} is not a processed table; rerun its script")
-    _validate(table)
-    return table
 
 
-def _parse(formula: str) -> Composition:
+def _parse_formula(formula: str) -> Composition:
     try:
         return Composition(formula)
     except ValueError as e:
         raise DataError(f"cannot read formula {formula!r}; fix the raw file") from e
-
-
-def _validate(table: pd.DataFrame) -> None:
-    energies = table[["total_energy_ev", "e_above_hull_mev"]].notna().sum(axis=1)
-    if bad := int((energies != 1).sum()):
-        raise DataError(
-            f"{bad} rows need exactly one energy, total or above the hull; "
-            "check the raw file"
-        )
-    if not table["reference"].to_numpy(dtype=bool).any():
-        raise DataError(
-            "no reference compositions in the phase field; flag them in its script"
-        )

@@ -40,7 +40,7 @@ def test_clean_gives_cells_of_one_formula_one_point():
 
 
 def test_clean_rejects_a_field_without_references():
-    with pytest.raises(DataError, match="no reference compositions"):
+    with pytest.raises(DataError, match="has_references"):
         table.clean(rows(["Li2 S1"], [False], [-11.9]), elements=["Li", "S"])
 
 
@@ -59,6 +59,16 @@ def test_parse_returns_what_render_wrote():
     cleaned, _ = table.clean(FIELD, elements=["Li", "S"])
 
     assert table.parse(table.render(cleaned), source="t.csv").equals(cleaned)
+
+
+def test_parse_names_every_broken_rule():
+    cleaned, _ = table.clean(FIELD, elements=["Li", "S"])
+    broken = cleaned.assign(reference=False, e_above_hull_mev=1.0)
+
+    with pytest.raises(DataError) as error:
+        table.parse(broken.to_csv(index=False), source="t.csv")
+
+    assert "has_references, one_energy_per_row: 2 rows" in str(error.value)
 
 
 def test_parse_rejects_text_that_is_not_a_processed_table():
