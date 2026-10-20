@@ -57,8 +57,9 @@ directory is created: a missing file stops the command with an error.
 
 ## Configs
 
-`configs/defaults/<command>.yaml` lists every setting of a command with its default and a comment: the Gaussian
-process (`bo.kernel`, `bo.noise_mev`, ...), batch size, seeding, logging, tracking. It is generated from the schemas
+`configs/defaults/<command>.yaml` lists every setting of a command with its default, commented where the options or
+the meaning are not obvious: the Gaussian process (`bo.kernel`, `bo.noise_mev`, ...), batch size, seeding, logging,
+tracking. It is generated from the schemas
 in `src/phasebo/config.py`, so it is never edited. To change a value:
 
 | for | edit |

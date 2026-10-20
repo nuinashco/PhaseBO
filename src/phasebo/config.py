@@ -28,7 +28,7 @@ class DataConfig(Schema):
 class ElementConfig(Schema):
     """One element of a phase field."""
 
-    charge: int = Field(description="oxidation state")
+    charge: int
     atoms: tuple[NonNegativeInt, NonNegativeInt] | None = Field(
         default=None,
         description="[min, max] atoms per generated cell; null: up to max_atoms",
@@ -45,22 +45,22 @@ class ElementConfig(Schema):
 class CandidatesConfig(Schema):
     """Compositions BO may pick from."""
 
-    max_atoms: PositiveInt = Field(description="most atoms per generated cell")
+    max_atoms: PositiveInt = Field(description="per generated cell")
     file: Path | None = Field(
         default=None, description="CSV of formulas to rank; null: generated"
     )
     exclude: Path | None = Field(
         default=None,
-        description="CSV of formulas left out of the data and candidates; null: none",
+        description="CSV of formulas left out of data and candidates; null: none",
     )
 
 
 class SystemConfig(Schema):
     """Phase field: its computed compositions, elements and candidate space."""
 
-    data: DataConfig = Field(description="computed compositions")
-    elements: dict[str, ElementConfig] = Field(description="symbol: element settings")
-    candidates: CandidatesConfig = Field(description="compositions BO may pick from")
+    data: DataConfig
+    elements: dict[str, ElementConfig]
+    candidates: CandidatesConfig
 
 
 class BOConfig(Schema):
@@ -75,9 +75,9 @@ class BOConfig(Schema):
     )
     noise_mev: NonNegativeFloat | None = Field(
         default=0.0,
-        description="energy noise std (meV/atom); 0: DFT is exact; null: fitted",
+        description="std in meV/atom; null: fitted",
     )
-    batch_size: PositiveInt = Field(default=4, description="compositions per batch")
+    batch_size: PositiveInt = 4
 
 
 class RunConfig(Schema):
@@ -86,50 +86,44 @@ class RunConfig(Schema):
     run_name: str = Field(
         default="${now:%Y-%m-%d_%H-%M-%S}", description="directory under runs/"
     )
-    seed: int = Field(default=42, description="seeds random, numpy and torch")
-    deterministic: bool = Field(
-        default=False, description="force deterministic torch kernels (slower)"
-    )
+    seed: int = 42
+    deterministic: bool = Field(default=False, description="torch kernels; slower")
     log_level: LogLevel = Field(default="info", description="debug|info|warning|error")
     log_format: LogFormat = Field(
-        default="auto", description="auto: console in a terminal, JSON otherwise"
+        default="auto", description="auto|console|json; auto: console in a terminal"
     )
     tracker: Literal["wandb"] | None = Field(
-        default=None, description="mirror the run to W&B; null: run dir only"
+        default=None, description="wandb: mirror the run to W&B; null: run dir only"
     )
-    wandb_project: str = Field(default="phasebo", description="W&B project")
+    wandb_project: str = "phasebo"
 
 
 class SuggestConfig(RunConfig):
     """Entry config of `phasebo-suggest` (configs/suggest.yaml)."""
 
-    system: SystemConfig = Field(description="phase field")
-    bo: BOConfig = Field(
-        default_factory=BOConfig, description="Gaussian process and batch selection"
-    )
-    show_plots: bool = Field(default=False, description="open plot windows")
-    plot_dpi: PositiveInt = Field(default=150, description="resolution of saved plots")
+    system: SystemConfig
+    bo: BOConfig = Field(default_factory=BOConfig)
+    show_plots: bool = False
+    plot_dpi: PositiveInt = 150
 
 
 class BenchmarkConfig(RunConfig):
     """Entry config of `phasebo-benchmark` (configs/benchmark.yaml)."""
 
-    system: SystemConfig = Field(description="phase field")
-    bo: BOConfig = Field(
-        default_factory=BOConfig, description="Gaussian process and batch selection"
-    )
+    system: SystemConfig
+    bo: BOConfig = Field(default_factory=BOConfig)
     n_starts: PositiveInt = Field(
-        default=23, description="random computed compositions the replay starts from"
+        default=23, description="random computed compositions before BO"
     )
-    max_iter: PositiveInt = Field(default=10, description="batches after the start")
-    show_plots: bool = Field(default=False, description="open plot windows")
-    plot_dpi: PositiveInt = Field(default=150, description="resolution of saved plots")
+    max_iter: PositiveInt = Field(default=10, description="BO batches after the starts")
+    show_plots: bool = False
+    plot_dpi: PositiveInt = 150
 
 
 class GenerateConfig(RunConfig):
     """Entry config of `phasebo-generate` (configs/generate.yaml)."""
 
-    system: SystemConfig = Field(description="phase field")
+    system: SystemConfig
 
 
 GENERATED = (

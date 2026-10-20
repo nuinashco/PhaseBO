@@ -2,9 +2,9 @@
 # Chosen through config groups, not listed here: system.
 
 run_name: "${now:%Y-%m-%d_%H-%M-%S}"  # directory under runs/
-seed: 42  # seeds random, numpy and torch
-deterministic: false  # force deterministic torch kernels (slower)
+seed: 42
+deterministic: false  # torch kernels; slower
 log_level: "info"  # debug|info|warning|error
-log_format: "auto"  # auto: console in a terminal, JSON otherwise
-tracker: null  # mirror the run to W&B; null: run dir only
-wandb_project: "phasebo"  # W&B project
+log_format: "auto"  # auto|console|json; auto: console in a terminal
+tracker: null  # wandb: mirror the run to W&B; null: run dir only
+wandb_project: "phasebo"

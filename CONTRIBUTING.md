@@ -116,7 +116,7 @@ writes `configs/<family>/kinds/<kind>.yaml`.
 | a family | `src/phasebo/<family>/base.py` + `items/` | place it in the import-linter `layers`; `make configs` |
 | an item | `src/phasebo/<family>/items/<kind>.py` | `make configs` |
 | an entry config | a schema in `config.py` listed in `GENERATED` as `defaults/<command>.yaml`, and `configs/<command>.yaml` composing it | a `cli/<command>.py` and a console script |
-| a setting | a `Field(default=..., description=...)` on the schema | `make configs` |
+| a setting | a field with a default on the schema; a `description` only for options or meaning the name can't carry | `make configs` |
 
 ## Deviations
 
@@ -130,6 +130,9 @@ writes `configs/<family>/kinds/<kind>.yaml`.
   number in the docs must trace back to the exact file; pre-commit's whitespace fixers leave them byte for byte.
 - **Notebooks are marimo files** (RUN-5 describes `.ipynb`), installed with the `notebooks` dependency group. They
   are plain Python with no stored outputs, so nbstripout has nothing to strip; `__marimo__/` caches are gitignored.
+- **Config descriptions are sparse** (CFG-3 gives every field one). A description, and so a comment in the generated
+  YAML, only lists the options or says what the name can't: units, what `null` means, side effects. Comments that
+  repeat the key (`wandb_project: "phasebo"  # W&B project`) are noise.
 - **`cli/_launch.py`** is a module in `cli/` that is not a console script (LAY-7). The three Hydra commands share
   their start-up steps, which need the config schemas, so they sit in the only layer above `config`.
 

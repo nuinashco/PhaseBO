@@ -18,5 +18,5 @@ elements:
     atoms: [0, 4]
 candidates:
   max_atoms: 16
-  file: null  # e.g. an edited phasebo-generate output; null: generated
+  file: null  # null: generated
   exclude: null

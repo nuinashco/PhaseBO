@@ -2,17 +2,17 @@
 # Chosen through config groups, not listed here: system.
 
 run_name: "${now:%Y-%m-%d_%H-%M-%S}"  # directory under runs/
-seed: 42  # seeds random, numpy and torch
-deterministic: false  # force deterministic torch kernels (slower)
+seed: 42
+deterministic: false  # torch kernels; slower
 log_level: "info"  # debug|info|warning|error
-log_format: "auto"  # auto: console in a terminal, JSON otherwise
-tracker: null  # mirror the run to W&B; null: run dir only
-wandb_project: "phasebo"  # W&B project
-bo:  # Gaussian process and batch selection
+log_format: "auto"  # auto|console|json; auto: console in a terminal
+tracker: null  # wandb: mirror the run to W&B; null: run dir only
+wandb_project: "phasebo"
+bo:
   acquisition: "qlogei"  # qlogei: batch log expected improvement; ts: Thompson sampling
   kernel: "matern"  # matern: Matern 5/2, as in the paper; rbf
-  noise_mev: 0.0  # energy noise std (meV/atom); 0: DFT is exact; null: fitted
-  batch_size: 4  # compositions per batch
+  noise_mev: 0.0  # std in meV/atom; null: fitted
+  batch_size: 4
 
-show_plots: false  # open plot windows
-plot_dpi: 150  # resolution of saved plots
+show_plots: false
+plot_dpi: 150
