@@ -30,7 +30,7 @@ def test_read_field_splits_off_the_references(system, li_sn_s_cl):
         compositions[:, 0].tolist(),
         references[:, 0].tolist(),
     )
-    # pandas' default CSV float parser may round the last bit, depending on platform.
+    # `pandas` may round the last bit of a CSV float, depending on the platform.
     energies = compositions[:, 1].astype(float)
     assert rows[:, 1].astype(float) == pytest.approx(energies)
 
