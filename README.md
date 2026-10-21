@@ -105,6 +105,9 @@ shows the headline values side by side, each metric's curves under a short expla
 `phasebo-compare` runs' tables (logged with `tracker=wandb`), and the system charts collapsed. Random picking's
 exact values stay in `metrics.json`; in W&B, a `bo/acquisition=random` run is the comparison.
 
+The same content is also a W&B report, "PhaseBO benchmarks", for people outside the project: its Share button
+makes a view-only link that opens without a W&B account, if the organisation allows such links.
+
 ## Usage
 
 1. Put the dataset in `data/raw/` as received.

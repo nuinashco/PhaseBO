@@ -145,7 +145,7 @@ tests/                    mirrors src/; tests/nuikit/ comes with the template
 scripts/                  exploratory or one-time runnables, never imported; rerun ones become cli/ commands
   process_<source>.py     one per raw source: writes its processed table and sidecar
   plot_run.py             a run's figures: hull map, each metric's curves
-  wandb_workspace.py      saves the project's "Benchmarks" view in W&B
+  wandb_workspace.py      saves the project's "Benchmarks" view in W&B, or with --report a shareable report
 notebooks/                exploration only, outputs stripped; reference/ for third-party notebooks
 runs/                     gitignored
 ```
@@ -186,7 +186,7 @@ ratio from one joint fit, as the hazard ratio does.
 |---|---|---|
 | a phase field | its raw file in `data/raw/`, `configs/system/<name>.yaml` and `scripts/process_<source>.py` | run the script once, commit the table and sidecar; run commands with `system=<name>` |
 | a kind of a family | `src/phasebo/<domain>/<family>/items/<kind>.py` | `make configs`; choose it with `<domain>/<family>=<kind>` |
-| a metric | `src/phasebo/benchmark/metric/items/<kind>.py`, comparing with `baseline.py`, with its `reading` and `contrast` | `make configs`; add it to the list in `configs/benchmark.yaml`; rerun `scripts/wandb_workspace.py --url <view>` |
+| a metric | `src/phasebo/benchmark/metric/items/<kind>.py`, comparing with `baseline.py`, with its `reading` and `contrast` | `make configs`; add it to the list in `configs/benchmark.yaml`; rerun `scripts/wandb_workspace.py --url <view>` and `scripts/wandb_workspace.py --report --url <report>` |
 | a variant of a kind | a preset `configs/<domain>/<family>/<name>.yaml` whose defaults list names the kind; never a kind's name | choose it with `<domain>/<family>=<name>` |
 | a family | `src/phasebo/<domain>/<family>/base.py` + `items/`, a `_by_kind` (or, if `multiple`, `_by_kinds`) field type in `config.py` and a field of it, a group in the entry configs | place it in its domain's import-linter `layers`; `make configs` |
 | an entry config | a schema in `config.py` listed in `GENERATED` as `defaults/<command>.yaml`, and `configs/<command>.yaml` composing it | a `cli/<command>.py` and a console script |
@@ -209,9 +209,11 @@ ratio from one joint fit, as the hazard ratio does.
   aid, not part of a run or of the README, and `tracker=wandb` shows a benchmark's curves. It has no tests; it
   refuses a run whose processed table has changed since.
 - **`scripts/wandb_workspace.py` is rerun after a metric is added or the benchmark setup changes** (LAY-7 makes
-  such a script a command): it saves the project's "Benchmarks" view in W&B, a developer aid that is not part of a
-  run, whose "How to read" note quotes the newest run's repeats, batches and field; `--url <view>` rewrites the
-  view in place. It has no tests. Its packages are the `wandb` dependency group, installed by default so that
+  such a script a command): it saves the project's "Benchmarks" view in W&B, or with `--report` a report of the
+  same content to share outside the project, a developer aid that is not part of a run, whose "How to read" note
+  quotes the newest run's repeats, batches and field; `--url <view or report>` rewrites one in place. A report is
+  saved to the project, for whoever can see the project; the script makes no share link, which is a person's
+  decision, made in W&B. It has no tests. Its packages are the `wandb` dependency group, installed by default so that
   pyright checks it.
 - **GP priors are fixed** (CFG-7): every Matern kernel keeps BoTorch's pre-0.12 Matern 5/2 priors, Gamma(3, 6)
   on each lengthscale and Gamma(2, 0.15) on the outputscale, so `kernel` changes only nu. For `matern52` they
