@@ -127,7 +127,7 @@ src/phasebo/<family>/
 ```
 
 `<Family>Factory.from_config({"kind": ..., ...})` validates against the item's config and builds it; `make configs`
-writes `configs/<family>/kinds/<kind>.yaml`.
+writes `configs/<family>/<kind>.yaml`, the file `<family>=<kind>` selects.
 
 ## Extending
 
