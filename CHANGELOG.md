@@ -11,7 +11,8 @@ All notable changes to this project will be documented in this file.
   choose a phase field with `system=` and override any value on the command line. `configs/defaults/<command>.yaml`
   lists every setting with its default.
 - Each run writes `runs/<run_name>/`: the resolved configuration, `run.json` (git commit, command line, start time),
-  and results. `tracker=wandb` mirrors a run to Weights & Biases.
+  and results. `tracker=wandb` mirrors a run to Weights & Biases, typed by command (`benchmark`, `suggest`,
+  `generate`), grouped by phase field and tagged with every family setting, without the reporting-only settings.
 - A phase field is a file in `configs/system/`: its processed table, its elements (charge and an inclusive range
   of atoms per cell) and its candidate space.
 - One script per raw source (`scripts/process_<source>.py`) turns it into a committed, validated table in
@@ -22,19 +23,33 @@ All notable changes to this project will be documented in this file.
   compositions (its 46 oxygen phases are dropped). BO models one fidelity at a time (`fidelity=dft` by default).
 - Each run writes `data.json`: the processed table, its script and its raw files, by sha256.
 - `phasebo-suggest` writes the next batch to `next.csv` and prints it.
-- `bo_path.csv`: each point a benchmark evaluates, with its energy above the hull, its batch (0 for the starting
-  set) and whether it is a target; the command prints how many targets it found.
+- `phasebo-benchmark` replays BO from `benchmark.repeats` starting sets (300) in parallel (`benchmark.workers`,
+  all CPUs by default) and scores it against random picking's exact odds. The same `seed` gives every setting the
+  same starting sets, and results do not depend on the number of workers. It writes `paths.parquet` (every
+  evaluation of every repeat: batch, formula, energy above the hull, whether a target) and `metrics.json`, prints
+  one line per metric, and with `tracker=wandb` logs each metric's curves against `evaluations`, its values as
+  the summary, and its outputs as a `replays-<run id>` artifact. A run is named after its batch rule
+  (`qlogei-<time>`) unless `run_name` is set.
+- `scripts/wandb_workspace.py` saves a "Benchmarks" view in W&B: a "How to read" note, the headline values side
+  by side, each metric's curves under its own explanation with one line per run, the system charts collapsed; a
+  `bo/acquisition=random` run is the comparison there.
+- `benchmark/metric`, a list of metrics, all four by default: `steps_to_hit` (evaluations to each target, the
+  first and their mean, a miss counting as the budget), `discovery` (the share of runs that found each target,
+  batch by batch), `best_so_far` (the lowest energy known) and `hazard_ratio` (BO's chance per batch of picking a
+  target as a multiple of random's, with a `level` interval, and batch by batch; adds statsmodels).
 - Validation with pydantic: unknown keys, invalid values and missing input files stop a run before it starts.
 - `seed` (default 42): runs repeat exactly.
-- BO is three config groups, each a choice of kind (`bo/<group>=<kind>`):
+- BO is two config groups, each a choice of kind (`bo/<group>=<kind>`):
   - `bo/surrogate`: `gp`, with `kernel` (`matern12`, `matern32`, `matern52`: Matérn ν = 1/2, 3/2, 5/2, the last
     as in the paper and the default; `rbf`) and `noise_mev`, the
     energy noise it assumes in meV/atom (0 by default, as DFT energies are deterministic; `null` fits it); the
     preset `paper` is the paper's GP, with a fitted noise;
   - `bo/acquisition`: `qlogei` (batch log expected improvement, default), `ts` (Thompson sampling) or `random`, the
-    baseline, which picks uniformly and skips the GP fit in a benchmark;
-  - `bo/start`: `random`, the benchmark's starting set, `size` explored points off the hull.
-- `bo.batch_size` (compositions per batch, it was fixed at 4) and `bo.max_iter` (a benchmark's batches).
+    baseline, which picks uniformly and skips the GP fit in a benchmark.
+- `bo.batch_size` (compositions per batch, it was fixed at 4).
+- A benchmark's own settings: `benchmark/start` (`random`, `size` explored points off the hull, 8 by default as
+  in the paper's real use; it was 23 with no recorded reason) and `benchmark.max_iter` (batches after the start, 8
+  by default: 32 picks).
 - Tests on synthetic phase fields; the project follows the nuinashco/conventions `rnd` template (`make check`).
 - Optional `notebooks` dependency group (marimo, plotly; matplotlib and scipy for `scripts/plot_run.py`).
 
@@ -43,8 +58,8 @@ All notable changes to this project will be documented in this file.
 - The published datasets moved, unchanged, to `data/raw/`.
 - Packaging with uv (`make setup`): dependencies pinned in `uv.lock`, sources in `src/`, Python 3.14 or newer.
 - Data paths start from the repository root (marked by `.project-root`), so the commands run from any directory.
-- Commands no longer draw figures: `scripts/plot_run.py runs/<run_name>` draws the hull map and a benchmark's
-  convergence into the run directory.
+- Commands no longer draw figures: `scripts/plot_run.py runs/<run_name>` draws the hull map and each metric's
+  curves into the run directory.
 - `phasebo-generate` lists one cell per point not computed yet, its smallest; it listed every cell.
 - The posterior is written to `posterior.csv` in the run directory.
 
@@ -53,7 +68,7 @@ All notable changes to this project will be documented in this file.
   above, `configs/` and command-line overrides.
 - Segmented starting compositions (`seeds_type=segmented`).
 - `example/`, the outputs of the old default run.
-- `BO_Path_in_<field>.txt`, which repeated `bo_path.csv` as text.
+- `BO_Path_in_<field>.txt`, the path of one replay: `paths.parquet` holds every repeat's.
 
 ### Fixed
 - A benchmark's starting set is drawn by point and never holds a target. It was drawn by name and kept only points

@@ -44,7 +44,12 @@ def run(cfg: GenerateConfig, *, runs_dir: Path) -> Path:
     rows = loaded.rows
     explored = [*rows["formula"], *(excluded or [])]
     formulas = _launch.generate_formulas(cfg.system, explored=explored)
-    run_dir, _ = _launch.start(cfg, runs_dir=runs_dir)
+    run_dir, _ = _launch.start(
+        cfg,
+        runs_dir=runs_dir,
+        job_type="generate",
+        group=_launch.field_name(cfg.system),
+    )
     _launch.write_data(run_dir, loaded)
     path = run_dir / "candidates_list.csv"
     pd.DataFrame({"formula": formulas}).to_csv(path, index=False)

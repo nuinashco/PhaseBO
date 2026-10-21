@@ -5,7 +5,7 @@ import pytest
 
 from nuikit.errors import ConfigError
 
-from phasebo.bo.start.base import StartFactory
+from phasebo.benchmark.start.base import StartFactory
 
 
 def test_random_start_never_takes_a_reference_or_a_target(points):
@@ -20,5 +20,12 @@ def test_random_start_never_takes_a_reference_or_a_target(points):
 def test_random_start_refuses_more_points_than_are_off_the_hull(points):
     start = StartFactory.from_config({"kind": "random", "size": 100})
 
-    with pytest.raises(ConfigError, match=r"lower bo\.start\.size"):
-        start.check(points)
+    with pytest.raises(ConfigError, match=r"lower benchmark\.start\.size"):
+        start.check(points, budget=0)
+
+
+def test_random_start_refuses_a_budget_larger_than_the_points_left(points):
+    start = StartFactory.from_config({"kind": "random", "size": 2})
+
+    with pytest.raises(ConfigError, match=r"lower benchmark\.max_iter"):
+        start.check(points, budget=len(points.pool) - 1)

@@ -20,8 +20,8 @@ class Start[C: StartConfig](Configurable[C], ABC):
     """Rule that picks the points a replay starts from."""
 
     @abstractmethod
-    def check(self, points: Points) -> None:
-        """Raise `ConfigError` if `points` cannot supply this starting set."""
+    def check(self, points: Points, *, budget: int) -> None:
+        """Raise `ConfigError` unless `points` hold this set and `budget` picks more."""
 
     @abstractmethod
     def pick(self, points: Points, *, rng: np.random.Generator) -> list[int]:
@@ -31,4 +31,4 @@ class Start[C: StartConfig](Configurable[C], ABC):
 class StartFactory(ConfigurableFactory[Start[Any]]):
     """Registry of starting-set rules by `kind`."""
 
-    config_group = "bo/start"
+    config_group = "benchmark/start"
