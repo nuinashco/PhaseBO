@@ -17,6 +17,13 @@ class DiscoveryConfig(MetricConfig):
 class DiscoveryMetric(Metric[DiscoveryConfig]):
     """Share of repeats that found each target, and any target, after each batch."""
 
+    reading = (
+        "The share of games that have found each target (one panel per target), or "
+        "any target (`first_hit`), after each number of picks. Higher and earlier is "
+        "better: a setting beats random picking where its line is above the `random` "
+        "run's."
+    )
+
     def measure(self, replays: Replays) -> Score:
         names = replays.target_names
         if not names:

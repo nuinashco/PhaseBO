@@ -30,6 +30,13 @@ class HazardRatioMetric(Metric[HazardRatioConfig]):
     whether the advantage holds early, late or throughout.
     """
 
+    reading = (
+        "`hit_chance`: of the targets not found yet, the share each batch picked. "
+        "`per_batch`: the same as a multiple of random picking's chance, so 1 is "
+        "random and 2 twice as good. Read the trend, not single batches: one batch "
+        "swings by chance, as the `random` run's own line shows."
+    )
+
     def measure(self, replays: Replays) -> Score:
         hits = replays.hit_batches()
         curves = _measure_per_batch(replays, hits)

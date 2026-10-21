@@ -2,7 +2,7 @@
 
 from abc import ABC, abstractmethod
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, ClassVar
 
 import numpy as np
 from attrs import define, field, frozen
@@ -31,7 +31,13 @@ class Score:
 
 @define
 class Metric[C: MetricConfig](Configurable[C], ABC):
-    """Measure of how well replays found the targets, or low energies."""
+    """Measure of how well replays found the targets, or low energies.
+
+    `reading` tells a reader of its curves what they show, in plain words; the W&B
+    view prints it above them.
+    """
+
+    reading: ClassVar[str]
 
     @abstractmethod
     def measure(self, replays: Replays) -> Score:

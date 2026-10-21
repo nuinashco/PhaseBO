@@ -27,6 +27,12 @@ class BestSoFarMetric(Metric[BestSoFarConfig]):
     field whose targets are not among the computed points.
     """
 
+    reading = (
+        "The lowest energy above the hull known after each number of picks, the "
+        "starting set included, averaged over the games (meV/atom; 0 is stable). Lower "
+        "is better: a line under the `random` run's closes in on the hull faster."
+    )
+
     def measure(self, replays: Replays) -> Score:
         energies_mev = replays.points.energies_mev
         pool = set(replays.points.pool.tolist())

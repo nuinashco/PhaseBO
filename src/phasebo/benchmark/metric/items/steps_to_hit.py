@@ -27,6 +27,12 @@ class StepsToHitMetric(Metric[StepsToHitConfig]):
     better. A hit in batch b costs every evaluation up to that batch's end.
     """
 
+    reading = (
+        "Picks until the first target, and until each one, averaged over the games; a "
+        "game that never finds it counts as the whole budget. Lower is better. It is "
+        "blunt while most games find nothing, since they all count the same."
+    )
+
     def measure(self, replays: Replays) -> Score:
         names = replays.target_names
         if not names:

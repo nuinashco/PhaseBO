@@ -3,7 +3,13 @@
 import numpy as np
 import pytest
 
-from phasebo.benchmark.metric.base import Score, summarise, to_json, to_wandb
+from phasebo.benchmark.metric.base import (
+    MetricFactory,
+    Score,
+    summarise,
+    to_json,
+    to_wandb,
+)
 
 SCORES = {"a": Score(headline="a line", values={"x": 1.0}, curves={"c": [0.0, 1.0]})}
 
@@ -47,3 +53,9 @@ def test_to_wandb_leaves_undefined_curve_points_out():
     scores = {"a": Score(headline="", values={}, curves={"c": [None, 2.0]})}
 
     assert to_wandb(scores, [0, 4])[1] == [{}, {"a/c": 2.0}]
+
+
+def test_every_metric_says_how_to_read_it():
+    kinds = MetricFactory.list_registered()
+
+    assert all(MetricFactory.get_class(kind).reading for kind in kinds)
