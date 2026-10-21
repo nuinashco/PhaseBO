@@ -9,12 +9,16 @@ from pydantic import Field, NonNegativeFloat
 
 from phasebo.bo.surrogate.base import Fit, Surrogate, SurrogateConfig, SurrogateFactory
 
+_MATERN_NU = {"matern12": 0.5, "matern32": 1.5, "matern52": 2.5}
+
 
 class GPConfig(SurrogateConfig):
     """Gaussian process settings."""
 
-    kernel: Literal["matern", "rbf"] = Field(
-        default="matern", description="matern: Matern 5/2, as in the paper; rbf"
+    kernel: Literal["matern12", "matern32", "matern52", "rbf"] = Field(
+        default="matern52",
+        description="matern12|matern32|matern52: Matern nu 1/2, 3/2, 5/2 (the paper); "
+        "rbf: BoTorch's default kernel",
     )
     noise_mev: NonNegativeFloat | None = Field(
         default=0.0, description="std in meV/atom; null: fitted"
@@ -57,15 +61,16 @@ class GPSurrogate(Surrogate[GPConfig]):
         return Fit(model=model, best_f=float(g.max()))
 
     def _build_kernel(self, dims: int) -> Any:
-        if self.config.kernel == "rbf":
-            return None  # BoTorch's default.
+        nu = _MATERN_NU.get(self.config.kernel)
+        if nu is None:
+            return None  # BoTorch's default, an RBF kernel.
         from gpytorch.kernels import MaternKernel, ScaleKernel
         from gpytorch.priors import GammaPrior
 
-        # The priors of BoTorch's Matern default before 0.12.
+        # BoTorch's Matern 5/2 priors before 0.12, the paper's; kept for every nu.
         return ScaleKernel(
             MaternKernel(
-                nu=2.5, ard_num_dims=dims, lengthscale_prior=GammaPrior(3.0, 6.0)
+                nu=nu, ard_num_dims=dims, lengthscale_prior=GammaPrior(3.0, 6.0)
             ),
             outputscale_prior=GammaPrior(2.0, 0.15),
         )

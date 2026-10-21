@@ -12,7 +12,7 @@ from phasebo.cli import benchmark
 from phasebo.config import BenchmarkBOConfig, BenchmarkConfig
 
 
-def test_benchmark_writes_the_path_and_its_plots(system, tmp_path, capsys):
+def test_benchmark_writes_the_path_and_reports_the_targets(system, tmp_path, capsys):
     cfg = BenchmarkConfig(
         run_name="r",
         system=system,
@@ -30,7 +30,6 @@ def test_benchmark_writes_the_path_and_its_plots(system, tmp_path, capsys):
     path = pd.read_csv(run_dir / "bo_path.csv")
     assert path["batch"].tolist() == [0, 0, 1, 1, 2, 2]
     assert "targets found in 6 evaluations" in capsys.readouterr().out
-    assert {"convergence.png", "convex_hull.png"} <= {p.name for p in run_dir.iterdir()}
 
 
 def test_benchmark_refuses_an_oversized_start_before_creating_the_run(system, tmp_path):

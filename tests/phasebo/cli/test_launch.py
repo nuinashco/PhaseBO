@@ -41,25 +41,34 @@ def test_map_charges_keeps_the_config_order(system):
     ]
 
 
-def test_generate_formulas_skips_computed_and_excluded_points(system):
+def test_generate_formulas_skips_explored_points(system):
     rows = _launch.load_table(system).rows
-    point = Composition("Li1 Sn1 S1 Cl3").reduced_composition
+    computed = list(rows["formula"])
 
-    every = _launch.generate_formulas(system, rows, excluded=None)
-    kept = _launch.generate_formulas(system, rows, excluded=["Li1 Sn1 S1 Cl3"])
+    every = _launch.generate_formulas(system, explored=computed)
+    kept = _launch.generate_formulas(system, explored=[*computed, "Li1 Sn1 S1 Cl3"])
 
-    computed = {Composition(f).reduced_composition for f in rows["formula"]}
-    points = {Composition(f).reduced_composition for f in kept}
-    assert point in {Composition(f).reduced_composition for f in every}
-    assert (point in points, points & computed) == (False, set())
+    points = {Composition(f).reduced_composition for f in every}
+    assert points & {Composition(f).reduced_composition for f in computed} == set()
+    assert ("Li1 Sn1 S1 Cl3" in every, "Li1 Sn1 S1 Cl3" in kept) == (True, False)
 
 
 def test_select_candidates_prefers_the_listed_formulas(system, candidates):
-    rows = _launch.load_table(system).rows
+    explored = list(_launch.load_table(system).rows["formula"])
 
-    selected = _launch.select_candidates(system, rows, listed=candidates, excluded=None)
+    selected = _launch.select_candidates(system, explored=explored, listed=candidates)
 
     assert selected == candidates
+
+
+def test_select_candidates_drops_listed_formulas_at_explored_points(system):
+    listed = ["Li6 Sn1 S5", "Li1 Sn1 S1 Cl3"]
+
+    selected = _launch.select_candidates(
+        system, explored=["Li12 Sn2 S10"], listed=listed
+    )
+
+    assert selected == ["Li1 Sn1 S1 Cl3"]
 
 
 def test_select_candidates_refuses_an_empty_list(system):
@@ -72,9 +81,14 @@ def test_select_candidates_refuses_an_empty_list(system):
         }
     )
 
-    with pytest.raises(DataError, match="no candidates left"):
+    with pytest.raises(DataError, match=r"widen system\.elements atoms"):
+        _launch.select_candidates(empty, explored=[], listed=None)
+
+
+def test_select_candidates_refuses_listed_formulas_that_are_all_explored(system):
+    with pytest.raises(DataError, match=r"list others in system\.candidates\.file"):
         _launch.select_candidates(
-            empty, _launch.load_table(empty).rows, listed=None, excluded=None
+            system, explored=["Li3 S1 Cl1"], listed=["Li3 S1 Cl1", "Li6 S2 Cl2"]
         )
 
 

@@ -117,14 +117,12 @@ class BenchmarkBOConfig(BOConfig):
 
 
 class SearchConfig(RunConfig):
-    """Settings suggest and benchmark share: the phase field, its rows, the plots."""
+    """Settings suggest and benchmark share: the phase field and its rows."""
 
     system: SystemConfig
     fidelity: str = Field(
         default="dft", description="a value of the processed table's fidelity column"
     )
-    show_plots: bool = False
-    plot_dpi: PositiveInt = 150
 
 
 class SuggestConfig(SearchConfig):

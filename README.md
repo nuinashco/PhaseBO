@@ -20,9 +20,9 @@ cp .env.example .env   # only to mirror runs to Weights & Biases
 
 | command | does | writes |
 |---|---|---|
-| `phasebo-suggest` | picks the next compositions to compute from the computed ones | `next.csv`, `posterior.csv`, `convex_hull.png` (4-element fields) |
-| `phasebo-benchmark` | replays BO over the computed compositions, as if computing them, from random starting ones | `bo_path.csv`, `convergence.png`, `convex_hull.png` (4-element fields) |
-| `phasebo-generate` | lists the charge-balanced cells at points not computed yet | `candidates_list.csv` |
+| `phasebo-suggest` | picks the next compositions to compute from the computed ones | `next.csv`, `posterior.csv` |
+| `phasebo-benchmark` | replays BO over the computed compositions, as if computing them, from random starting ones | `bo_path.csv` |
+| `phasebo-generate` | lists the smallest charge-balanced cell of each point not computed yet | `candidates_list.csv` |
 | `phasebo-data` (`make data`) | checks that every processed table still matches its raw files and its script | |
 | `phasebo-configs` (`make configs`) | regenerates `configs/defaults/` and each kind's `configs/bo/<group>/<kind>.yaml` from the config schemas (`--check` only reports) | `configs/` |
 
@@ -88,7 +88,7 @@ generated file, `configs/bo/<group>/<kind>.yaml`, with every setting and its def
 
 | group | kinds | settings |
 |---|---|---|
-| `bo/surrogate` | `gp`; preset `paper` (fitted noise, as in the paper) | `kernel` (`matern`, Matern 5/2 as in the paper; `rbf`), `noise_mev` (std; `null` fits it) |
+| `bo/surrogate` | `gp`; preset `paper` (fitted noise, as in the paper) | `kernel` (`matern12`, `matern32`, `matern52` as in the paper; `rbf`), `noise_mev` (std; `null` fits it) |
 | `bo/acquisition` | `qlogei` (batch log expected improvement), `ts` (Thompson sampling), `random` (the baseline; a benchmark skips the GP fit) | |
 | `bo/start` (benchmark) | `random`: explored points off the hull | `size` |
 

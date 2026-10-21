@@ -9,7 +9,5 @@ log_format: "auto"  # auto|console|json; auto: console in a terminal, JSON other
 tracker: null  # wandb: mirror the run to W&B; null: run dir only
 wandb_project: "phasebo"
 fidelity: "dft"  # a value of the processed table's fidelity column
-show_plots: false
-plot_dpi: 150
 bo:
   batch_size: 4

@@ -30,7 +30,7 @@ make data           # check data/processed/ against data/raw/; scripts/process_*
   its files and the sha256 sidecar (pydantic) that pins the table, its script and its raw files.
 - `src/phasebo/field/`: the phase field: the oracle hull, one entry per point, candidate generation.
 - `src/phasebo/bo/`: Bayesian optimisation: the `surrogate`, `acquisition` and `start` families, the benchmark loop
-  (`replay.py`), suggest's batch (`proposal.py`) and the plots.
+  (`replay.py`) and suggest's batch (`proposal.py`). Figures are drawn by `scripts/plot_run.py`, not by commands.
 - `scripts/`: exploratory or one-time runnables, never imported; they may import the package and compose
   `configs/`. Anything `make`, CI or a test depends on is a `cli/` command; a script that is rerun or shared becomes
   one. A one-time conversion whose committed output is pinned by the sha256 of its inputs and itself stays a script.

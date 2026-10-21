@@ -1448,7 +1448,6 @@ dependencies = [
     { name = "botorch" },
     { name = "click" },
     { name = "hydra-core" },
-    { name = "matplotlib" },
     { name = "numpy" },
     { name = "omegaconf" },
     { name = "pandas" },
@@ -1456,7 +1455,6 @@ dependencies = [
     { name = "pydantic" },
     { name = "pymatgen" },
     { name = "rootutils" },
-    { name = "scipy" },
     { name = "structlog" },
     { name = "torch", version = "2.14.1", source = { registry = "https://pypi.org/simple" }, marker = "sys_platform != 'linux'" },
     { name = "torch", version = "2.14.1+cpu", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "sys_platform == 'linux'" },
@@ -1474,7 +1472,9 @@ dev = [
 ]
 notebooks = [
     { name = "marimo" },
+    { name = "matplotlib" },
     { name = "plotly" },
+    { name = "scipy" },
 ]
 
 [package.metadata]
@@ -1483,7 +1483,6 @@ requires-dist = [
     { name = "botorch", specifier = ">=0.18.1" },
     { name = "click", specifier = ">=8.5" },
     { name = "hydra-core", specifier = ">=1.4.0rc1" },
-    { name = "matplotlib", specifier = ">=3.11" },
     { name = "numpy", specifier = ">=2.5" },
     { name = "omegaconf", specifier = ">=2.4" },
     { name = "pandas", specifier = ">=3.0" },
@@ -1491,7 +1490,6 @@ requires-dist = [
     { name = "pydantic", specifier = ">=2.14" },
     { name = "pymatgen", specifier = ">=2026.9.24" },
     { name = "rootutils", specifier = ">=1.0.7" },
-    { name = "scipy", specifier = ">=1.17" },
     { name = "structlog", specifier = ">=26.1" },
     { name = "torch", marker = "sys_platform != 'linux'", specifier = ">=2.14" },
     { name = "torch", marker = "sys_platform == 'linux'", specifier = ">=2.14", index = "https://download.pytorch.org/whl/cpu" },
@@ -1509,7 +1507,9 @@ dev = [
 ]
 notebooks = [
     { name = "marimo", specifier = ">=0.24.2,<0.25" },
+    { name = "matplotlib", specifier = ">=3.11" },
     { name = "plotly", specifier = ">=7.1" },
+    { name = "scipy", specifier = ">=1.17" },
 ]
 
 [[package]]

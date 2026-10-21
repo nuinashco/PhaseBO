@@ -10,9 +10,9 @@ Usage:
 
     phasebo-benchmark -m seed=0,1,2 'run_name=sweep/${hydra:job.num}'
 
-Writes runs/<run_name>/ with bo_path.csv (each evaluated point: its energy above the
-hull, its batch, 0 for the starting set, and whether it is a target),
-convergence.png and, for 4-element fields, convex_hull.png.
+Writes runs/<run_name>/bo_path.csv: each evaluated point, its energy above the hull,
+its batch (0 for the starting set) and whether it is a target. scripts/plot_run.py
+draws its figures.
 """
 
 from pathlib import Path
@@ -20,13 +20,12 @@ from pathlib import Path
 import click
 import hydra
 import rootutils
-import structlog
 from omegaconf import DictConfig
 
 from nuikit.errors import cli_boundary
 
 from phasebo import paths
-from phasebo.bo import plots, replay
+from phasebo.bo import replay
 from phasebo.bo.acquisition.base import AcquisitionFactory
 from phasebo.bo.start.base import StartFactory
 from phasebo.bo.surrogate.base import SurrogateFactory
@@ -35,8 +34,6 @@ from phasebo.config import BenchmarkConfig
 
 # Loads .env and sets PROJECT_ROOT, as every entry point does (GUIDE ENV-2).
 rootutils.setup_root(__file__, indicator=".project-root")
-
-log = structlog.stdlib.get_logger()
 
 
 @hydra.main(config_path=str(paths.CONFIGS_DIR), config_name="benchmark")
@@ -67,16 +64,4 @@ def run(cfg: BenchmarkConfig, *, runs_dir: Path) -> Path:
     found = int(path["target"].to_numpy().sum())
     targets = len(points.targets)
     click.echo(f"{found} of {targets} targets found in {len(path)} evaluations")
-    plots.save_convergence(
-        path, run_dir / "convergence.png", dpi=cfg.plot_dpi, show=cfg.show_plots
-    )
-    elements = list(cfg.system.elements)
-    if not plots.save_hull_map(
-        points,
-        run_dir / "convex_hull.png",
-        elements=elements,
-        dpi=cfg.plot_dpi,
-        show=cfg.show_plots,
-    ):
-        log.info("hull_map_skipped", elements=len(elements))
     return run_dir

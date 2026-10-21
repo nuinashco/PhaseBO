@@ -6,9 +6,9 @@ Usage:
 
     phasebo-suggest bo/acquisition=ts seed=1    # Hydra overrides
 
-Writes runs/<run_name>/ with next.csv (the batch to compute next), posterior.csv
-(each candidate point's predicted energy above the hull) and, for 4-element fields,
-convex_hull.png.
+Writes runs/<run_name>/ with next.csv (the batch to compute next) and posterior.csv
+(each candidate point's predicted energy above the hull); scripts/plot_run.py draws
+its figures.
 """
 
 from pathlib import Path
@@ -17,13 +17,12 @@ import click
 import hydra
 import pandas as pd
 import rootutils
-import structlog
 from omegaconf import DictConfig
 
 from nuikit.errors import cli_boundary
 
 from phasebo import paths
-from phasebo.bo import plots, proposal
+from phasebo.bo import proposal
 from phasebo.bo.acquisition.base import AcquisitionFactory
 from phasebo.bo.surrogate.base import SurrogateFactory
 from phasebo.cli import _launch
@@ -31,8 +30,6 @@ from phasebo.config import SuggestConfig
 
 # Loads .env and sets PROJECT_ROOT, as every entry point does (GUIDE ENV-2).
 rootutils.setup_root(__file__, indicator=".project-root")
-
-log = structlog.stdlib.get_logger()
 
 
 @hydra.main(config_path=str(paths.CONFIGS_DIR), config_name="suggest")
@@ -47,10 +44,10 @@ def run(cfg: SuggestConfig, *, runs_dir: Path) -> Path:
     listed = _launch.read_formulas(
         cfg.system.candidates.file, key="system.candidates.file"
     )
-    formulas = _launch.select_candidates(
-        cfg.system, loaded.rows, listed=listed, excluded=excluded
+    # A point computed at another fidelity only is still a candidate at this one.
+    cells = _launch.select_candidates(
+        cfg.system, explored=[*points.formulas, *excluded], listed=listed
     )
-    cells = proposal.select_cells(points, formulas, excluded=excluded)
     surrogate = SurrogateFactory.from_config(cfg.bo.surrogate)
     acquisition = AcquisitionFactory.from_config(cfg.bo.acquisition)
     run_dir, rng = _launch.start(cfg, runs_dir=runs_dir)
@@ -66,13 +63,4 @@ def run(cfg: SuggestConfig, *, runs_dir: Path) -> Path:
     pd.DataFrame({"formula": picks}).to_csv(run_dir / "next.csv", index=False)
     posterior.to_csv(run_dir / "posterior.csv", index=False)
     click.echo("\n".join(picks))
-    elements = list(cfg.system.elements)
-    if not plots.save_hull_map(
-        points,
-        run_dir / "convex_hull.png",
-        elements=elements,
-        dpi=cfg.plot_dpi,
-        show=cfg.show_plots,
-    ):
-        log.info("hull_map_skipped", elements=len(elements))
     return run_dir

@@ -26,4 +26,4 @@ def test_suggest_writes_the_batch_and_each_candidate_prediction(
     assert (len(picks), set(picks) <= set(candidates)) == (2, True)
     assert list(posterior.columns) == ["formula", "mean_mev", "std_mev"]
     assert capsys.readouterr().out.split() == " ".join(picks).split()
-    assert {"convex_hull.png", "data.json"} <= {p.name for p in run_dir.iterdir()}
+    assert (run_dir / "data.json").is_file()

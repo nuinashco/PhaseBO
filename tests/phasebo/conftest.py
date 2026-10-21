@@ -114,4 +114,6 @@ def system(write_system: SystemWriter) -> SystemConfig:
 def points(system: SystemConfig) -> field_points.Points:
     """Return the field's points at the dft fidelity."""
     rows = store.load(system.processed).rows
-    return field_points.build(rows, fidelity="dft", elements=list(system.elements))
+    return field_points.Points.from_rows(
+        rows, fidelity="dft", elements=list(system.elements)
+    )

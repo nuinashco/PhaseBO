@@ -1,12 +1,9 @@
-"""Proposals: the next compositions to compute, picked from candidate formulas."""
+"""Proposals: the next compositions to compute, picked from candidate cells."""
 
-from collections.abc import Collection, Sequence
+from collections.abc import Sequence
 
 import numpy as np
 import pandas as pd
-from pymatgen.core import Composition
-
-from nuikit.errors import DataError
 
 from phasebo.bo.acquisition.base import Acquisition
 from phasebo.bo.surrogate.base import Surrogate
@@ -25,9 +22,12 @@ def propose(
     """Return the next batch among `cells` and the prediction at each.
 
     The surrogate is fitted to the explored points even when the acquisition ignores
-    it, so every cell gets a prediction.
+    it, so every cell gets a prediction. Cells are ranked in coordinate order, so the
+    batch does not depend on the order they come in.
     """
-    coords = points.locate(cells)
+    unsorted = points.locate(cells)
+    order = sorted(range(len(cells)), key=lambda i: tuple(unsorted[i]))
+    cells, coords = [cells[i] for i in order], unsorted[order]
     pool = points.pool
     fit = surrogate.fit(points.coords[pool], points.energies_mev[pool])
     size = min(batch_size, len(cells))
@@ -37,33 +37,3 @@ def propose(
         {"formula": cells, "mean_mev": mean_mev.round(1), "std_mev": std_mev.round(1)}
     ).sort_values("mean_mev", kind="stable", ignore_index=True)
     return [cells[i] for i in picked], posterior
-
-
-def select_cells(
-    points: Points, candidates: Sequence[str], *, excluded: Collection[str] = ()
-) -> list[str]:
-    """Return one cell per candidate point not computed or excluded, by coordinates.
-
-    A point keeps its smallest candidate cell, the cheapest to compute.
-    """
-    taken = {
-        Composition(f).reduced_composition.formula
-        for f in [*points.formulas, *excluded]
-    }
-    smallest: dict[str, str] = {}
-    for formula in candidates:
-        composition = Composition(formula)
-        point = composition.reduced_composition.formula
-        if point in taken:
-            continue
-        kept = smallest.get(point)
-        if kept is None or composition.num_atoms < Composition(kept).num_atoms:
-            smallest[point] = formula
-    if not smallest:
-        raise DataError(
-            "every candidate is at a computed or excluded point; give other "
-            "candidates in system.candidates.file, or set it to null"
-        )
-    cells = list(smallest.values())
-    coords = points.locate(cells)
-    return [cells[i] for i in sorted(range(len(cells)), key=lambda i: tuple(coords[i]))]

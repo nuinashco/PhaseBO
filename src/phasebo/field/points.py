@@ -42,47 +42,54 @@ class Points:
 
     def locate(self, formulas: Sequence[str]) -> np.ndarray:
         """Return the coordinates of `formulas` in this phase field's basis."""
-        return project(formulas, self.elements)
+        return _project(formulas, self.elements)
 
+    @classmethod
+    def from_rows(
+        cls,
+        rows: pd.DataFrame,
+        *,
+        fidelity: str,
+        elements: Collection[str],
+        excluded: Collection[str] = (),
+    ) -> Points:
+        """Return the points of one fidelity's rows of a processed table.
 
-def build(
-    rows: pd.DataFrame,
-    *,
-    fidelity: str,
-    elements: Collection[str],
-    excluded: Collection[str] = (),
-) -> Points:
-    """Return the points of one fidelity's rows of a processed table.
-
-    `excluded` formulas drop every row at their points before the hull is built.
-    """
-    found = sorted(set(rows["fidelity"]))
-    rows = rows.loc[rows["fidelity"] == fidelity].reset_index(drop=True)
-    if rows.empty:
-        raise DataError(
-            f"no rows of fidelity {fidelity!r}; set fidelity to one of "
-            f"{', '.join(found)}"
+        `excluded` formulas drop every row at their points before the hull is built.
+        """
+        found = sorted(set(rows["fidelity"]))
+        rows = rows.loc[rows["fidelity"] == fidelity].reset_index(drop=True)
+        if rows.empty:
+            raise DataError(
+                f"no rows of fidelity {fidelity!r}; set fidelity to one of "
+                f"{', '.join(found)}"
+            )
+        left_out = sorted(
+            {Composition(f).reduced_composition.formula for f in excluded}
         )
-    left_out = sorted({Composition(f).reduced_composition.formula for f in excluded})
-    rows = rows.loc[~rows["point"].isin(left_out)].reset_index(drop=True)
-    energies_mev = _read_energies(rows)
-    groups = pd.DataFrame(
-        {"point": rows["point"], "energy": energies_mev, "reference": rows["reference"]}
-    ).groupby("point", sort=False)
-    # `idxmin` keeps the first of tied cells, in table order.
-    lowest = groups["energy"].idxmin().to_numpy()
-    order = tuple(str(el) for el in sorted(Element(symbol) for symbol in elements))
-    formulas = tuple(rows["formula"].to_numpy()[lowest])
-    return Points(
-        elements=order,
-        formulas=formulas,
-        coords=project(formulas, order),
-        energies_mev=energies_mev[lowest],
-        references=groups["reference"].any().to_numpy(dtype=bool),
-    )
+        rows = rows.loc[~rows["point"].isin(left_out)].reset_index(drop=True)
+        energies_mev = _read_energies(rows)
+        groups = pd.DataFrame(
+            {
+                "point": rows["point"],
+                "energy": energies_mev,
+                "reference": rows["reference"],
+            }
+        ).groupby("point", sort=False)
+        # `idxmin` keeps the first of tied cells, in table order.
+        lowest = groups["energy"].idxmin().to_numpy()
+        order = tuple(str(el) for el in sorted(Element(symbol) for symbol in elements))
+        formulas = tuple(rows["formula"].to_numpy()[lowest])
+        return cls(
+            elements=order,
+            formulas=formulas,
+            coords=_project(formulas, order),
+            energies_mev=energies_mev[lowest],
+            references=groups["reference"].any().to_numpy(dtype=bool),
+        )
 
 
-def project(formulas: Sequence[str], elements: Sequence[str]) -> np.ndarray:
+def _project(formulas: Sequence[str], elements: Sequence[str]) -> np.ndarray:
     """Return each formula's atomic fractions of every element but the first."""
     basis = [Element(symbol) for symbol in elements[1:]]
     return np.array(

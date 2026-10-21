@@ -17,7 +17,6 @@ dependencies = [
     "botorch>=0.18.1",
     "click>=8.5",
     "hydra-core>=1.4.0rc1",  # 1.3.x crashes on Python 3.14 (argparse help check).
-    "matplotlib>=3.11",
     "numpy>=2.5",
     "omegaconf>=2.4",
     "pandas>=3.0",
@@ -25,7 +24,6 @@ dependencies = [
     "pydantic>=2.14",
     "pymatgen>=2026.9.24",
     "rootutils>=1.0.7",
-    "scipy>=1.17",
     "structlog>=26.1",
     "torch>=2.14",
     "wandb>=0.31",
@@ -47,10 +45,13 @@ dev = [
     "pytest>=9.1",
     "ruff>=0.17",
 ]
+# Notebooks and scripts/plot_run.py.
 notebooks = [
     # 0.25.0 pairs KaTeX 0.18 with KaTeX 0.16 CSS, so sub- and superscripts are not shrunk.
     "marimo>=0.24.2,<0.25",
+    "matplotlib>=3.11",
     "plotly>=7.1",
+    "scipy>=1.17",
 ]
 
 [tool.uv.sources]
@@ -143,7 +144,7 @@ exhaustive = true
 name = "BO: the loops use the families, the batch rules use the surrogate"
 type = "layers"
 containers = ["phasebo.bo"]
-layers = ["replay | proposal | plots", "acquisition | start", "surrogate"]
+layers = ["replay | proposal", "acquisition | start", "surrogate"]
 exhaustive = true
 
 [[tool.importlinter.contracts]]

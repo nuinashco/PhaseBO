@@ -11,7 +11,7 @@ All notable changes to this project will be documented in this file.
   choose a phase field with `system=` and override any value on the command line. `configs/defaults/<command>.yaml`
   lists every setting with its default.
 - Each run writes `runs/<run_name>/`: the resolved configuration, `run.json` (git commit, command line, start time),
-  results and plots. `tracker=wandb` mirrors a run to Weights & Biases.
+  and results. `tracker=wandb` mirrors a run to Weights & Biases.
 - A phase field is a file in `configs/system/`: its processed table, its elements (charge and an inclusive range
   of atoms per cell) and its candidate space.
 - One script per raw source (`scripts/process_<source>.py`) turns it into a committed, validated table in
@@ -27,7 +27,8 @@ All notable changes to this project will be documented in this file.
 - Validation with pydantic: unknown keys, invalid values and missing input files stop a run before it starts.
 - `seed` (default 42): runs repeat exactly.
 - BO is three config groups, each a choice of kind (`bo/<group>=<kind>`):
-  - `bo/surrogate`: `gp`, with `kernel` (`matern`, Matérn 5/2 as in the paper, default; `rbf`) and `noise_mev`, the
+  - `bo/surrogate`: `gp`, with `kernel` (`matern12`, `matern32`, `matern52`: Matérn ν = 1/2, 3/2, 5/2, the last
+    as in the paper and the default; `rbf`) and `noise_mev`, the
     energy noise it assumes in meV/atom (0 by default, as DFT energies are deterministic; `null` fits it); the
     preset `paper` is the paper's GP, with a fitted noise;
   - `bo/acquisition`: `qlogei` (batch log expected improvement, default), `ts` (Thompson sampling) or `random`, the
@@ -35,14 +36,16 @@ All notable changes to this project will be documented in this file.
   - `bo/start`: `random`, the benchmark's starting set, `size` explored points off the hull.
 - `bo.batch_size` (compositions per batch, it was fixed at 4) and `bo.max_iter` (a benchmark's batches).
 - Tests on synthetic phase fields; the project follows the nuinashco/conventions `rnd` template (`make check`).
-- Optional `notebooks` dependency group (marimo, plotly).
+- Optional `notebooks` dependency group (marimo, plotly; matplotlib and scipy for `scripts/plot_run.py`).
 
 ### Changed
 - Bayesian optimisation uses BoTorch instead of GPyOpt, which is no longer maintained.
 - The published datasets moved, unchanged, to `data/raw/`.
 - Packaging with uv (`make setup`): dependencies pinned in `uv.lock`, sources in `src/`, Python 3.14 or newer.
 - Data paths start from the repository root (marked by `.project-root`), so the commands run from any directory.
-- Plots are saved to the run directory; `show_plots=true` also opens them.
+- Commands no longer draw figures: `scripts/plot_run.py runs/<run_name>` draws the hull map and a benchmark's
+  convergence into the run directory.
+- `phasebo-generate` lists one cell per point not computed yet, its smallest; it listed every cell.
 - The posterior is written to `posterior.csv` in the run directory.
 
 ### Removed
@@ -60,8 +63,8 @@ All notable changes to this project will be documented in this file.
   when cells of one point differ in energy.
 - The convex hull map is skipped for fields that are not 4-element instead of crashing before results are written.
 - `phasebo-generate` writes a header, so reading its output back no longer drops the first candidate.
-- Generated candidates skip the points already computed or excluded; `posterior.csv` lists only them (22 of the
-  78 rows it listed for LiSnSCl).
+- Generated candidates skip the points already computed or excluded; `posterior.csv` lists only them, one cell
+  each (17 of the 78 rows it listed for LiSnSCl).
 - Reference compositions were treated as search candidates since July 2025: their names in the data file start with
   spaces and no longer matched. Path mode spent about half of its evaluations on them and counted them as stable
   compositions found; suggest mode trained on them.

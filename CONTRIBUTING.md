@@ -14,13 +14,12 @@ flowchart TD
         config["config.py<br/>entry config schemas"]:::pure
         subgraph bo["bo/: Bayesian optimisation"]
             loops["replay.py, proposal.py<br/>the benchmark loop, suggest's batch"]:::pure
-            plots["plots.py<br/>hull map, convergence"]:::side
             families["acquisition/, start/<br/>batch rules, starting sets"]:::pure
             surrogate["surrogate/<br/>gp (BoTorch)"]:::pure
         end
         subgraph field["field/: the phase field"]
             points["points.py<br/>one entry per point"]:::pure
-            hull["hull.py, candidates.py<br/>oracle hull, charge-balanced cells"]:::pure
+            hull["hull.py, candidates.py<br/>oracle hull, one new cell per point"]:::pure
         end
         subgraph data["data/: processed data"]
             store["store.py<br/>tables on disk, with a pydantic sha256 sidecar"]:::side
@@ -57,11 +56,14 @@ flowchart TD
 
 - `data/` is processed data: the canonical table (`table.py`, pure) and its files with their sidecars (`store.py`).
 - `field/` is the phase field: the oracle hull, one entry per point (its lowest cell, its `pymatgen` phase diagram
-  coordinates, its energy above the hull, whether it is a reference or a target), and candidate generation, which
-  `phasebo-generate` uses without any BO.
+  coordinates, its energy above the hull, whether it is a reference or a target), and the candidates: the
+  smallest charge-balanced cell of each point not computed yet, which `phasebo-generate` lists without any BO.
 - `bo/` is the search: three families decide how BO models the points (`surrogate`), picks a batch
   (`acquisition`) and starts a benchmark (`start`); `replay.py` and `proposal.py` drive them for the two BO
-  commands, and `plots.py` draws their figures. Only `plots.py` writes a file; the commands in `cli/` do the rest.
+  commands. It writes no file; the commands in `cli/` do.
+
+Figures are not part of a run: `uv run --group notebooks scripts/plot_run.py runs/<run_name>` draws the hull map
+and a benchmark's convergence into the run directory (see Deviations).
 
 `nuikit` is the machinery every project built from the template shares: what schemas and families build on, and
 what an entry point sets up before it runs. Copier writes it; fixes go upstream and arrive with `copier update`.
@@ -88,7 +90,7 @@ sequenceDiagram
     C->>L: write_data: data.json, the sidecar's provenance
     C->>R: replay: the starting set, then batches; the GP is fitted only if the acquisition needs it
     R-->>C: the path
-    C->>C: bo_path.csv, convergence.png, convex_hull.png in the run directory
+    C->>C: bo_path.csv in the run directory
 ```
 
 ## Repository layout
@@ -118,14 +120,13 @@ src/phasebo/
   field/                  the phase field
     hull.py               energies above the oracle hull
     points.py             one entry per point: lowest cell, coordinates, energy, role
-    candidates.py         charge-balanced cells, filtered to unexplored points
+    candidates.py         charge-balanced cells; the smallest at each new point
   bo/                     Bayesian optimisation
     surrogate/            family: models of the energy above the hull
     acquisition/          family: rules that pick the next batch
     start/                family: a benchmark's starting set
     replay.py             the benchmark loop
     proposal.py           suggest's next batch and the prediction at every candidate point
-    plots.py              figures
 src/nuikit/               copied from the conventions template: config, configgen, registry, errors, logging,
                           runs, seeding
 tests/                    mirrors src/; tests/nuikit/ comes with the template
@@ -134,6 +135,7 @@ tests/                    mirrors src/; tests/nuikit/ comes with the template
   integration/            end to end, `-m integration`
 scripts/                  exploratory or one-time runnables, never imported; rerun ones become cli/ commands
   process_<source>.py     one per raw source: writes its processed table and sidecar
+  plot_run.py             a run's figures: hull map, convergence
 notebooks/                exploration only, outputs stripped; reference/ for third-party notebooks
 runs/                     gitignored
 ```
@@ -146,7 +148,7 @@ hand-written preset names a variant of a kind (`bo/surrogate=paper`).
 
 | family | kinds | chosen by |
 |---|---|---|
-| `bo/surrogate` | `gp`: BoTorch single-task GP, Matern 5/2 or RBF, fixed or fitted noise | `bo/surrogate=gp` (default), `bo/surrogate=paper` |
+| `bo/surrogate` | `gp`: BoTorch single-task GP, Matern 1/2, 3/2, 5/2 or RBF, fixed or fitted noise | `bo/surrogate=gp` (default), `bo/surrogate=paper` |
 | `bo/acquisition` | `qlogei`, `ts`, `random`; `random` has `needs_model = False`, so the replay does not fit the GP | `bo/acquisition=<kind>` |
 | `bo/start` | `random`: explored points off the hull, drawn with the run's generator | `bo/start=random` |
 
@@ -184,6 +186,12 @@ src/phasebo/bo/<family>/
 - **`cli/_launch.py`** is a module in `cli/` that is not a console script (LAY-7). It holds what the commands share
   and what needs the config schemas, so it sits in the only layer above `config`: start-up, loading the processed
   table and its points, and reading the candidate files.
+- **`scripts/plot_run.py` is rerun for any run** (LAY-7 makes such a script a command): figures are a developer
+  aid, not part of a run or of the README, and W&B will show the curves once benchmarks log them. It has no
+  tests; it refuses a run whose processed table has changed since.
+- **GP priors are fixed** (CFG-7): every Matern kernel keeps BoTorch's pre-0.12 Matern 5/2 priors, Gamma(3, 6)
+  on each lengthscale and Gamma(2, 0.15) on the outputscale, so `kernel` changes only nu. For `matern52` they
+  reproduce the paper's GP; for `matern12` and `matern32` they are a choice, made to change one thing at a time.
 - **BoTorch draws from torch's global generator** (RUN-2 asks for an explicit one): fitting a GP, qLogEI's MC
   sampler and Thompson sampling take no generator. `seed_everything` seeds it once per run, so runs repeat; the starting set and random
   acquisition take the run's `np.random.Generator`.

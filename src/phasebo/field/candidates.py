@@ -11,27 +11,37 @@ def generate(
     ranges: Mapping[str, tuple[int, int]],
     *,
     max_atoms: int,
-) -> list[Composition]:
-    """Return every charge-neutral cell of at most `max_atoms` atoms.
+) -> list[str]:
+    """Return the formula of every charge-neutral cell of at most `max_atoms` atoms.
 
     `charges` maps each element to its oxidation state, `ranges` to its inclusive
     [min, max] atoms per cell.
     """
     symbols = list(charges)
     spans = [range(ranges[s][0], ranges[s][1] + 1) for s in symbols]
-    cells: list[Composition] = []
+    cells: list[str] = []
     for amounts in product(*spans):
         if not 0 < sum(amounts) <= max_atoms:
             continue
         if sum(charges[s] * n for s, n in zip(symbols, amounts, strict=True)):
             continue
-        cells.append(Composition(dict(zip(symbols, amounts, strict=True))))
+        cells.append(Composition(dict(zip(symbols, amounts, strict=True))).formula)
     return cells
 
 
-def drop_explored(
-    candidates: Iterable[Composition], explored: Iterable[Composition]
-) -> list[Composition]:
-    """Return the candidates whose point no explored composition shares."""
-    seen = {c.reduced_composition for c in explored}
-    return [c for c in candidates if c.reduced_composition not in seen]
+def select(cells: Iterable[str], *, explored: Iterable[str]) -> list[str]:
+    """Return one cell per point no explored formula shares, in first-seen order.
+
+    A point keeps its smallest cell, the cheapest to compute.
+    """
+    taken = {Composition(f).reduced_composition.formula for f in explored}
+    smallest: dict[str, Composition] = {}
+    for formula in cells:
+        cell = Composition(formula)
+        point = cell.reduced_composition.formula
+        if point in taken:
+            continue
+        kept = smallest.get(point)
+        if kept is None or cell.num_atoms < kept.num_atoms:
+            smallest[point] = cell
+    return [cell.formula for cell in smallest.values()]

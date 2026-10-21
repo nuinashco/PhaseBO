@@ -42,7 +42,8 @@ def run(cfg: GenerateConfig, *, runs_dir: Path) -> Path:
     )
     loaded = _launch.load_table(cfg.system)
     rows = loaded.rows
-    formulas = _launch.generate_formulas(cfg.system, rows, excluded=excluded)
+    explored = [*rows["formula"], *(excluded or [])]
+    formulas = _launch.generate_formulas(cfg.system, explored=explored)
     run_dir, _ = _launch.start(cfg, runs_dir=runs_dir)
     _launch.write_data(run_dir, loaded)
     path = run_dir / "candidates_list.csv"

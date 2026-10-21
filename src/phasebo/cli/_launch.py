@@ -1,12 +1,12 @@
 """Command start-up, and the inputs that need the config schemas to be read."""
 
 import json
+from collections.abc import Sequence
 from pathlib import Path
 
 import numpy as np
 import pandas as pd
 import structlog
-from pymatgen.core import Composition
 
 from nuikit import runs, seeding
 from nuikit.errors import DataError
@@ -49,7 +49,7 @@ def load_points(
     excluded = read_formulas(
         cfg.system.candidates.exclude, key="system.candidates.exclude"
     )
-    points = field_points.build(
+    points = field_points.Points.from_rows(
         loaded.rows,
         fidelity=cfg.fidelity,
         elements=list(cfg.system.elements),
@@ -70,33 +70,31 @@ def map_charges(system: SystemConfig) -> dict[str, int]:
     return {symbol: element.charge for symbol, element in system.elements.items()}
 
 
-def generate_formulas(
-    system: SystemConfig, rows: pd.DataFrame, *, excluded: list[str] | None
-) -> list[str]:
-    """Return the charge-balanced cells at points neither computed nor excluded."""
+def generate_formulas(system: SystemConfig, *, explored: Sequence[str]) -> list[str]:
+    """Return the smallest charge-balanced cell of each point no `explored` shares."""
     top = system.candidates.max_atoms
     ranges = {s: e.atoms or (0, top) for s, e in system.elements.items()}
     cells = candidates.generate(map_charges(system), ranges, max_atoms=top)
-    explored = [Composition(f) for f in [*rows["formula"], *(excluded or [])]]
-    return [cell.formula for cell in candidates.drop_explored(cells, explored)]
+    return candidates.select(cells, explored=explored)
 
 
 def select_candidates(
-    system: SystemConfig,
-    rows: pd.DataFrame,
-    *,
-    listed: list[str] | None,
-    excluded: list[str] | None,
+    system: SystemConfig, *, explored: Sequence[str], listed: list[str] | None
 ) -> list[str]:
-    """Return the formulas to rank: the listed ones, else the generated ones."""
+    """Return one cell per new point to rank, from the listed formulas or generated.
+
+    `explored` holds the formulas computed or excluded: no candidate shares a point
+    with one.
+    """
     if listed is None:
-        listed = generate_formulas(system, rows, excluded=excluded)
-    if not listed:
-        raise DataError(
-            "no candidates left to rank; widen system.elements atoms or "
-            "system.candidates.max_atoms"
-        )
-    return listed
+        cells = generate_formulas(system, explored=explored)
+        remedy = "widen system.elements atoms or system.candidates.max_atoms"
+    else:
+        cells = candidates.select(listed, explored=explored)
+        remedy = "list others in system.candidates.file, or set it to null"
+    if not cells:
+        raise DataError(f"no candidate at a point not computed or excluded; {remedy}")
+    return cells
 
 
 def read_formulas(path: Path | None, *, key: str) -> list[str] | None:
