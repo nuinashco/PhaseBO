@@ -1,7 +1,9 @@
 # Entry config of `phasebo-suggest`: values set below change every run of this repo.
-# Every setting, with its default and description: defaults/suggest.yaml (generated).
+# Every setting with its default: defaults/suggest.yaml (generated).
 defaults:
   - defaults/suggest@_here_
   - system: LiSnSCl
+  - bo/surrogate: gp
+  - bo/acquisition: qlogei
   - hydra: default
   - _self_

@@ -1,33 +1,48 @@
-"""`phasebo-benchmark` replays BO over the computed compositions, reproducibly."""
+"""`phasebo-benchmark` replays BO over the computed points and writes its path."""
 
 import pandas as pd
+import pytest
 
+from nuikit.errors import ConfigError
+
+from phasebo.bo.acquisition.items.qlogei import QLogEIConfig
+from phasebo.bo.start.items.random import RandomStartConfig
+from phasebo.bo.surrogate.items.gp import GPConfig
 from phasebo.cli import benchmark
-from phasebo.config import BenchmarkConfig, BOConfig
+from phasebo.config import BenchmarkBOConfig, BenchmarkConfig
 
 
-def replay(system, runs_dir, *, seed, run_name):
+def test_benchmark_writes_the_path_and_its_plots(system, tmp_path, capsys):
     cfg = BenchmarkConfig(
-        run_name=run_name,
-        seed=seed,
+        run_name="r",
         system=system,
-        bo=BOConfig(batch_size=2),
-        n_starts=2,
-        max_iter=2,
+        bo=BenchmarkBOConfig(
+            surrogate=GPConfig(kind="gp"),
+            acquisition=QLogEIConfig(kind="qlogei"),
+            start=RandomStartConfig(kind="random", size=2),
+            batch_size=2,
+            max_iter=2,
+        ),
     )
-    return pd.read_csv(benchmark.run(cfg, runs_dir=runs_dir) / "bo_path.csv")
+
+    run_dir = benchmark.run(cfg, runs_dir=tmp_path / "runs")
+
+    path = pd.read_csv(run_dir / "bo_path.csv")
+    assert path["batch"].tolist() == [0, 0, 1, 1, 2, 2]
+    assert "targets found in 6 evaluations" in capsys.readouterr().out
+    assert {"convergence.png", "convex_hull.png"} <= {p.name for p in run_dir.iterdir()}
 
 
-def test_benchmark_writes_the_starts_then_every_batch(system, tmp_path):
-    path = replay(system, tmp_path, seed=0, run_name="r")
+def test_benchmark_refuses_an_oversized_start_before_creating_the_run(system, tmp_path):
+    cfg = BenchmarkConfig(
+        system=system,
+        bo=BenchmarkBOConfig(
+            surrogate=GPConfig(kind="gp"),
+            acquisition=QLogEIConfig(kind="qlogei"),
+            start=RandomStartConfig(kind="random", size=100),
+        ),
+    )
 
-    assert path["seed"].tolist() == [True] * 2 + [False] * 4
-
-
-def test_benchmark_path_depends_only_on_the_seed(system, tmp_path):
-    first = replay(system, tmp_path, seed=0, run_name="a")
-    again = replay(system, tmp_path, seed=0, run_name="b")
-    other = replay(system, tmp_path, seed=1, run_name="c")
-
-    assert first.equals(again)
-    assert not first.equals(other)
+    with pytest.raises(ConfigError, match=r"bo\.start\.size"):
+        benchmark.run(cfg, runs_dir=tmp_path / "runs")
+    assert not (tmp_path / "runs").exists()

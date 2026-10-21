@@ -2,12 +2,13 @@
 
 Usage:
 
-    phasebo-suggest                           # configs/suggest.yaml as it is
+    phasebo-suggest                          # configs/suggest.yaml as it is
 
-    phasebo-suggest bo.acquisition=ts seed=1  # Hydra overrides
+    phasebo-suggest bo/acquisition=ts seed=1    # Hydra overrides
 
 Writes runs/<run_name>/ with next.csv (the batch to compute next), posterior.csv
-(each candidate's predicted energy above the hull) and convex_hull.png.
+(each candidate point's predicted energy above the hull) and, for 4-element fields,
+convex_hull.png.
 """
 
 from pathlib import Path
@@ -16,16 +17,22 @@ import click
 import hydra
 import pandas as pd
 import rootutils
+import structlog
 from omegaconf import DictConfig
 
 from nuikit.errors import cli_boundary
 
 from phasebo import paths
+from phasebo.bo import plots, proposal
+from phasebo.bo.acquisition.base import AcquisitionFactory
+from phasebo.bo.surrogate.base import SurrogateFactory
 from phasebo.cli import _launch
 from phasebo.config import SuggestConfig
 
 # Loads .env and sets PROJECT_ROOT, as every entry point does (GUIDE ENV-2).
 rootutils.setup_root(__file__, indicator=".project-root")
+
+log = structlog.stdlib.get_logger()
 
 
 @hydra.main(config_path=str(paths.CONFIGS_DIR), config_name="suggest")
@@ -35,43 +42,37 @@ def main(dict_cfg: DictConfig) -> None:
 
 
 def run(cfg: SuggestConfig, *, runs_dir: Path) -> Path:
-    """Fit the GP to the computed compositions and pick the next batch."""
-    from phasebo.phase_field_bo import PhaseFieldBO
-
-    loaded = _launch.load_table(cfg.system)
-    rows = loaded.rows
-    compositions, references = _launch.to_legacy_inputs(rows)
-    excluded = _launch.read_formulas(
-        cfg.system.candidates.exclude, key="system.candidates.exclude"
-    )
+    """Fit the surrogate to the explored points and pick the next batch."""
+    loaded, points, excluded = _launch.load_points(cfg)
     listed = _launch.read_formulas(
         cfg.system.candidates.file, key="system.candidates.file"
     )
     formulas = _launch.select_candidates(
-        cfg.system, rows, listed=listed, excluded=excluded
+        cfg.system, loaded.rows, listed=listed, excluded=excluded
     )
-    run_dir = _launch.start(cfg, runs_dir=runs_dir)
+    cells = proposal.select_cells(points, formulas, excluded=excluded)
+    surrogate = SurrogateFactory.from_config(cfg.bo.surrogate)
+    acquisition = AcquisitionFactory.from_config(cfg.bo.acquisition)
+    run_dir, rng = _launch.start(cfg, runs_dir=runs_dir)
     _launch.write_data(run_dir, loaded)
-    bopt = PhaseFieldBO(
-        compositions=compositions,
-        references=references,
-        ions=_launch.map_charges(cfg.system),
-        mode="suggest",
-        batch=cfg.bo.batch_size,
-        acquisition=cfg.bo.acquisition,
-        kernel=cfg.bo.kernel,
-        noise=cfg.bo.noise_mev,
-        next_formulas=formulas,
-        exceptions=excluded,
-        output_dir=str(run_dir),
+    picks, posterior = proposal.propose(
+        points,
+        cells,
+        surrogate=surrogate,
+        acquisition=acquisition,
+        batch_size=cfg.bo.batch_size,
+        rng=rng,
     )
-    bopt.print_results()
-    bopt.get_uncertainty()
-    picks = [bopt.next_list[bopt.fcsym(x)] for x in bopt.next]
-    pd.DataFrame({"composition": picks}).to_csv(run_dir / "next.csv", index=False)
+    pd.DataFrame({"formula": picks}).to_csv(run_dir / "next.csv", index=False)
+    posterior.to_csv(run_dir / "posterior.csv", index=False)
     click.echo("\n".join(picks))
-    bopt.plot_convex()
-    _launch.save_plot(
-        run_dir / "convex_hull.png", dpi=cfg.plot_dpi, show=cfg.show_plots
-    )
+    elements = list(cfg.system.elements)
+    if not plots.save_hull_map(
+        points,
+        run_dir / "convex_hull.png",
+        elements=elements,
+        dpi=cfg.plot_dpi,
+        show=cfg.show_plots,
+    ):
+        log.info("hull_map_skipped", elements=len(elements))
     return run_dir

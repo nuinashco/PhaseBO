@@ -74,16 +74,7 @@ module-name = ["phasebo", "nuikit"]
 [tool.ruff]
 line-length = 88
 src = ["src", "tests"]
-extend-exclude = [
-    "CONVENTIONS.md",  # Vendored guide: fix it upstream, not here.
-    # Pre-template code, rewritten by the feat/bo-families branch (CONTRIBUTING,
-    # Deviations).
-    "src/phasebo/phase_field.py",
-    "src/phasebo/phase_field_bo.py",
-    "tests/conftest.py",
-    "tests/test_phase_field.py",
-    "tests/test_phase_field_bo.py",
-]
+extend-exclude = ["CONVENTIONS.md"]  # Vendored guide: fix it upstream, not here.
 
 [tool.ruff.lint]
 select = [
@@ -128,14 +119,6 @@ ban-relative-imports = "all"
 
 [tool.pyright]
 include = ["src", "tests", "scripts"]
-exclude = [
-    # Pre-template code (CONTRIBUTING, Deviations).
-    "src/phasebo/phase_field.py",
-    "src/phasebo/phase_field_bo.py",
-    "tests/conftest.py",
-    "tests/test_phase_field.py",
-    "tests/test_phase_field_bo.py",
-]
 strict = ["src/nuikit"]
 typeCheckingMode = "standard"
 venvPath = "."
@@ -153,7 +136,21 @@ root_packages = ["phasebo", "nuikit"]
 name = "Layers: cli on top, paths at the bottom, every module placed"
 type = "layers"
 containers = ["phasebo"]
-layers = ["cli", "config", "phase_field_bo | data | candidates", "phase_field", "paths"]
+layers = ["cli", "config", "bo", "field | data", "paths"]
+exhaustive = true
+
+[[tool.importlinter.contracts]]
+name = "BO: the loops use the families, the batch rules use the surrogate"
+type = "layers"
+containers = ["phasebo.bo"]
+layers = ["replay | proposal | plots", "acquisition | start", "surrogate"]
+exhaustive = true
+
+[[tool.importlinter.contracts]]
+name = "Field: points build on the hull; candidates stand apart"
+type = "layers"
+containers = ["phasebo.field"]
+layers = ["points", "hull | candidates"]
 exhaustive = true
 
 [[tool.importlinter.contracts]]

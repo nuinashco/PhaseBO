@@ -1,19 +1,45 @@
 """Schemas of the entry configs; `make configs` mirrors them to configs/defaults/."""
 
+from collections.abc import Mapping
 from pathlib import Path
-from typing import Literal, Self
+from typing import Annotated, Any, Literal, Self
 
 from pydantic import (
+    BeforeValidator,
     Field,
-    NonNegativeFloat,
     NonNegativeInt,
     PositiveInt,
+    SerializeAsAny,
     model_validator,
 )
 
 from nuikit.config import Schema
 from nuikit.configgen import ConfigFile
 from nuikit.logging import LogFormat, LogLevel
+from nuikit.registry import ConfigurableFactory
+
+from phasebo.bo.acquisition.base import AcquisitionConfig, AcquisitionFactory
+from phasebo.bo.start.base import StartConfig, StartFactory
+from phasebo.bo.surrogate.base import SurrogateConfig, SurrogateFactory
+
+
+def _by_kind(factory: type[ConfigurableFactory[Any]]) -> BeforeValidator:
+    """Return a validator that hands a family config's mapping to its factory."""
+
+    def validate(value: object) -> object:
+        return factory.validate(value) if isinstance(value, Mapping) else value
+
+    return BeforeValidator(validate)
+
+
+# Fields holding a family item's config, validated against the item that `kind` names.
+type _SurrogateField = Annotated[
+    SerializeAsAny[SurrogateConfig], _by_kind(SurrogateFactory)
+]
+type _AcquisitionField = Annotated[
+    SerializeAsAny[AcquisitionConfig], _by_kind(AcquisitionFactory)
+]
+type _StartField = Annotated[SerializeAsAny[StartConfig], _by_kind(StartFactory)]
 
 
 class ElementConfig(Schema):
@@ -54,23 +80,6 @@ class SystemConfig(Schema):
     candidates: CandidatesConfig
 
 
-class BOConfig(Schema):
-    """Gaussian process and batch selection."""
-
-    acquisition: Literal["qlogei", "ts"] = Field(
-        default="qlogei",
-        description="qlogei: batch log expected improvement; ts: Thompson sampling",
-    )
-    kernel: Literal["matern", "rbf"] = Field(
-        default="matern", description="matern: Matern 5/2, as in the paper; rbf"
-    )
-    noise_mev: NonNegativeFloat | None = Field(
-        default=0.0,
-        description="std in meV/atom; null: fitted",
-    )
-    batch_size: PositiveInt = 4
-
-
 class RunConfig(Schema):
     """Settings every command shares: run directory, seeding, logging, tracking."""
 
@@ -92,26 +101,42 @@ class RunConfig(Schema):
     wandb_project: str = "phasebo"
 
 
-class SuggestConfig(RunConfig):
+class BOConfig(Schema):
+    """Bayesian optimisation settings: the model, the batch rule, the batch size."""
+
+    surrogate: _SurrogateField
+    acquisition: _AcquisitionField
+    batch_size: PositiveInt = 4
+
+
+class BenchmarkBOConfig(BOConfig):
+    """BO settings of a benchmark replay: also its starting set and length."""
+
+    start: _StartField
+    max_iter: PositiveInt = Field(default=10, description="BO batches after the starts")
+
+
+class SearchConfig(RunConfig):
+    """Settings suggest and benchmark share: the phase field, its rows, the plots."""
+
+    system: SystemConfig
+    fidelity: str = Field(
+        default="dft", description="a value of the processed table's fidelity column"
+    )
+    show_plots: bool = False
+    plot_dpi: PositiveInt = 150
+
+
+class SuggestConfig(SearchConfig):
     """Entry config of `phasebo-suggest` (configs/suggest.yaml)."""
 
-    system: SystemConfig
-    bo: BOConfig = Field(default_factory=BOConfig)
-    show_plots: bool = False
-    plot_dpi: PositiveInt = 150
+    bo: BOConfig
 
 
-class BenchmarkConfig(RunConfig):
+class BenchmarkConfig(SearchConfig):
     """Entry config of `phasebo-benchmark` (configs/benchmark.yaml)."""
 
-    system: SystemConfig
-    bo: BOConfig = Field(default_factory=BOConfig)
-    n_starts: PositiveInt = Field(
-        default=23, description="random computed compositions before BO"
-    )
-    max_iter: PositiveInt = Field(default=10, description="BO batches after the starts")
-    show_plots: bool = False
-    plot_dpi: PositiveInt = 150
+    bo: BenchmarkBOConfig
 
 
 class GenerateConfig(RunConfig):
@@ -127,8 +152,16 @@ class DataConfig(Schema):
 
 
 GENERATED = (
-    ConfigFile("defaults/suggest.yaml", SuggestConfig, groups=("system",)),
-    ConfigFile("defaults/benchmark.yaml", BenchmarkConfig, groups=("system",)),
+    ConfigFile(
+        "defaults/suggest.yaml",
+        SuggestConfig,
+        groups=("system", "bo/surrogate", "bo/acquisition"),
+    ),
+    ConfigFile(
+        "defaults/benchmark.yaml",
+        BenchmarkConfig,
+        groups=("system", "bo/surrogate", "bo/acquisition", "bo/start"),
+    ),
     ConfigFile("defaults/generate.yaml", GenerateConfig, groups=("system",)),
     ConfigFile("defaults/data.yaml", DataConfig, groups=("system",)),
 )

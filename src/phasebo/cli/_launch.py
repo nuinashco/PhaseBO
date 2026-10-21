@@ -1,4 +1,4 @@
-"""Command start-up, and adapters from the configs and table to the old BO class."""
+"""Command start-up, and the inputs that need the config schemas to be read."""
 
 import json
 from pathlib import Path
@@ -12,23 +12,28 @@ from nuikit import runs, seeding
 from nuikit.errors import DataError
 from nuikit.logging import configure_logging
 
-from phasebo import candidates, paths
-from phasebo.config import RunConfig, SystemConfig
+from phasebo import paths
+from phasebo.config import RunConfig, SearchConfig, SystemConfig
 from phasebo.data import store
+from phasebo.field import candidates
+from phasebo.field import points as field_points
 
 log = structlog.stdlib.get_logger()
 
 
-def start(cfg: RunConfig, *, runs_dir: Path) -> Path:
-    """Configure logging, seed, and create the run directory; return it."""
+def start(cfg: RunConfig, *, runs_dir: Path) -> tuple[Path, np.random.Generator]:
+    """Configure logging, seed, and create the run directory.
+
+    Return the directory and the run's random generator.
+    """
     configure_logging(level=cfg.log_level, fmt=cfg.log_format)
-    seeding.seed_everything(cfg.seed, deterministic=cfg.deterministic)
+    rng = seeding.seed_everything(cfg.seed, deterministic=cfg.deterministic)
     run_dir = runs.start_run(cfg, name=cfg.run_name, runs_dir=runs_dir)
     if cfg.tracker == "wandb":
         runs.mirror_to_wandb(cfg, run_dir, project=cfg.wandb_project)
     structlog.contextvars.bind_contextvars(run=run_dir.name)
     log.info("run_started", run_dir=str(run_dir), seed=cfg.seed)
-    return run_dir
+    return run_dir, rng
 
 
 def load_table(system: SystemConfig) -> store.LoadedTable:
@@ -36,23 +41,28 @@ def load_table(system: SystemConfig) -> store.LoadedTable:
     return store.load(paths.ROOT / system.processed)
 
 
+def load_points(
+    cfg: SearchConfig,
+) -> tuple[store.LoadedTable, field_points.Points, list[str]]:
+    """Return the processed table, its points at `cfg.fidelity`, and the exclusions."""
+    loaded = load_table(cfg.system)
+    excluded = read_formulas(
+        cfg.system.candidates.exclude, key="system.candidates.exclude"
+    )
+    points = field_points.build(
+        loaded.rows,
+        fidelity=cfg.fidelity,
+        elements=list(cfg.system.elements),
+        excluded=excluded or [],
+    )
+    return loaded, points, excluded or []
+
+
 def write_data(run_dir: Path, loaded: store.LoadedTable) -> None:
     """Write data.json: the processed table, its script and raw files, by sha256."""
     data = {"table": str(loaded.path), **loaded.sidecar.model_dump(mode="json")}
     text = json.dumps(data, indent=2, ensure_ascii=False)
     (run_dir / "data.json").write_text(text + "\n", encoding="utf-8")
-
-
-def to_legacy_inputs(rows: pd.DataFrame) -> tuple[np.ndarray, np.ndarray]:
-    """Return the inputs of PhaseFieldBO: (formula, total energy) rows, references."""
-    totals = rows.loc[rows["total_energy_ev"].notna()]
-    if totals.empty:
-        raise DataError(
-            "this command needs total energies until BO is rebuilt; "
-            "choose a phase field that has them, e.g. system=LiSnSCl"
-        )
-    field = totals.loc[:, ["formula", "total_energy_ev"]].to_numpy(dtype=object)
-    return field, field[totals["reference"].to_numpy(dtype=bool)]
 
 
 def map_charges(system: SystemConfig) -> dict[str, int]:
@@ -97,13 +107,3 @@ def read_formulas(path: Path | None, *, key: str) -> list[str] | None:
     if not path.is_file():
         raise DataError(f"no formula file at {path}; fix {key} or set it to null")
     return [str(formula) for formula in pd.read_csv(path).iloc[:, 0]]
-
-
-def save_plot(path: Path, *, dpi: int, show: bool) -> None:
-    """Save the current matplotlib figure, then show it if asked."""
-    import matplotlib.pyplot as plt
-
-    plt.savefig(path, dpi=dpi, bbox_inches="tight")
-    if show:
-        plt.show()
-    plt.close("all")

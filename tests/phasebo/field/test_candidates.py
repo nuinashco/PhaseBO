@@ -2,7 +2,7 @@
 
 from pymatgen.core import Composition
 
-from phasebo import candidates
+from phasebo.field import candidates
 
 CHARGES = {"Li": 1, "S": -2, "Cl": -1}
 

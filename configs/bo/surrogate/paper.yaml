@@ -1,0 +1,5 @@
+# The paper's GP (J. Chem. Phys. 160, 054110): Matern 5/2 with a fitted noise.
+defaults:
+  - gp
+  - _self_
+noise_mev: null

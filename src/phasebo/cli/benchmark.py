@@ -2,30 +2,41 @@
 
 Usage:
 
-    phasebo-benchmark                          # configs/benchmark.yaml as it is
+    phasebo-benchmark                                   # configs/benchmark.yaml
 
-    phasebo-benchmark n_starts=8 seed=1        # Hydra overrides
+    phasebo-benchmark bo.start.size=8 bo/acquisition=ts # Hydra overrides
+
+    phasebo-benchmark bo/acquisition=random             # the random baseline
 
     phasebo-benchmark -m seed=0,1,2 'run_name=sweep/${hydra:job.num}'
 
-Writes runs/<run_name>/ with bo_path.csv (the starting compositions, then each pick
-and its energy above the hull), convergence.png and convex_hull.png.
+Writes runs/<run_name>/ with bo_path.csv (each evaluated point: its energy above the
+hull, its batch, 0 for the starting set, and whether it is a target),
+convergence.png and, for 4-element fields, convex_hull.png.
 """
 
 from pathlib import Path
 
+import click
 import hydra
 import rootutils
+import structlog
 from omegaconf import DictConfig
 
 from nuikit.errors import cli_boundary
 
 from phasebo import paths
+from phasebo.bo import plots, replay
+from phasebo.bo.acquisition.base import AcquisitionFactory
+from phasebo.bo.start.base import StartFactory
+from phasebo.bo.surrogate.base import SurrogateFactory
 from phasebo.cli import _launch
 from phasebo.config import BenchmarkConfig
 
 # Loads .env and sets PROJECT_ROOT, as every entry point does (GUIDE ENV-2).
 rootutils.setup_root(__file__, indicator=".project-root")
+
+log = structlog.stdlib.get_logger()
 
 
 @hydra.main(config_path=str(paths.CONFIGS_DIR), config_name="benchmark")
@@ -35,39 +46,37 @@ def main(dict_cfg: DictConfig) -> None:
 
 
 def run(cfg: BenchmarkConfig, *, runs_dir: Path) -> Path:
-    """Pick max_iter batches from the computed compositions after n_starts at random."""
-    from phasebo.phase_field_bo import PhaseFieldBO
-
-    loaded = _launch.load_table(cfg.system)
-    compositions, references = _launch.to_legacy_inputs(loaded.rows)
-    excluded = _launch.read_formulas(
-        cfg.system.candidates.exclude, key="system.candidates.exclude"
-    )
-    run_dir = _launch.start(cfg, runs_dir=runs_dir)
+    """Evaluate a starting set, then up to max_iter batches picked by BO."""
+    loaded, points, _ = _launch.load_points(cfg)
+    starting = StartFactory.from_config(cfg.bo.start)
+    starting.check(points)
+    surrogate = SurrogateFactory.from_config(cfg.bo.surrogate)
+    acquisition = AcquisitionFactory.from_config(cfg.bo.acquisition)
+    run_dir, rng = _launch.start(cfg, runs_dir=runs_dir)
     _launch.write_data(run_dir, loaded)
-    bopt = PhaseFieldBO(
-        compositions=compositions,
-        references=references,
-        ions=_launch.map_charges(cfg.system),
-        mode="path",
-        n_seeds=cfg.n_starts,
-        # Stable compositions never start a replay: finding them is what it measures.
-        exclude_zeros=True,
-        max_iter=cfg.max_iter,
-        batch=cfg.bo.batch_size,
-        acquisition=cfg.bo.acquisition,
-        kernel=cfg.bo.kernel,
-        noise=cfg.bo.noise_mev,
-        exceptions=excluded,
-        output_dir=str(run_dir),
+    path = replay.replay(
+        points,
+        start=starting,
+        surrogate=surrogate,
+        acquisition=acquisition,
+        batch_size=cfg.bo.batch_size,
+        max_iter=cfg.bo.max_iter,
+        rng=rng,
     )
-    bopt.print_results()
-    bopt.plot_convergence()
-    _launch.save_plot(
-        run_dir / "convergence.png", dpi=cfg.plot_dpi, show=cfg.show_plots
+    path.to_csv(run_dir / "bo_path.csv", index=False)
+    found = int(path["target"].to_numpy().sum())
+    targets = len(points.targets)
+    click.echo(f"{found} of {targets} targets found in {len(path)} evaluations")
+    plots.save_convergence(
+        path, run_dir / "convergence.png", dpi=cfg.plot_dpi, show=cfg.show_plots
     )
-    bopt.plot_convex()
-    _launch.save_plot(
-        run_dir / "convex_hull.png", dpi=cfg.plot_dpi, show=cfg.show_plots
-    )
+    elements = list(cfg.system.elements)
+    if not plots.save_hull_map(
+        points,
+        run_dir / "convex_hull.png",
+        elements=elements,
+        dpi=cfg.plot_dpi,
+        show=cfg.show_plots,
+    ):
+        log.info("hull_map_skipped", elements=len(elements))
     return run_dir

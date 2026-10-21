@@ -5,29 +5,31 @@ from pymatgen.core import Composition
 
 from nuikit.errors import DataError
 
+from phasebo.bo.acquisition.items.qlogei import QLogEIConfig
+from phasebo.bo.surrogate.items.gp import GPConfig
 from phasebo.cli import _launch
-from phasebo.config import ElementConfig
+from phasebo.config import BOConfig, ElementConfig, SuggestConfig
 
 
-def test_to_legacy_inputs_split_off_the_references(system, li_sn_s_cl):
-    compositions, references, _ = li_sn_s_cl
-
-    field, refs = _launch.to_legacy_inputs(_launch.load_table(system).rows)
-
-    assert (field[:, 0].tolist(), refs[:, 0].tolist()) == (
-        compositions[:, 0].tolist(),
-        references[:, 0].tolist(),
+def test_load_points_drops_the_excluded_points(system, tmp_path):
+    (tmp_path / "exclude.csv").write_text("formula\nLi6 S2 Cl2\n")
+    excluding = system.model_copy(
+        update={
+            "candidates": system.candidates.model_copy(
+                update={"exclude": tmp_path / "exclude.csv"}
+            )
+        }
     )
-    assert field[:, 1].astype(float) == pytest.approx(compositions[:, 1].astype(float))
-
-
-def test_to_legacy_inputs_need_total_energies(system):
-    rows = _launch.load_table(system).rows.assign(
-        total_energy_ev=float("nan"), e_above_hull_mev=0.0
+    cfg = SuggestConfig(
+        system=excluding,
+        bo=BOConfig(
+            surrogate=GPConfig(kind="gp"), acquisition=QLogEIConfig(kind="qlogei")
+        ),
     )
 
-    with pytest.raises(DataError, match="needs total energies"):
-        _launch.to_legacy_inputs(rows)
+    _, points, excluded = _launch.load_points(cfg)
+
+    assert (excluded, "Li3 S1 Cl1" in points.formulas) == (["Li6 S2 Cl2"], False)
 
 
 def test_map_charges_keeps_the_config_order(system):
