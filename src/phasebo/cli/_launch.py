@@ -14,7 +14,8 @@ from nuikit.logging import configure_logging
 from nuikit.registry import KindConfig
 
 from phasebo import paths
-from phasebo.config import RunConfig, SearchConfig, SystemConfig
+from phasebo.benchmark.replay import Replays
+from phasebo.config import BenchmarkConfig, RunConfig, SearchConfig, SystemConfig
 from phasebo.data import store
 from phasebo.field import candidates
 from phasebo.field import points as field_points
@@ -56,12 +57,12 @@ def start(
     return run_dir, rng
 
 
-def field_name(system: SystemConfig) -> str:
+def name_field(system: SystemConfig) -> str:
     """Return the phase field's name: its processed table's, by convention."""
     return Path(system.processed).stem
 
 
-def family_tags(**configs: KindConfig) -> list[str]:
+def tag_families(**configs: KindConfig) -> list[str]:
     """Return a tag per family choice and setting, as `surrogate.kernel=matern52`."""
     tags = []
     for role, config in configs.items():
@@ -91,6 +92,38 @@ def load_points(
         excluded=excluded or [],
     )
     return loaded, points, excluded or []
+
+
+def load_benchmark(
+    run_dir: Path,
+) -> tuple[BenchmarkConfig, store.LoadedTable, Replays]:
+    """Return a benchmark run's config, processed table and replays.
+
+    The table must be the one the run read: a changed table is refused.
+    """
+    for name in ("config.yaml", "data.json", "paths.parquet"):
+        if not (run_dir / name).is_file():
+            raise DataError(
+                f"no {name} in {run_dir}; pass a phasebo-benchmark run directory"
+            )
+    from omegaconf import OmegaConf
+
+    raw = OmegaConf.to_container(OmegaConf.load(run_dir / "config.yaml"))
+    cfg = BenchmarkConfig.model_validate(raw)
+    loaded, points, _ = load_points(cfg)
+    ran_on = json.loads((run_dir / "data.json").read_text(encoding="utf-8"))
+    if ran_on["table_sha256"] != loaded.sidecar.table_sha256:
+        raise DataError(
+            f"{cfg.system.processed} changed since {run_dir.name} ran; check out its "
+            "commit or rerun it"
+        )
+    replays = Replays.from_table(
+        points,
+        pd.read_parquet(run_dir / "paths.parquet"),
+        batch_size=cfg.bo.batch_size,
+        max_iter=cfg.benchmark.max_iter,
+    )
+    return cfg, loaded, replays
 
 
 def write_data(run_dir: Path, loaded: store.LoadedTable) -> None:

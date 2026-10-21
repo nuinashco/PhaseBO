@@ -5,10 +5,12 @@ from attrs import define
 
 from phasebo.benchmark import baseline
 from phasebo.benchmark.metric.base import (
+    Contrast,
     Metric,
     MetricConfig,
     MetricFactory,
     Score,
+    pair,
     summarise,
 )
 from phasebo.benchmark.replay import Replays
@@ -37,16 +39,12 @@ class BestSoFarMetric(Metric[BestSoFarConfig]):
         energies_mev = replays.points.energies_mev
         pool = set(replays.points.pool.tolist())
         evaluations = replays.evaluations
-        best_mev = np.empty((replays.repeats, len(evaluations)))
+        best_mev = _track_best(replays)
         expected_mev = np.empty_like(best_mev)
-        # Repeats are numbered from 0, and groupby yields them in order.
-        for row, (_, path) in enumerate(replays.paths.groupby("repeat")):
-            start = path.loc[path["batch"] == 0, "point"].to_numpy()
-            floor_mev = float(energies_mev[start].min())
-            left_mev = energies_mev[sorted(pool - set(start.tolist()))]
+        for row, start in enumerate(replays.list_starts()):
+            floor_mev = float(energies_mev[list(start)].min())
+            left_mev = energies_mev[sorted(pool - set(start))]
             for done, picks in enumerate(evaluations):
-                known = path.loc[path["batch"] <= done, "point"].to_numpy()
-                best_mev[row, done] = energies_mev[known].min()
                 expected_mev[row, done] = baseline.expected_min(
                     left_mev, int(picks), floor_mev=floor_mev
                 )
@@ -62,3 +60,34 @@ class BestSoFarMetric(Metric[BestSoFarConfig]):
             ),
             curves={"mean": mean_mev.tolist(), "mean/random": random_mev.tolist()},
         )
+
+    def contrast(
+        self,
+        base: Replays,
+        run: Replays,
+        *,
+        level: float,
+        resamples: int,
+        rng: np.random.Generator,
+    ) -> dict[str, Contrast]:
+        at_budget = pair(
+            _track_best(base)[:, -1],
+            _track_best(run)[:, -1],
+            lower_is_better=True,
+            level=level,
+            resamples=resamples,
+            rng=rng,
+        )
+        return {"at_budget": at_budget}
+
+
+def _track_best(replays: Replays) -> np.ndarray:
+    """Return each repeat's lowest energy known after each batch (meV/atom)."""
+    energies_mev = replays.points.energies_mev
+    best_mev = np.empty((replays.repeats, replays.max_iter + 1))
+    # Repeats are numbered from 0, and groupby yields them in order.
+    for row, (_, path) in enumerate(replays.paths.groupby("repeat")):
+        for done in range(replays.max_iter + 1):
+            known = path.loc[path["batch"] <= done, "point"].to_numpy()
+            best_mev[row, done] = energies_mev[known].min()
+    return best_mev

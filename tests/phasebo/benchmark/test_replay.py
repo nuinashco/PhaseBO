@@ -1,6 +1,9 @@
 """Replays evaluate a starting set, then batches; repeats are paired and repeatable."""
 
 import numpy as np
+import pytest
+
+from nuikit.errors import DataError
 
 from phasebo.benchmark import replay
 from phasebo.benchmark.start.base import StartFactory
@@ -99,3 +102,20 @@ def test_table_lists_every_evaluation_with_its_energy_and_role(made, points):
     found = table.loc[table["formula"] == points.formulas[points.targets[0]]]
     assert len(table) == 8
     assert found[["batch", "target"]].values.tolist() == [[1, True]]
+
+
+def test_from_table_rebuilds_the_replays_a_table_holds(made, points):
+    replays = made([{0: 1, 1: 3}, {1: 2}])
+
+    rebuilt = replay.Replays.from_table(
+        points, replays.table(), batch_size=2, max_iter=3
+    )
+
+    assert rebuilt.paths.equals(replays.paths)
+
+
+def test_from_table_refuses_formulas_of_another_field(made, points):
+    table = made([{}]).table().assign(formula="Na1 Cl1")
+
+    with pytest.raises(DataError, match="not points of this field"):
+        replay.Replays.from_table(points, table, batch_size=2, max_iter=3)

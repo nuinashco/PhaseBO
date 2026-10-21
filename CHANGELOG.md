@@ -30,6 +30,11 @@ All notable changes to this project will be documented in this file.
   one line per metric, and with `tracker=wandb` logs each metric's curves against `evaluations`, its values as
   the summary, and its outputs as a `replays-<run id>` artifact. A run is named after its batch rule
   (`qlogei-<time>`) unless `run_name` is set.
+- `phasebo-compare` compares benchmark runs with the first, game by game: for steps to the first target, targets
+  found and the lowest energy, the mean difference per game with a bootstrap interval and the shares of games won
+  and lost; for the hazard ratio, the ratio from one joint fit. It reads runs under `runs/` or downloads them from
+  W&B (`wandb=[<run id>, ...]`), refuses runs that did not play the same games, writes `comparison.json`, and with
+  `tracker=wandb` logs the table, which the "Benchmarks" view shows.
 - `scripts/wandb_workspace.py` saves a "Benchmarks" view in W&B: a "How to read" note, the headline values side
   by side, each metric's curves under its own explanation with one line per run, the system charts collapsed; a
   `bo/acquisition=random` run is the comparison there.

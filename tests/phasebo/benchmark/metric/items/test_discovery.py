@@ -28,3 +28,15 @@ def test_discovery_of_random_picking_converges_on_random(random_replays):
     found = np.array(curves["first_hit"], dtype=float)
     gap = np.abs(found - np.array(curves["first_hit/random"], dtype=float))
     assert gap.max() < 0.05
+
+
+def contrast(base, run):
+    return MetricFactory.from_config({"kind": "discovery"}).contrast(
+        base, run, level=0.9, resamples=500, rng=np.random.default_rng(0)
+    )
+
+
+def test_discovery_contrast_counts_extra_targets_per_game(made):
+    found = contrast(made([{}, {}]), made([{0: 1}, {0: 1, 1: 2}]))["found"]
+
+    assert (found.estimate, found.better, found.worse) == (1.5, 1.0, 0.0)

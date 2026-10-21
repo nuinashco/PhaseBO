@@ -48,7 +48,7 @@ def run(cfg: GenerateConfig, *, runs_dir: Path) -> Path:
         cfg,
         runs_dir=runs_dir,
         job_type="generate",
-        group=_launch.field_name(cfg.system),
+        group=_launch.name_field(cfg.system),
     )
     _launch.write_data(run_dir, loaded)
     path = run_dir / "candidates_list.csv"

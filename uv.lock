@@ -1497,6 +1497,7 @@ dependencies = [
     { name = "pydantic" },
     { name = "pymatgen" },
     { name = "rootutils" },
+    { name = "scipy" },
     { name = "statsmodels" },
     { name = "structlog" },
     { name = "torch", version = "2.14.1", source = { registry = "https://pypi.org/simple" }, marker = "sys_platform != 'linux'" },
@@ -1517,7 +1518,6 @@ notebooks = [
     { name = "marimo" },
     { name = "matplotlib" },
     { name = "plotly" },
-    { name = "scipy" },
 ]
 wandb = [
     { name = "wandb-workspaces" },
@@ -1538,6 +1538,7 @@ requires-dist = [
     { name = "pydantic", specifier = ">=2.14" },
     { name = "pymatgen", specifier = ">=2026.9.24" },
     { name = "rootutils", specifier = ">=1.0.7" },
+    { name = "scipy", specifier = ">=1.17" },
     { name = "statsmodels", specifier = ">=0.15.0" },
     { name = "structlog", specifier = ">=26.1" },
     { name = "torch", marker = "sys_platform != 'linux'", specifier = ">=2.14" },
@@ -1558,7 +1559,6 @@ notebooks = [
     { name = "marimo", specifier = ">=0.24.2,<0.25" },
     { name = "matplotlib", specifier = ">=3.11" },
     { name = "plotly", specifier = ">=7.1" },
-    { name = "scipy", specifier = ">=1.17" },
 ]
 wandb = [{ name = "wandb-workspaces", specifier = ">=0.4.13" }]
 

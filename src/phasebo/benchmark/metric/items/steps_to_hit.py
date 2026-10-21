@@ -5,10 +5,12 @@ from attrs import define
 
 from phasebo.benchmark import baseline
 from phasebo.benchmark.metric.base import (
+    Contrast,
     Metric,
     MetricConfig,
     MetricFactory,
     Score,
+    pair,
     summarise,
 )
 from phasebo.benchmark.replay import Replays
@@ -38,7 +40,7 @@ class StepsToHitMetric(Metric[StepsToHitConfig]):
         if not names:
             return Score(headline="steps to hit: no target to find", values={})
         budget = replays.budget
-        steps = np.minimum(replays.hit_batches() * replays.batch_size, budget)
+        steps = _cap_steps(replays)
         one = _random(replays, targets=1)
         first = _random(replays, targets=len(names))
         values: dict[str, float] = {}
@@ -51,6 +53,32 @@ class StepsToHitMetric(Metric[StepsToHitConfig]):
             f"(random {first:.1f}; a miss counts as {budget})"
         )
         return Score(headline=headline, values=values)
+
+    def contrast(
+        self,
+        base: Replays,
+        run: Replays,
+        *,
+        level: float,
+        resamples: int,
+        rng: np.random.Generator,
+    ) -> dict[str, Contrast]:
+        if not base.target_names:
+            return {}
+        first_hit = pair(
+            _cap_steps(base).min(axis=1),
+            _cap_steps(run).min(axis=1),
+            lower_is_better=True,
+            level=level,
+            resamples=resamples,
+            rng=rng,
+        )
+        return {"first_hit": first_hit}
+
+
+def _cap_steps(replays: Replays) -> np.ndarray:
+    """Return evaluations to each target per repeat; a miss counts as the budget."""
+    return np.minimum(replays.hit_batches() * replays.batch_size, replays.budget)
 
 
 def _random(replays: Replays, *, targets: int) -> float:

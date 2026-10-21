@@ -4,7 +4,14 @@ import numpy as np
 from attrs import define
 
 from phasebo.benchmark import baseline
-from phasebo.benchmark.metric.base import Metric, MetricConfig, MetricFactory, Score
+from phasebo.benchmark.metric.base import (
+    Contrast,
+    Metric,
+    MetricConfig,
+    MetricFactory,
+    Score,
+    pair,
+)
 from phasebo.benchmark.replay import Replays
 
 
@@ -40,7 +47,7 @@ class DiscoveryMetric(Metric[DiscoveryConfig]):
         curves["first_hit/random"] = [
             1 - baseline.survival(pool, int(x), targets=len(names)) for x in evaluations
         ]
-        found = (steps <= replays.budget).sum(axis=1)
+        found = _count_found(replays)
         random = len(names) * one[-1]
         headline = (
             f"{found.mean():.2f} of {len(names)} targets found within "
@@ -51,6 +58,33 @@ class DiscoveryMetric(Metric[DiscoveryConfig]):
             "found/random": random,
         }
         return Score(headline=headline, values=values, curves=curves)
+
+    def contrast(
+        self,
+        base: Replays,
+        run: Replays,
+        *,
+        level: float,
+        resamples: int,
+        rng: np.random.Generator,
+    ) -> dict[str, Contrast]:
+        if not base.target_names:
+            return {}
+        found = pair(
+            _count_found(base),
+            _count_found(run),
+            lower_is_better=False,
+            level=level,
+            resamples=resamples,
+            rng=rng,
+        )
+        return {"found": found}
+
+
+def _count_found(replays: Replays) -> np.ndarray:
+    """Return the targets each repeat found within the budget."""
+    steps = replays.hit_batches() * replays.batch_size
+    return (steps <= replays.budget).sum(axis=1).astype(float)
 
 
 def _found(steps: np.ndarray, evaluations: np.ndarray) -> list[float | None]:

@@ -1,5 +1,6 @@
 """The hazard ratio is 1 for random picking and grows with earlier hits."""
 
+import numpy as np
 import pytest
 
 from phasebo.benchmark.metric.base import MetricFactory
@@ -52,3 +53,21 @@ def test_hazard_per_batch_is_undefined_once_every_target_is_found(made):
     assert curves["hit_chance"][1:] == [1.0, None, None]
     assert curves["per_batch"][1:] == [None, None, None]
     assert "theta" not in score.values
+
+
+def contrast(base, run):
+    return MetricFactory.from_config({"kind": "hazard_ratio"}).contrast(
+        base, run, level=0.9, resamples=500, rng=np.random.default_rng(0)
+    )
+
+
+def test_hazard_contrast_favours_the_run_that_hits_earlier(made):
+    late, early = made([{0: 3}, {}] * 10), made([{0: 1}, {}] * 10)
+
+    ratio = contrast(late, early)["theta"]
+
+    assert (ratio.scale, ratio.estimate > 1, ratio.better) == ("ratio", True, None)
+
+
+def test_hazard_contrast_needs_hits_in_both_runs(made):
+    assert contrast(made([{}, {}]), made([{0: 1}, {}])) == {}

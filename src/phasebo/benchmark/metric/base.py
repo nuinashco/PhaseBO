@@ -2,7 +2,7 @@
 
 from abc import ABC, abstractmethod
 from collections.abc import Mapping
-from typing import Any, ClassVar
+from typing import Any, ClassVar, Literal
 
 import numpy as np
 from attrs import define, field, frozen
@@ -29,6 +29,19 @@ class Score:
     curves: dict[str, list[float | None]] = field(factory=dict)
 
 
+@frozen
+class Contrast:
+    """How a run differs from a baseline run on one outcome, over paired repeats."""
+
+    scale: Literal["difference", "ratio"]  # Run minus baseline, or run over baseline.
+    estimate: float
+    low: float
+    high: float
+    # Shares of repeats in which the run did better and worse; None for a pooled ratio.
+    better: float | None = None
+    worse: float | None = None
+
+
 @define
 class Metric[C: MetricConfig](Configurable[C], ABC):
     """Measure of how well replays found the targets, or low energies."""
@@ -39,6 +52,18 @@ class Metric[C: MetricConfig](Configurable[C], ABC):
     @abstractmethod
     def measure(self, replays: Replays) -> Score:
         """Return this metric over every repeat of `replays`."""
+
+    @abstractmethod
+    def contrast(
+        self,
+        base: Replays,
+        run: Replays,
+        *,
+        level: float,
+        resamples: int,
+        rng: np.random.Generator,
+    ) -> dict[str, Contrast]:
+        """Return how `run` differs from `base`, whose repeat r starts as its own."""
 
 
 class MetricFactory(ConfigurableFactory[Metric[Any]]):
@@ -54,6 +79,45 @@ def summarise(name: str, samples: np.ndarray, *, random: float) -> dict[str, flo
     if len(samples) > 1:
         values[f"{name}/se"] = float(samples.std(ddof=1) / np.sqrt(len(samples)))
     return values
+
+
+def pair(
+    base: np.ndarray,
+    run: np.ndarray,
+    *,
+    lower_is_better: bool,
+    level: float,
+    resamples: int,
+    rng: np.random.Generator,
+) -> Contrast:
+    """Return the mean of `run - base` over paired repeats; bootstrap its interval."""
+    from scipy import stats
+
+    difference = run - base
+    estimate = float(difference.mean())
+    if np.all(difference == difference[0]):
+        # A constant difference has no spread to resample.
+        low = high = estimate
+    else:
+        interval = stats.bootstrap(
+            (difference,),
+            np.mean,
+            n_resamples=resamples,
+            confidence_level=level,
+            rng=rng,
+        ).confidence_interval
+        low, high = float(interval.low), float(interval.high)
+    ahead, behind = difference < 0, difference > 0
+    if not lower_is_better:
+        ahead, behind = behind, ahead
+    return Contrast(
+        scale="difference",
+        estimate=estimate,
+        low=low,
+        high=high,
+        better=float(ahead.mean()),
+        worse=float(behind.mean()),
+    )
 
 
 def to_json(scores: Mapping[str, Score], evaluations: list[int]) -> dict[str, Any]:
