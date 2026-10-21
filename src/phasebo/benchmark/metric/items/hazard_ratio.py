@@ -5,7 +5,13 @@ from attrs import define
 from pydantic import Field
 
 from phasebo.benchmark import baseline
-from phasebo.benchmark.metric.base import Metric, MetricConfig, MetricFactory, Score
+from phasebo.benchmark.metric.base import (
+    Contrast,
+    Metric,
+    MetricConfig,
+    MetricFactory,
+    Score,
+)
 from phasebo.benchmark.replay import Replays
 
 
@@ -76,6 +82,44 @@ class HazardRatioMetric(Metric[HazardRatioConfig]):
             "high": float(high),
         }
         return Score(headline=headline, values=values, curves=curves)
+
+    def contrast(
+        self,
+        base: Replays,
+        run: Replays,
+        *,
+        level: float,
+        resamples: int,
+        rng: np.random.Generator,
+    ) -> dict[str, Contrast]:
+        """Return the run's hazard as a multiple of the baseline's, from one joint fit.
+
+        Both runs' trials share one model with an indicator for the run's; a repeat's
+        trials in both runs form one cluster, since they share a starting set.
+        """
+        trials = [_trials(replays, replays.hit_batches()) for replays in (base, run)]
+        hits = [hit for _, hit, _ in trials]
+        if not all(0 < hit.sum() < len(hit) for hit in hits):
+            return {}
+        import statsmodels.api as sm
+
+        repeat, hit, h0 = (np.concatenate(parts) for parts in zip(*trials, strict=True))
+        is_run = np.repeat([0.0, 1.0], [len(hits[0]), len(hits[1])])
+        model = sm.GLM(
+            hit,
+            np.column_stack([np.ones(len(hit)), is_run]),
+            family=sm.families.Binomial(link=sm.families.links.CLogLog()),
+            offset=np.log(-np.log1p(-h0)),
+        )
+        fit = model.fit(cov_type="cluster", cov_kwds={"groups": repeat})
+        low, high = np.exp(fit.conf_int(alpha=1 - level)[1])
+        ratio = Contrast(
+            scale="ratio",
+            estimate=float(np.exp(fit.params[1])),
+            low=float(low),
+            high=float(high),
+        )
+        return {"theta": ratio}
 
 
 def _measure_per_batch(

@@ -23,3 +23,15 @@ def test_best_so_far_of_random_picking_converges_on_random(random_replays):
 
     gap = abs(values["at_budget/mean"] - values["at_budget/random"])
     assert gap < 4 * values["at_budget/se"]
+
+
+def contrast(base, run):
+    return MetricFactory.from_config({"kind": "best_so_far"}).contrast(
+        base, run, level=0.9, resamples=500, rng=np.random.default_rng(0)
+    )
+
+
+def test_best_so_far_contrast_is_lower_when_the_run_finds_a_target(made):
+    at_budget = contrast(made([{}, {}]), made([{0: 3}, {0: 3}]))["at_budget"]
+
+    assert (at_budget.estimate < 0, at_budget.better) == (True, 1.0)

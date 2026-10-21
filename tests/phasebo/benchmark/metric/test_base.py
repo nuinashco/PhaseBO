@@ -6,6 +6,7 @@ import pytest
 from phasebo.benchmark.metric.base import (
     MetricFactory,
     Score,
+    pair,
     summarise,
     to_json,
     to_wandb,
@@ -59,3 +60,30 @@ def test_every_metric_says_how_to_read_it():
     kinds = MetricFactory.list_registered()
 
     assert all(MetricFactory.get_class(kind).reading for kind in kinds)
+
+
+def test_pair_bootstraps_the_mean_difference_and_counts_who_won():
+    contrast = pair(
+        np.array([3.0, 3.0, 3.0, 3.0]),
+        np.array([1.0, 2.0, 3.0, 5.0]),
+        lower_is_better=True,
+        level=0.9,
+        resamples=2000,
+        rng=np.random.default_rng(0),
+    )
+
+    assert (contrast.estimate, contrast.better, contrast.worse) == (-0.25, 0.5, 0.25)
+    assert contrast.low < contrast.estimate < contrast.high
+
+
+def test_pair_of_a_constant_difference_has_no_spread():
+    contrast = pair(
+        np.zeros(3),
+        np.ones(3),
+        lower_is_better=False,
+        level=0.95,
+        resamples=100,
+        rng=np.random.default_rng(0),
+    )
+
+    assert (contrast.low, contrast.estimate, contrast.high) == (1.0, 1.0, 1.0)

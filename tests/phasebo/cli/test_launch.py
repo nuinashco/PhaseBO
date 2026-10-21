@@ -1,14 +1,24 @@
 """Commands read the processed table and their inputs, and fail fast on a gap."""
 
+import json
+
 import pytest
 from pymatgen.core import Composition
 
 from nuikit.errors import DataError
 
+from phasebo.benchmark.start.items.random import RandomStartConfig
 from phasebo.bo.acquisition.items.qlogei import QLogEIConfig
+from phasebo.bo.acquisition.items.random import RandomAcquisitionConfig
 from phasebo.bo.surrogate.items.gp import GPConfig
-from phasebo.cli import _launch
-from phasebo.config import BOConfig, ElementConfig, SuggestConfig
+from phasebo.cli import _launch, benchmark
+from phasebo.config import (
+    BenchmarkConfig,
+    BOConfig,
+    ElementConfig,
+    ProtocolConfig,
+    SuggestConfig,
+)
 
 
 def test_load_points_drops_the_excluded_points(system, tmp_path):
@@ -109,8 +119,8 @@ def test_read_formulas_returns_the_first_column(tmp_path):
     assert formulas == ["Li2 S1", "Li1 Cl1"]
 
 
-def test_family_tags_name_each_choice_and_setting():
-    tags = _launch.family_tags(
+def test_tag_families_names_each_choice_and_setting():
+    tags = _launch.tag_families(
         surrogate=GPConfig(kind="gp"), acquisition=QLogEIConfig(kind="qlogei")
     )
 
@@ -122,5 +132,30 @@ def test_family_tags_name_each_choice_and_setting():
     ]
 
 
-def test_field_name_is_the_processed_tables(system):
-    assert _launch.field_name(system) == "processed"
+def test_name_field_gives_the_processed_tables_name(system):
+    assert _launch.name_field(system) == "processed"
+
+
+def test_load_benchmark_refuses_a_run_whose_table_changed(system, tmp_path):
+    cfg = BenchmarkConfig(
+        run_name="b",
+        system=system,
+        bo=BOConfig(
+            surrogate=GPConfig(kind="gp"),
+            acquisition=RandomAcquisitionConfig(kind="random"),
+            batch_size=2,
+        ),
+        benchmark=ProtocolConfig(
+            start=RandomStartConfig(kind="random", size=2),
+            repeats=2,
+            max_iter=1,
+            workers=1,
+        ),
+    )
+    run_dir = benchmark.run(cfg, runs_dir=tmp_path / "runs")
+    data = json.loads((run_dir / "data.json").read_text())
+    data["table_sha256"] = "0" * 64
+    (run_dir / "data.json").write_text(json.dumps(data))
+
+    with pytest.raises(DataError, match="changed since b ran"):
+        _launch.load_benchmark(run_dir)

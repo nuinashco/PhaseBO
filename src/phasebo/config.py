@@ -170,6 +170,22 @@ class GenerateConfig(RunConfig):
     system: SystemConfig
 
 
+class CompareConfig(RunConfig):
+    """Entry config of `phasebo-compare` (configs/compare.yaml)."""
+
+    runs: list[str] = Field(
+        default_factory=list,
+        description="benchmark runs under runs/, by name; the first is the baseline",
+    )
+    wandb: list[str] = Field(
+        default_factory=list, description="W&B benchmark run ids, read after `runs`"
+    )
+    level: float = Field(default=0.95, gt=0, lt=1, description="of each interval")
+    resamples: PositiveInt = Field(
+        default=10_000, description="bootstrap, per interval"
+    )
+
+
 class DataConfig(Schema):
     """Entry config composed once per phase field (configs/data.yaml)."""
 
@@ -194,5 +210,6 @@ GENERATED = (
         ),
     ),
     ConfigFile("defaults/generate.yaml", GenerateConfig, groups=("system",)),
+    ConfigFile("defaults/compare.yaml", CompareConfig),
     ConfigFile("defaults/data.yaml", DataConfig, groups=("system",)),
 )

@@ -72,9 +72,12 @@ def main(*, url: str | None) -> None:
         _build_guide_section(newest.config, group=newest.group),
         _build_headline_section(),
         *_build_metric_sections(keys),
+        _build_comparison_section(),
         _build_system_section(keys),
     ]
-    runset = ws.RunsetSettings(filters="JobType = 'benchmark'", pinned_columns=COLUMNS)
+    runset = ws.RunsetSettings(
+        filters="JobType in ['benchmark', 'compare']", pinned_columns=COLUMNS
+    )
     if url is None:
         view = ws.Workspace(
             entity=entity,
@@ -126,7 +129,16 @@ def _build_guide_section(config: Any, *, group: str | None) -> Any:
     bars = "\n".join(
         f"- **{title}**: {meaning}." for title, meaning in HEADLINES.values()
     )
-    text = f"**How to read this view.** {setup}\n\nThe headline bars:\n\n{bars}"
+    comparisons = (
+        "**Comparisons** lists each `phasebo-compare` run against its baseline, game "
+        "by game: `estimate` is the run minus the baseline, or the run over it where "
+        "`scale` is `ratio`; `low` to `high` is its interval, and `better` and `worse` "
+        "the shares of games the run won and lost."
+    )
+    text = (
+        f"**How to read this view.** {setup}\n\nThe headline bars:\n\n{bars}"
+        f"\n\n{comparisons}"
+    )
     return ws.Section(
         name="How to read",
         panels=[wr.MarkdownPanel(markdown=text)],
@@ -187,6 +199,26 @@ def _build_metric_sections(keys: list[str]) -> list[Any]:
         )
         for metric, panels in by_metric.items()
     ]
+
+
+def _build_comparison_section() -> Any:
+    import wandb_workspaces.reports.v2 as wr
+    import wandb_workspaces.workspaces as ws
+
+    class _TallLayout(ws.SectionLayoutSettings):
+        # The library keeps panel height private (300 px, three table rows); a
+        # table of two runs times four outcomes needs about 720.
+        def _to_model(self) -> Any:
+            model = super()._to_model()
+            model.box_height = 720
+            return model
+
+    return ws.Section(
+        name="Comparisons",
+        panels=[wr.WeavePanelSummaryTable(table_name="comparison")],
+        is_open=True,
+        layout_settings=_TallLayout(columns=1, rows=1),
+    )
 
 
 def _build_system_section(keys: list[str]) -> Any:

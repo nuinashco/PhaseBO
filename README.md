@@ -23,10 +23,11 @@ cp .env.example .env   # only to mirror runs to Weights & Biases
 | `phasebo-suggest` | picks the next compositions to compute from the computed ones | `next.csv`, `posterior.csv` |
 | `phasebo-benchmark` | replays BO over the computed compositions, as if computing them, from 300 random starting sets, and scores it against random picking | `paths.parquet`, `metrics.json` |
 | `phasebo-generate` | lists the smallest charge-balanced cell of each point not computed yet | `candidates_list.csv` |
+| `phasebo-compare` | compares benchmark runs with the first, game by game | `comparison.json` |
 | `phasebo-data` (`make data`) | checks that every processed table still matches its raw files and its script | |
 | `phasebo-configs` (`make configs`) | regenerates `configs/defaults/` and each kind's `configs/<group>/<kind>.yaml` from the config schemas (`--check` only reports) | `configs/` |
 
-The first three write to `runs/<run_name>/`, along with the resolved `config.yaml`, `run.json` (git SHA, dirty flag,
+The first four write to `runs/<run_name>/`, along with the resolved `config.yaml`, `run.json` (git SHA, dirty flag,
 command line, start time) and `data.json` (the processed table, its script and its raw files, by sha256). Runs are
 seeded (`seed=42` unless overridden), so a run repeats exactly. Inputs are checked before the run directory is
 created: a missing file, or a starting set larger than the field allows, stops the command with an error.
@@ -68,6 +69,30 @@ simulation), and, with `tracker=wandb`, logged as curves over evaluations:
 
 `bo/acquisition=random` checks the setup: its scores match random's values within their error.
 
+### Comparing settings
+
+`phasebo-compare` compares benchmark runs with the first one listed, the baseline, usually a
+`bo/acquisition=random` run. Runs of one seed, start and phase field play the same 300 games, so it compares
+game by game:
+
+```bash
+uv run phasebo-compare 'runs=[random-<time>,qlogei-<time>,ts-<time>]'    # under runs/
+uv run phasebo-compare 'wandb=[<random id>,<qlogei id>]' tracker=wandb    # from W&B
+```
+
+For each run and outcome it prints the difference from the baseline (or the ratio, for the hazard ratio) with a
+95% interval and the share of games the run won and lost, and writes them to `comparison.json`:
+
+```text
+baseline: random-2026-10-21_13-42-13
+qlogei-2026-10-21_13-41-18
+  discovery/found          +0.24  (95%: +0.12 to +0.36)  better in 39%, worse in 23%
+  hazard_ratio/theta       x1.41  (95%: 1.18 to 1.69)
+```
+
+It refuses runs that did not play the same games: another seed, start, phase field or budget, or a processed
+table changed since. With `wandb=`, it downloads the runs' `replays-<run id>` artifacts.
+
 ### In Weights & Biases
 
 With `tracker=wandb`, a benchmark run is named after its batch rule (`qlogei-<time>` unless `run_name` is set),
@@ -76,9 +101,9 @@ W&B table filters and groups by setting. Each metric's curves are plotted agains
 holds the metrics' values, and the run's outputs (`paths.parquet`, `metrics.json`, `config.yaml`,
 `data.json`) are saved as its `replays-<run id>` artifact, so any later comparison can start from W&B alone. The
 project's "Benchmarks" view opens with a "How to read" note (the setup and what each headline bar means), then
-shows the headline values side by side, each metric's curves under a short explanation, one line per run, and
-the system charts collapsed. Random picking's exact values stay in `metrics.json`; in W&B, a `bo/acquisition=random`
-run is the comparison.
+shows the headline values side by side, each metric's curves under a short explanation, one line per run, the
+`phasebo-compare` runs' tables (logged with `tracker=wandb`), and the system charts collapsed. Random picking's
+exact values stay in `metrics.json`; in W&B, a `bo/acquisition=random` run is the comparison.
 
 ## Usage
 

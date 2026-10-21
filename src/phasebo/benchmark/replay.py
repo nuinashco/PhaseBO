@@ -9,6 +9,8 @@ import pandas as pd
 from attrs import field, frozen
 from pymatgen.core import Composition
 
+from nuikit.errors import DataError
+
 from phasebo.benchmark.start.base import Start
 from phasebo.bo.acquisition.base import Acquisition
 from phasebo.bo.surrogate.base import Surrogate
@@ -24,6 +26,27 @@ class Replays:
     max_iter: int
     # One row per evaluation: `repeat`, `batch` (0 for the starting set), `point`.
     paths: pd.DataFrame = field(eq=False)
+
+    @classmethod
+    def from_table(
+        cls, points: Points, table: pd.DataFrame, *, batch_size: int, max_iter: int
+    ) -> Replays:
+        """Return the replays that `table()` wrote, over the same `points`."""
+        index = {formula: i for i, formula in enumerate(points.formulas)}
+        unknown = sorted(set(table["formula"]) - set(index))
+        if unknown:
+            raise DataError(
+                f"{len(unknown)} evaluated formulas, such as {unknown[0]}, are not "
+                "points of this field; compare runs on the table they ran on"
+            )
+        paths = pd.DataFrame(
+            {
+                "repeat": table["repeat"].to_numpy(),
+                "batch": table["batch"].to_numpy(),
+                "point": [index[formula] for formula in table["formula"]],
+            }
+        )
+        return cls(points=points, batch_size=batch_size, max_iter=max_iter, paths=paths)
 
     @property
     def repeats(self) -> int:
@@ -52,6 +75,14 @@ class Replays:
         return [
             Composition(self.points.formulas[i]).reduced_composition.formula
             for i in self.points.targets
+        ]
+
+    def list_starts(self) -> list[tuple[int, ...]]:
+        """Return each repeat's starting points, sorted."""
+        starts = self.paths.loc[self.paths["batch"] == 0]
+        return [
+            tuple(sorted(group["point"].tolist()))
+            for _, group in starts.groupby("repeat")
         ]
 
     def hit_batches(self) -> np.ndarray:

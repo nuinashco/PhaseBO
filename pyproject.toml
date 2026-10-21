@@ -26,6 +26,7 @@ dependencies = [
     "pydantic>=2.14",
     "pymatgen>=2026.9.24",
     "rootutils>=1.0.7",
+    "scipy>=1.17",
     "statsmodels>=0.15.0",
     "structlog>=26.1",
     "torch>=2.14",
@@ -36,6 +37,7 @@ dependencies = [
 phasebo-suggest = "phasebo.cli.suggest:main"
 phasebo-benchmark = "phasebo.cli.benchmark:main"
 phasebo-generate = "phasebo.cli.generate:main"
+phasebo-compare = "phasebo.cli.compare:main"
 phasebo-data = "phasebo.cli.data:main"
 phasebo-configs = "phasebo.cli.configs:main"
 
@@ -56,7 +58,6 @@ notebooks = [
     "marimo>=0.24.2,<0.25",
     "matplotlib>=3.11",
     "plotly>=7.1",
-    "scipy>=1.17",
 ]
 
 [tool.uv]
@@ -156,10 +157,10 @@ layers = ["proposal", "acquisition", "surrogate"]
 exhaustive = true
 
 [[tool.importlinter.contracts]]
-name = "Benchmark: metrics score replays, which start from a starting set"
+name = "Benchmark: comparisons use metrics, which score replays from starting sets"
 type = "layers"
 containers = ["phasebo.benchmark"]
-layers = ["metric", "replay", "start | baseline"]
+layers = ["comparison", "metric", "replay", "start | baseline"]
 exhaustive = true
 
 [[tool.importlinter.contracts]]

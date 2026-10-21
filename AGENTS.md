@@ -19,6 +19,7 @@ make configs        # regenerate configs/ after changing any config schema
 phasebo-suggest     # next compositions to compute; results in runs/<run_name>/
 phasebo-benchmark   # BO replayed over the computed compositions, scored against random
 phasebo-generate    # candidate compositions of the phase field
+phasebo-compare     # benchmark runs compared with the first, game by game
 make data           # check data/processed/ against data/raw/; scripts/process_*.py rebuild it
 ```
 
@@ -32,7 +33,8 @@ make data           # check data/processed/ against data/raw/; scripts/process_*
 - `src/phasebo/bo/`: Bayesian optimisation: the `surrogate` and `acquisition` families and suggest's batch
   (`proposal.py`).
 - `src/phasebo/benchmark/`: BO scored against random picking: the `start` family, replays in parallel
-  (`replay.py`), the `metric` family (several per run) and random's exact odds (`baseline.py`). Figures are drawn
+  (`replay.py`), the `metric` family (several per run), random's exact odds (`baseline.py`) and paired
+  comparisons of runs (`comparison.py`). Figures are drawn
   by `scripts/plot_run.py`, not by commands.
 - `scripts/`: exploratory or one-time runnables, never imported; they may import the package and compose
   `configs/`. Anything `make`, CI or a test depends on is a `cli/` command; a script that is rerun or shared becomes

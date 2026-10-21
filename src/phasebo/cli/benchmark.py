@@ -57,14 +57,14 @@ def run(cfg: BenchmarkConfig, *, runs_dir: Path) -> Path:
         kind: MetricFactory.from_config(config)
         for kind, config in protocol.metric.items()
     }
-    tags = _launch.family_tags(
+    tags = _launch.tag_families(
         surrogate=cfg.bo.surrogate, acquisition=cfg.bo.acquisition, start=protocol.start
     )
     run_dir, _ = _launch.start(
         cfg,
         runs_dir=runs_dir,
         job_type="benchmark",
-        group=_launch.field_name(cfg.system),
+        group=_launch.name_field(cfg.system),
         tags=tags,
     )
     _launch.write_data(run_dir, loaded)

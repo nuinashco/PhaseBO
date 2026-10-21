@@ -12,11 +12,12 @@ flowchart TD
     cli["cli/<br/>one module per console script"]:::side
     config["config.py<br/>entry config schemas"]:::pure
     subgraph benchmark["benchmark/: BO scored against random"]
+        comparison["comparison.py<br/>runs against a baseline, game by game"]:::pure
         metric["metric/<br/>steps to hit, discovery,<br/>best so far, hazard ratio"]:::pure
         replay["replay.py<br/>repeats in parallel"]:::side
         start["start/<br/>starting sets"]:::pure
         baseline["baseline.py<br/>random's exact odds"]:::pure
-        metric --> replay --> start
+        comparison --> metric --> replay --> start
         metric --> baseline
     end
     subgraph bo["bo/: Bayesian optimisation"]
@@ -55,7 +56,8 @@ Every layer may import the ones below it and `nuikit`. `phasebo` holds this proj
   (`acquisition`), and `proposal.py` drives them for `phasebo-suggest`.
 - `benchmark/` scores the method: `replay.py` replays BO over the computed points from many starting sets (the
   `start` family), and the `metric` family measures the replays next to random picking's exact odds
-  (`baseline.py`). A run computes several metrics at once (FAM-4's `multiple`).
+  (`baseline.py`). A run computes several metrics at once (FAM-4's `multiple`). `comparison.py` checks that
+  runs played the same games and asks each metric how a run differs from a baseline.
 
 None of them writes a file; the commands in `cli/` do. Figures are not part of a run:
 `uv run --group notebooks scripts/plot_run.py runs/<run_name>` draws the hull map and each metric's curves into the
@@ -131,6 +133,7 @@ src/phasebo/
     metric/               family, several per run: what the replays achieved
     replay.py             one replay, and many in parallel (Replays)
     baseline.py           random picking's exact odds
+    comparison.py         runs against a baseline: the pairing check, then each metric's contrast
 src/nuikit/               copied from the conventions template: config, configgen, registry, errors, logging,
                           runs, seeding
 tests/                    mirrors src/; tests/nuikit/ comes with the template
@@ -173,7 +176,9 @@ returns a `Score`: a headline the command prints, values for `metrics.json` and 
 `Replays.evaluations`. A value or curve `x` comes with `x/random`, random picking's exact value: `metrics.json`
 and `plot_run.py` keep it, while W&B gets BO's alone, since there a run of the random batch rule is the
 comparison. Each metric also sets `reading`, plain words on its curves that the W&B view prints above them; a
-test checks that every registered metric has one.
+test checks that every registered metric has one. A metric's `contrast(base, run)` says how a run differs from a
+baseline whose repeat r is the same game: a paired difference per game with a bootstrap interval (`pair`), or a
+ratio from one joint fit, as the hazard ratio does.
 
 ## Extending
 
@@ -181,7 +186,7 @@ test checks that every registered metric has one.
 |---|---|---|
 | a phase field | its raw file in `data/raw/`, `configs/system/<name>.yaml` and `scripts/process_<source>.py` | run the script once, commit the table and sidecar; run commands with `system=<name>` |
 | a kind of a family | `src/phasebo/<domain>/<family>/items/<kind>.py` | `make configs`; choose it with `<domain>/<family>=<kind>` |
-| a metric | `src/phasebo/benchmark/metric/items/<kind>.py`, comparing with `baseline.py`, with its `reading` | `make configs`; add it to the list in `configs/benchmark.yaml`; rerun `scripts/wandb_workspace.py --url <view>` |
+| a metric | `src/phasebo/benchmark/metric/items/<kind>.py`, comparing with `baseline.py`, with its `reading` and `contrast` | `make configs`; add it to the list in `configs/benchmark.yaml`; rerun `scripts/wandb_workspace.py --url <view>` |
 | a variant of a kind | a preset `configs/<domain>/<family>/<name>.yaml` whose defaults list names the kind; never a kind's name | choose it with `<domain>/<family>=<name>` |
 | a family | `src/phasebo/<domain>/<family>/base.py` + `items/`, a `_by_kind` (or, if `multiple`, `_by_kinds`) field type in `config.py` and a field of it, a group in the entry configs | place it in its domain's import-linter `layers`; `make configs` |
 | an entry config | a schema in `config.py` listed in `GENERATED` as `defaults/<command>.yaml`, and `configs/<command>.yaml` composing it | a `cli/<command>.py` and a console script |
@@ -199,7 +204,7 @@ test checks that every registered metric has one.
   are plain Python with no stored outputs, so nbstripout has nothing to strip; `__marimo__/` caches are gitignored.
 - **`cli/_launch.py`** is a module in `cli/` that is not a console script (LAY-7). It holds what the commands share
   and what needs the config schemas, so it sits in the only layer above `config`: start-up, loading the processed
-  table and its points, and reading the candidate files.
+  table and its points, reading the candidate files, and loading benchmark runs back for `phasebo-compare`.
 - **`scripts/plot_run.py` is rerun for any run** (LAY-7 makes such a script a command): figures are a developer
   aid, not part of a run or of the README, and `tracker=wandb` shows a benchmark's curves. It has no tests; it
   refuses a run whose processed table has changed since.
