@@ -5,7 +5,7 @@ from pydantic import ValidationError
 
 from nuikit.errors import ConfigError
 
-from phasebo.config import ElementConfig, SuggestConfig
+from phasebo.config import ElementConfig, ProtocolConfig, SuggestConfig
 
 
 def test_element_atoms_must_be_min_then_max():
@@ -36,5 +36,15 @@ def test_an_unknown_kind_names_the_registered_ones(system):
             {
                 "system": system.model_dump(),
                 "bo": {"surrogate": {"kind": "gp"}, "acquisition": {"kind": "ucb"}},
+            }
+        )
+
+
+def test_a_metric_must_sit_under_its_own_kind():
+    with pytest.raises(ValidationError, match="set its kind to 'discovery'"):
+        ProtocolConfig.model_validate(
+            {
+                "start": {"kind": "random"},
+                "metric": {"discovery": {"kind": "steps_to_hit"}},
             }
         )

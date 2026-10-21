@@ -1,20 +1,22 @@
-"""`phasebo-benchmark`: replay BO over the computed compositions, as if computing them.
+"""`phasebo-benchmark`: replay BO over the computed compositions and score it.
 
 Usage:
 
-    phasebo-benchmark                                   # configs/benchmark.yaml
+    phasebo-benchmark                                    # configs/benchmark.yaml
 
-    phasebo-benchmark bo.start.size=8 bo/acquisition=ts # Hydra overrides
+    phasebo-benchmark bo/acquisition=ts benchmark.repeats=100
 
-    phasebo-benchmark bo/acquisition=random             # the random baseline
+    phasebo-benchmark bo/acquisition=random              # check: scores ~random
 
-    phasebo-benchmark -m seed=0,1,2 'run_name=sweep/${hydra:job.num}'
+    phasebo-benchmark benchmark/metric=[steps_to_hit,hazard_ratio]
 
-Writes runs/<run_name>/bo_path.csv: each evaluated point, its energy above the hull,
-its batch (0 for the starting set) and whether it is a target. scripts/plot_run.py
-draws its figures.
+Replays BO from `benchmark.repeats` starting sets, in parallel, and writes
+runs/<run_name>/ with paths.parquet (every evaluation of every repeat) and
+metrics.json (each metric next to random picking's exact value, and its curves
+over evaluations); `tracker=wandb` also logs them. Prints one line per metric.
 """
 
+import json
 from pathlib import Path
 
 import click
@@ -25,9 +27,10 @@ from omegaconf import DictConfig
 from nuikit.errors import cli_boundary
 
 from phasebo import paths
-from phasebo.bo import replay
+from phasebo.benchmark import replay
+from phasebo.benchmark.metric.base import MetricFactory, Score, to_json, to_wandb
+from phasebo.benchmark.start.base import StartFactory
 from phasebo.bo.acquisition.base import AcquisitionFactory
-from phasebo.bo.start.base import StartFactory
 from phasebo.bo.surrogate.base import SurrogateFactory
 from phasebo.cli import _launch
 from phasebo.config import BenchmarkConfig
@@ -43,25 +46,48 @@ def main(dict_cfg: DictConfig) -> None:
 
 
 def run(cfg: BenchmarkConfig, *, runs_dir: Path) -> Path:
-    """Evaluate a starting set, then up to max_iter batches picked by BO."""
+    """Replay BO from many starting sets and score it against random picking."""
     loaded, points, _ = _launch.load_points(cfg)
-    starting = StartFactory.from_config(cfg.bo.start)
-    starting.check(points)
+    protocol = cfg.benchmark
+    starting = StartFactory.from_config(protocol.start)
+    starting.check(points, budget=cfg.bo.batch_size * protocol.max_iter)
     surrogate = SurrogateFactory.from_config(cfg.bo.surrogate)
     acquisition = AcquisitionFactory.from_config(cfg.bo.acquisition)
-    run_dir, rng = _launch.start(cfg, runs_dir=runs_dir)
+    metrics = {
+        kind: MetricFactory.from_config(config)
+        for kind, config in protocol.metric.items()
+    }
+    run_dir, _ = _launch.start(cfg, runs_dir=runs_dir)
     _launch.write_data(run_dir, loaded)
-    path = replay.replay(
+    replays = replay.replay_many(
         points,
         start=starting,
         surrogate=surrogate,
         acquisition=acquisition,
         batch_size=cfg.bo.batch_size,
-        max_iter=cfg.bo.max_iter,
-        rng=rng,
+        max_iter=protocol.max_iter,
+        repeats=protocol.repeats,
+        seed=cfg.seed,
+        workers=protocol.workers,
     )
-    path.to_csv(run_dir / "bo_path.csv", index=False)
-    found = int(path["target"].to_numpy().sum())
-    targets = len(points.targets)
-    click.echo(f"{found} of {targets} targets found in {len(path)} evaluations")
+    replays.table().to_parquet(run_dir / "paths.parquet", index=False)
+    scores = {kind: metric.measure(replays) for kind, metric in metrics.items()}
+    evaluations = replays.evaluations.tolist()
+    text = json.dumps(to_json(scores, evaluations), indent=2, ensure_ascii=False)
+    (run_dir / "metrics.json").write_text(text + "\n", encoding="utf-8")
+    if cfg.tracker == "wandb":
+        _log_to_wandb(scores, evaluations)
+    for score in scores.values():
+        click.echo(score.headline)
     return run_dir
+
+
+def _log_to_wandb(scores: dict[str, Score], evaluations: list[int]) -> None:
+    import wandb
+
+    summary, rows = to_wandb(scores, evaluations)
+    for evaluation, row in zip(evaluations, rows, strict=True):
+        wandb.log(row, step=evaluation)
+    wandb.summary.update(summary)
+    # Left to exit, W&B's teardown abandons a pending message and logs an error.
+    wandb.finish()

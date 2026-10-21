@@ -3,8 +3,8 @@
     uv run --group notebooks scripts/plot_run.py runs/<run_name>
 
 Writes into the run directory: convex_hull.png, the energy above the hull over a
-4-element field's square, and for a benchmark run convergence.png, each evaluation's
-energy and the best so far.
+4-element field's square, and for a benchmark run one <metric>.png per metric with
+curves in metrics.json, random picking's dashed.
 """
 
 import json
@@ -57,10 +57,20 @@ def main(run_dir: Path, *, dpi: int) -> None:
         _save_hull_map(points, run_dir / "convex_hull.png", elements=elements, dpi=dpi)
     else:
         click.echo(f"no hull map: {len(elements)} elements, not 4")
-    path_file = run_dir / "bo_path.csv"
-    if path_file.is_file():
-        rows = pd.read_csv(path_file)
-        _save_convergence(rows, run_dir / "convergence.png", dpi=dpi)
+    metrics_file = run_dir / "metrics.json"
+    if metrics_file.is_file():
+        metrics = json.loads(metrics_file.read_text(encoding="utf-8"))
+        evaluations = metrics.pop("evaluations")
+        for kind, score in metrics.items():
+            if score["curves"]:
+                path = run_dir / f"{kind}.png"
+                _save_curves(
+                    score["curves"],
+                    path,
+                    evaluations=evaluations,
+                    title=kind,
+                    dpi=dpi,
+                )
 
 
 def _read_config(run_dir: Path) -> Any:
@@ -105,20 +115,25 @@ def _save_hull_map(
     _save(figure, path, dpi=dpi)
 
 
-def _save_convergence(path_rows: pd.DataFrame, path: Path, *, dpi: int) -> None:
-    """Save each evaluation's energy above the hull and the best so far."""
+def _save_curves(
+    curves: dict[str, list[float]],
+    path: Path,
+    *,
+    evaluations: Sequence[int],
+    title: str,
+    dpi: int,
+) -> None:
+    """Save every curve of one metric over the evaluations after the start."""
     import matplotlib.pyplot as plt
 
-    energies_mev = path_rows["e_above_hull_mev"].to_numpy()
-    evaluation = np.arange(1, len(energies_mev) + 1)
-    starts = int((path_rows["batch"] == 0).sum())
     figure, axes = plt.subplots()
-    axes.plot(evaluation, energies_mev, "o", alpha=0.5, label="Evaluated")
-    axes.plot(evaluation, np.minimum.accumulate(energies_mev), "-", label="Best so far")
-    axes.axvline(starts + 0.5, ls="--", c="grey", label="End of starting set")
-    axes.set_xlabel("Evaluation")
-    axes.set_ylabel("Energy above hull (meV/atom)")
-    axes.legend()
+    for name, values in curves.items():
+        # A curve named `.../random` or `random` is random picking's exact value.
+        style = "--" if name.split("/")[-1] == "random" else "-"
+        axes.plot(evaluations, values, style, marker="o", ms=3, label=name)
+    axes.set_xlabel("Evaluations after the start")
+    axes.set_title(title)
+    axes.legend(fontsize=8)
     _save(figure, path, dpi=dpi)
 
 

@@ -1,1 +1,1 @@
-"""Bayesian optimisation: the model, the batch rule, the starting set, the loops."""
+"""Bayesian optimisation: the model and the batch rule, and suggest's batch."""

@@ -18,8 +18,9 @@ from nuikit.configgen import ConfigFile
 from nuikit.logging import LogFormat, LogLevel
 from nuikit.registry import ConfigurableFactory
 
+from phasebo.benchmark.metric.base import MetricConfig, MetricFactory
+from phasebo.benchmark.start.base import StartConfig, StartFactory
 from phasebo.bo.acquisition.base import AcquisitionConfig, AcquisitionFactory
-from phasebo.bo.start.base import StartConfig, StartFactory
 from phasebo.bo.surrogate.base import SurrogateConfig, SurrogateFactory
 
 
@@ -32,6 +33,25 @@ def _by_kind(factory: type[ConfigurableFactory[Any]]) -> BeforeValidator:
     return BeforeValidator(validate)
 
 
+def _by_kinds(factory: type[ConfigurableFactory[Any]]) -> BeforeValidator:
+    """Return a validator of a multiple family's configs, each under its own kind."""
+
+    def validate(value: object) -> object:
+        if not isinstance(value, Mapping):
+            return value
+        configs = {key: factory.validate(item) for key, item in value.items()}
+        for key, config in configs.items():
+            if config.kind != key:
+                msg = (
+                    f"{key}: kind {config.kind!r} differs from its key; "
+                    f"set its kind to {key!r} or select {config.kind!r} instead"
+                )
+                raise ValueError(msg)
+        return configs
+
+    return BeforeValidator(validate)
+
+
 # Fields holding a family item's config, validated against the item that `kind` names.
 type _SurrogateField = Annotated[
     SerializeAsAny[SurrogateConfig], _by_kind(SurrogateFactory)
@@ -40,6 +60,9 @@ type _AcquisitionField = Annotated[
     SerializeAsAny[AcquisitionConfig], _by_kind(AcquisitionFactory)
 ]
 type _StartField = Annotated[SerializeAsAny[StartConfig], _by_kind(StartFactory)]
+type _MetricsField = Annotated[
+    dict[str, SerializeAsAny[MetricConfig]], _by_kinds(MetricFactory)
+]
 
 
 class ElementConfig(Schema):
@@ -109,32 +132,36 @@ class BOConfig(Schema):
     batch_size: PositiveInt = 4
 
 
-class BenchmarkBOConfig(BOConfig):
-    """BO settings of a benchmark replay: also its starting set and length."""
+class ProtocolConfig(Schema):
+    """How a benchmark replays BO and scores it."""
 
     start: _StartField
-    max_iter: PositiveInt = Field(default=10, description="BO batches after the starts")
+    repeats: PositiveInt = Field(
+        default=300, description="replays, each from its own start"
+    )
+    max_iter: PositiveInt = Field(default=8, description="BO batches after the start")
+    workers: PositiveInt | None = Field(default=None, description="null: one per CPU")
+    metric: _MetricsField = Field(default_factory=dict)
 
 
 class SearchConfig(RunConfig):
-    """Settings suggest and benchmark share: the phase field and its rows."""
+    """Settings suggest and benchmark share: the phase field, its rows, BO."""
 
     system: SystemConfig
     fidelity: str = Field(
         default="dft", description="a value of the processed table's fidelity column"
     )
+    bo: BOConfig
 
 
 class SuggestConfig(SearchConfig):
     """Entry config of `phasebo-suggest` (configs/suggest.yaml)."""
 
-    bo: BOConfig
-
 
 class BenchmarkConfig(SearchConfig):
     """Entry config of `phasebo-benchmark` (configs/benchmark.yaml)."""
 
-    bo: BenchmarkBOConfig
+    benchmark: ProtocolConfig
 
 
 class GenerateConfig(RunConfig):
@@ -158,7 +185,13 @@ GENERATED = (
     ConfigFile(
         "defaults/benchmark.yaml",
         BenchmarkConfig,
-        groups=("system", "bo/surrogate", "bo/acquisition", "bo/start"),
+        groups=(
+            "system",
+            "bo/surrogate",
+            "bo/acquisition",
+            "benchmark/start",
+            "benchmark/metric",
+        ),
     ),
     ConfigFile("defaults/generate.yaml", GenerateConfig, groups=("system",)),
     ConfigFile("defaults/data.yaml", DataConfig, groups=("system",)),

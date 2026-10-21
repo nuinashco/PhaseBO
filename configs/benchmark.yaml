@@ -5,6 +5,7 @@ defaults:
   - system: LiSnSCl
   - bo/surrogate: gp
   - bo/acquisition: qlogei
-  - bo/start: random
+  - benchmark/start: random
+  - benchmark/metric: [steps_to_hit, discovery, best_so_far, hazard_ratio]
   - hydra: default
   - _self_

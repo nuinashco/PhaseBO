@@ -21,10 +21,10 @@ cp .env.example .env   # only to mirror runs to Weights & Biases
 | command | does | writes |
 |---|---|---|
 | `phasebo-suggest` | picks the next compositions to compute from the computed ones | `next.csv`, `posterior.csv` |
-| `phasebo-benchmark` | replays BO over the computed compositions, as if computing them, from random starting ones | `bo_path.csv` |
+| `phasebo-benchmark` | replays BO over the computed compositions, as if computing them, from 300 random starting sets, and scores it against random picking | `paths.parquet`, `metrics.json` |
 | `phasebo-generate` | lists the smallest charge-balanced cell of each point not computed yet | `candidates_list.csv` |
 | `phasebo-data` (`make data`) | checks that every processed table still matches its raw files and its script | |
-| `phasebo-configs` (`make configs`) | regenerates `configs/defaults/` and each kind's `configs/bo/<group>/<kind>.yaml` from the config schemas (`--check` only reports) | `configs/` |
+| `phasebo-configs` (`make configs`) | regenerates `configs/defaults/` and each kind's `configs/<group>/<kind>.yaml` from the config schemas (`--check` only reports) | `configs/` |
 
 The first three write to `runs/<run_name>/`, along with the resolved `config.yaml`, `run.json` (git SHA, dirty flag,
 command line, start time) and `data.json` (the processed table, its script and its raw files, by sha256). Runs are
@@ -49,6 +49,25 @@ changed since the table was written, naming the script to rerun.
 BO models one fidelity (`fidelity=dft` by default; `fidelity=nn` models the neural network instead). Each point
 keeps its lowest-energy cell; a benchmark's targets are the explored points on the hull of the modelled fidelity.
 
+## Benchmark
+
+`phasebo-benchmark` asks how much sooner BO finds stable compositions than picking at random. It hides the energies
+of the computed compositions, starts from 8 random ones (never a stable one), and lets BO pick 8 batches of 4: the
+paper's real use on a new phase field. It replays this from 300 starting sets in parallel (about 20 s on 12 cores
+for qLogEI). The same `seed` gives every setting the same starting sets, so settings compare run by run.
+
+Each metric is printed, written to `metrics.json` next to random picking's exact value (a formula, not a
+simulation), and, with `tracker=wandb`, logged as curves over evaluations:
+
+| metric | reads | example (qLogEI, LiSnSCl) |
+|---|---|---|
+| `steps_to_hit` | evaluations until the first stable composition, and each one, averaged; a miss counts as the budget (32) | first hit after 23.9 (random 24.4) |
+| `discovery` | the share of runs that found each target after every batch | 0.89 of 3 found within 32 (random 0.61) |
+| `best_so_far` | the lowest energy above the hull known after every batch | 2.8 meV/atom after 32 (random 4.9) |
+| `hazard_ratio` | BO's chance per batch of picking a target, as a multiple of random's, with a 95% interval | 1.50 (1.33 to 1.68) |
+
+`bo/acquisition=random` checks the setup: its scores match random's values within their error.
+
 ## Usage
 
 1. Put the dataset in `data/raw/` as received.
@@ -72,9 +91,10 @@ keeps its lowest-energy cell; a benchmark's targets are the explored points on t
 
    ```bash
    uv run phasebo-suggest system=LiSnSCl bo/acquisition=ts
-   uv run phasebo-benchmark bo.start.size=8 seed=1 run_name=8-starts
-   uv run phasebo-benchmark bo/acquisition=random            # the random baseline, same starts
-   uv run phasebo-benchmark -m bo/acquisition=qlogei,ts seed=0,1,2 'run_name=sweep/${hydra:job.num}'
+   uv run phasebo-benchmark bo/acquisition=ts benchmark.start.size=23 run_name=ts-23-starts
+   uv run phasebo-benchmark bo/acquisition=random            # the random check, same starting sets
+   uv run phasebo-benchmark benchmark/metric=[hazard_ratio] benchmark.repeats=100
+   uv run phasebo-benchmark -m bo/acquisition=qlogei,ts 'run_name=sweep/${hydra:job.num}'
    ```
 
    `tracker=wandb` mirrors a run to Weights & Biases; the run directory stays the source of truth.
@@ -82,15 +102,17 @@ keeps its lowest-energy cell; a benchmark's targets are the explored points on t
 ## Configs
 
 `configs/defaults/<command>.yaml` lists every setting of a command with its default, commented where the options or
-the meaning are not obvious: seeding, logging, tracking, the batch size, the replay's length. It is generated from
-the schemas in `src/phasebo/config.py`, so it is never edited. BO's parts are config groups: each kind has its own
-generated file, `configs/bo/<group>/<kind>.yaml`, with every setting and its default, and presets name variants:
+the meaning are not obvious: seeding, logging, tracking, the batch size, a benchmark's repeats, length and workers.
+It is generated from the schemas in `src/phasebo/config.py`, so it is never edited. BO's and the benchmark's parts
+are config groups: each kind has its own generated file, `configs/<group>/<kind>.yaml`, with every setting and its
+default, and presets name variants:
 
 | group | kinds | settings |
 |---|---|---|
 | `bo/surrogate` | `gp`; preset `paper` (fitted noise, as in the paper) | `kernel` (`matern12`, `matern32`, `matern52` as in the paper; `rbf`), `noise_mev` (std; `null` fits it) |
 | `bo/acquisition` | `qlogei` (batch log expected improvement), `ts` (Thompson sampling), `random` (the baseline; a benchmark skips the GP fit) | |
-| `bo/start` (benchmark) | `random`: explored points off the hull | `size` |
+| `benchmark/start` | `random`: explored points off the hull | `size` (8) |
+| `benchmark/metric` (a list) | `steps_to_hit`, `discovery`, `best_so_far`, `hazard_ratio`: all four by default | `hazard_ratio.level` (0.95) |
 
 To change a value:
 
