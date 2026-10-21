@@ -59,7 +59,7 @@ notebooks = [
 
 [tool.uv.sources]
 # The conventions repo at the template's commit; `copier update` moves the pin.
-conventions-hooks = { git = "https://github.com/nuinashco/conventions.git", rev = "52aced92bd492ba4432bdba018cf0204692bd67d" }
+conventions-hooks = { git = "https://github.com/nuinashco/conventions.git", rev = "f0f22d0c0d001931e069467fe8197e09c68ca612" }
 # The default Linux torch wheels pull in the CUDA toolkit.
 torch = [{ index = "pytorch-cpu", marker = "sys_platform == 'linux'" }]
 
