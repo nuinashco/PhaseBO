@@ -19,11 +19,12 @@ def test_discovery_curves_follow_the_hits_and_random(made):
     assert curves[first] == [0.0, 0.5, 0.5, 0.5]
     assert curves[second] == [0.0, 0.0, 0.5, 1.0]
     assert curves["first_hit"] == [0.0, 0.5, 1.0, 1.0]
-    assert curves["random"] == pytest.approx([0, 2 / 11, 4 / 11, 6 / 11])
+    assert curves[f"{first}/random"] == pytest.approx([0, 2 / 11, 4 / 11, 6 / 11])
 
 
 def test_discovery_of_random_picking_converges_on_random(random_replays):
     curves = measure(random_replays).curves
 
-    gap = np.abs(np.subtract(curves["first_hit"], curves["first_hit/random"]))
+    found = np.array(curves["first_hit"], dtype=float)
+    gap = np.abs(found - np.array(curves["first_hit/random"], dtype=float))
     assert gap.max() < 0.05

@@ -90,7 +90,7 @@ sequenceDiagram
     R-->>C: Replays: each repeat's start and batches
     C->>M: measure, per chosen metric
     M-->>C: Scores: headline, values, curves
-    C->>C: paths.parquet, metrics.json, W&B curves, then print the headlines
+    C->>C: paths.parquet, metrics.json, W&B curves, summary and artifact, then print the headlines
 ```
 
 ## Repository layout
@@ -142,6 +142,7 @@ tests/                    mirrors src/; tests/nuikit/ comes with the template
 scripts/                  exploratory or one-time runnables, never imported; rerun ones become cli/ commands
   process_<source>.py     one per raw source: writes its processed table and sidecar
   plot_run.py             a run's figures: hull map, each metric's curves
+  wandb_workspace.py      saves the project's "Benchmarks" view in W&B
 notebooks/                exploration only, outputs stripped; reference/ for third-party notebooks
 runs/                     gitignored
 ```
@@ -169,7 +170,8 @@ src/phasebo/<domain>/<family>/
 
 `<Family>Factory.from_config({"kind": ..., ...})` validates against the item's config and builds it. A metric
 returns a `Score`: a headline the command prints, values for `metrics.json` and the W&B summary, and curves over
-`Replays.evaluations`, each next to random's exact value.
+`Replays.evaluations`. A curve `x` comes with `x/random`, random picking's exact value, so every plot (W&B's, the
+saved view's, `plot_run.py`'s) pairs them without knowing the metric.
 
 ## Extending
 
@@ -199,6 +201,10 @@ returns a `Score`: a headline the command prints, values for `metrics.json` and 
 - **`scripts/plot_run.py` is rerun for any run** (LAY-7 makes such a script a command): figures are a developer
   aid, not part of a run or of the README, and `tracker=wandb` shows a benchmark's curves. It has no tests; it
   refuses a run whose processed table has changed since.
+- **`scripts/wandb_workspace.py` is rerun after a metric is added** (LAY-7 makes such a script a command): it
+  saves the project's "Benchmarks" view in W&B, a developer aid that is not part of a run; `--url <view>` rewrites
+  the view in place. It has no tests. Its packages are the `wandb` dependency group, installed by default so that
+  pyright checks it.
 - **GP priors are fixed** (CFG-7): every Matern kernel keeps BoTorch's pre-0.12 Matern 5/2 priors, Gamma(3, 6)
   on each lengthscale and Gamma(2, 0.15) on the outputscale, so `kernel` changes only nu. For `matern52` they
   reproduce the paper's GP; for `matern12` and `matern32` they are a choice, made to change one thing at a time.

@@ -11,6 +11,7 @@ import structlog
 from nuikit import runs, seeding
 from nuikit.errors import DataError
 from nuikit.logging import configure_logging
+from nuikit.registry import KindConfig
 
 from phasebo import paths
 from phasebo.config import RunConfig, SearchConfig, SystemConfig
@@ -20,20 +21,54 @@ from phasebo.field import points as field_points
 
 log = structlog.stdlib.get_logger()
 
+# How a run is reported, not what it computes: left out of W&B's config columns.
+_REPORTING = ("run_name", "log_level", "log_format", "tracker", "wandb_project")
 
-def start(cfg: RunConfig, *, runs_dir: Path) -> tuple[Path, np.random.Generator]:
-    """Configure logging, seed, and create the run directory.
 
-    Return the directory and the run's random generator.
+def start(
+    cfg: RunConfig,
+    *,
+    runs_dir: Path,
+    job_type: str,
+    group: str | None = None,
+    tags: Sequence[str] = (),
+) -> tuple[Path, np.random.Generator]:
+    """Configure logging, seed, and create the run directory; mirror it to W&B.
+
+    Return the directory and the run's random generator. `job_type`, `group` and
+    `tags` label the W&B run.
     """
     configure_logging(level=cfg.log_level, fmt=cfg.log_format)
     rng = seeding.seed_everything(cfg.seed, deterministic=cfg.deterministic)
     run_dir = runs.start_run(cfg, name=cfg.run_name, runs_dir=runs_dir)
     if cfg.tracker == "wandb":
-        runs.mirror_to_wandb(cfg, run_dir, project=cfg.wandb_project)
+        runs.mirror_to_wandb(
+            cfg,
+            run_dir,
+            project=cfg.wandb_project,
+            job_type=job_type,
+            group=group,
+            tags=tags,
+            exclude=_REPORTING,
+        )
     structlog.contextvars.bind_contextvars(run=run_dir.name)
     log.info("run_started", run_dir=str(run_dir), seed=cfg.seed)
     return run_dir, rng
+
+
+def field_name(system: SystemConfig) -> str:
+    """Return the phase field's name: its processed table's, by convention."""
+    return Path(system.processed).stem
+
+
+def family_tags(**configs: KindConfig) -> list[str]:
+    """Return a tag per family choice and setting, as `surrogate.kernel=matern52`."""
+    tags = []
+    for role, config in configs.items():
+        tags.append(f"{role}={config.kind}")
+        settings = config.model_dump(mode="json", exclude={"kind"})
+        tags += [f"{role}.{key}={value}" for key, value in settings.items()]
+    return tags
 
 
 def load_table(system: SystemConfig) -> store.LoadedTable:

@@ -9,3 +9,5 @@ defaults:
   - benchmark/metric: [steps_to_hit, discovery, best_so_far, hazard_ratio]
   - hydra: default
   - _self_
+
+run_name: ${bo.acquisition.kind}-${now:%Y-%m-%d_%H-%M-%S}

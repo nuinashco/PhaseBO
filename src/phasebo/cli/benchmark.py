@@ -57,7 +57,16 @@ def run(cfg: BenchmarkConfig, *, runs_dir: Path) -> Path:
         kind: MetricFactory.from_config(config)
         for kind, config in protocol.metric.items()
     }
-    run_dir, _ = _launch.start(cfg, runs_dir=runs_dir)
+    tags = _launch.family_tags(
+        surrogate=cfg.bo.surrogate, acquisition=cfg.bo.acquisition, start=protocol.start
+    )
+    run_dir, _ = _launch.start(
+        cfg,
+        runs_dir=runs_dir,
+        job_type="benchmark",
+        group=_launch.field_name(cfg.system),
+        tags=tags,
+    )
     _launch.write_data(run_dir, loaded)
     replays = replay.replay_many(
         points,
@@ -76,18 +85,29 @@ def run(cfg: BenchmarkConfig, *, runs_dir: Path) -> Path:
     text = json.dumps(to_json(scores, evaluations), indent=2, ensure_ascii=False)
     (run_dir / "metrics.json").write_text(text + "\n", encoding="utf-8")
     if cfg.tracker == "wandb":
-        _log_to_wandb(scores, evaluations)
+        _log_to_wandb(scores, evaluations, run_dir=run_dir)
     for score in scores.values():
         click.echo(score.headline)
     return run_dir
 
 
-def _log_to_wandb(scores: dict[str, Score], evaluations: list[int]) -> None:
+def _log_to_wandb(
+    scores: dict[str, Score], evaluations: list[int], *, run_dir: Path
+) -> None:
+    """Log curves over evaluations, values as the summary, and the outputs."""
     import wandb
 
     summary, rows = to_wandb(scores, evaluations)
+    # W&B otherwise copies each curve's last point into the summary, beside the values.
+    wandb.define_metric("evaluations", summary="none")
+    for key in {key for row in rows for key in row}:
+        wandb.define_metric(key, step_metric="evaluations", summary="none")
     for evaluation, row in zip(evaluations, rows, strict=True):
-        wandb.log(row, step=evaluation)
+        wandb.log({"evaluations": evaluation, **row})
     wandb.summary.update(summary)
-    # Left to exit, W&B's teardown abandons a pending message and logs an error.
-    wandb.finish()
+    run = wandb.run
+    if run is not None:
+        outputs = wandb.Artifact(f"replays-{run.id}", type="replays")
+        for name in ("paths.parquet", "metrics.json", "config.yaml", "data.json"):
+            outputs.add_file(str(run_dir / name))
+        run.log_artifact(outputs)

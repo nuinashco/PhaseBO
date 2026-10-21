@@ -29,3 +29,9 @@ def test_to_wandb_summarises_values_and_logs_one_row_per_evaluation():
     summary, rows = to_wandb(SCORES, [0, 4])
 
     assert (summary, rows) == ({"a/x": 1.0}, [{"a/c": 0.0}, {"a/c": 1.0}])
+
+
+def test_to_wandb_leaves_undefined_curve_points_out():
+    scores = {"a": Score(headline="", values={}, curves={"c": [None, 2.0]})}
+
+    assert to_wandb(scores, [0, 4])[1] == [{}, {"a/c": 2.0}]

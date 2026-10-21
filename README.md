@@ -64,9 +64,19 @@ simulation), and, with `tracker=wandb`, logged as curves over evaluations:
 | `steps_to_hit` | evaluations until the first stable composition, and each one, averaged; a miss counts as the budget (32) | first hit after 23.9 (random 24.4) |
 | `discovery` | the share of runs that found each target after every batch | 0.89 of 3 found within 32 (random 0.61) |
 | `best_so_far` | the lowest energy above the hull known after every batch | 2.8 meV/atom after 32 (random 4.9) |
-| `hazard_ratio` | BO's chance per batch of picking a target, as a multiple of random's, with a 95% interval | 1.50 (1.33 to 1.68) |
+| `hazard_ratio` | BO's chance per batch of picking a target, as a multiple of random's, with a 95% interval; and batch by batch | 1.50 (1.33 to 1.68); 0.5 in the first batch, 2.2 in the eighth |
 
 `bo/acquisition=random` checks the setup: its scores match random's values within their error.
+
+### In Weights & Biases
+
+With `tracker=wandb`, a benchmark run is named after its batch rule (`qlogei-<time>` unless `run_name` is set),
+grouped by phase field, typed `benchmark` and tagged with every family setting (`surrogate.kernel=matern52`), so the
+W&B table filters and groups by setting. Each metric's curves are plotted against `evaluations` beside random's,
+the summary holds the metrics' values, and the run's outputs (`paths.parquet`, `metrics.json`, `config.yaml`,
+`data.json`) are saved as its `replays-<run id>` artifact, so any later comparison can start from W&B alone. The
+project's "Benchmarks" view shows the headline values side by side, then each curve with random's dashed, and the
+system charts collapsed.
 
 ## Usage
 
@@ -97,7 +107,8 @@ simulation), and, with `tracker=wandb`, logged as curves over evaluations:
    uv run phasebo-benchmark -m bo/acquisition=qlogei,ts 'run_name=sweep/${hydra:job.num}'
    ```
 
-   `tracker=wandb` mirrors a run to Weights & Biases; the run directory stays the source of truth.
+   `tracker=wandb` mirrors a run to Weights & Biases, with its command as the job type and its phase field as the
+   group; the run directory stays the source of truth.
 
 ## Configs
 

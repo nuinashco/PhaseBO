@@ -50,7 +50,16 @@ def run(cfg: SuggestConfig, *, runs_dir: Path) -> Path:
     )
     surrogate = SurrogateFactory.from_config(cfg.bo.surrogate)
     acquisition = AcquisitionFactory.from_config(cfg.bo.acquisition)
-    run_dir, rng = _launch.start(cfg, runs_dir=runs_dir)
+    tags = _launch.family_tags(
+        surrogate=cfg.bo.surrogate, acquisition=cfg.bo.acquisition
+    )
+    run_dir, rng = _launch.start(
+        cfg,
+        runs_dir=runs_dir,
+        job_type="suggest",
+        group=_launch.field_name(cfg.system),
+        tags=tags,
+    )
     _launch.write_data(run_dir, loaded)
     picks, posterior = proposal.propose(
         points,

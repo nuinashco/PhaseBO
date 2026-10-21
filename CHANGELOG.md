@@ -11,7 +11,8 @@ All notable changes to this project will be documented in this file.
   choose a phase field with `system=` and override any value on the command line. `configs/defaults/<command>.yaml`
   lists every setting with its default.
 - Each run writes `runs/<run_name>/`: the resolved configuration, `run.json` (git commit, command line, start time),
-  and results. `tracker=wandb` mirrors a run to Weights & Biases.
+  and results. `tracker=wandb` mirrors a run to Weights & Biases, typed by command (`benchmark`, `suggest`,
+  `generate`), grouped by phase field and tagged with every family setting, without the reporting-only settings.
 - A phase field is a file in `configs/system/`: its processed table, its elements (charge and an inclusive range
   of atoms per cell) and its candidate space.
 - One script per raw source (`scripts/process_<source>.py`) turns it into a committed, validated table in
@@ -26,11 +27,15 @@ All notable changes to this project will be documented in this file.
   all CPUs by default) and scores it against random picking's exact odds. The same `seed` gives every setting the
   same starting sets, and results do not depend on the number of workers. It writes `paths.parquet` (every
   evaluation of every repeat: batch, formula, energy above the hull, whether a target) and `metrics.json`, prints
-  one line per metric, and with `tracker=wandb` logs each metric's curves over evaluations.
+  one line per metric, and with `tracker=wandb` logs each metric's curves against `evaluations` beside random's,
+  its values as the summary, and its outputs as a `replays-<run id>` artifact. A run is named after its batch rule
+  (`qlogei-<time>`) unless `run_name` is set.
+- `scripts/wandb_workspace.py` saves a "Benchmarks" view in W&B: the headline values side by side, each curve with
+  random's dashed, the system charts collapsed.
 - `benchmark/metric`, a list of metrics, all four by default: `steps_to_hit` (evaluations to each target, the
   first and their mean, a miss counting as the budget), `discovery` (the share of runs that found each target,
   batch by batch), `best_so_far` (the lowest energy known) and `hazard_ratio` (BO's chance per batch of picking a
-  target as a multiple of random's, with a `level` interval; adds statsmodels).
+  target as a multiple of random's, with a `level` interval, and batch by batch; adds statsmodels).
 - Validation with pydantic: unknown keys, invalid values and missing input files stop a run before it starts.
 - `seed` (default 42): runs repeat exactly.
 - BO is two config groups, each a choice of kind (`bo/<group>=<kind>`):

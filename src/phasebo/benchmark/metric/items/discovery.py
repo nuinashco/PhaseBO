@@ -24,17 +24,17 @@ class DiscoveryMetric(Metric[DiscoveryConfig]):
         evaluations = replays.evaluations
         steps = replays.hit_batches() * replays.batch_size
         pool = replays.pool
-        curves = {
-            name: _found(column, evaluations)
-            for name, column in zip(names, steps.T, strict=True)
-        }
+        one = [1 - baseline.survival(pool, int(x)) for x in evaluations]
+        curves: dict[str, list[float | None]] = {}
+        for name, column in zip(names, steps.T, strict=True):
+            curves[name] = _found(column, evaluations)
+            curves[f"{name}/random"] = list(one)
         curves["first_hit"] = _found(steps.min(axis=1), evaluations)
-        curves["random"] = [1 - baseline.survival(pool, int(x)) for x in evaluations]
         curves["first_hit/random"] = [
             1 - baseline.survival(pool, int(x), targets=len(names)) for x in evaluations
         ]
         found = (steps <= replays.budget).sum(axis=1)
-        random = len(names) * curves["random"][-1]
+        random = len(names) * one[-1]
         headline = (
             f"{found.mean():.2f} of {len(names)} targets found within "
             f"{replays.budget} evaluations on average (random {random:.2f})"
@@ -46,5 +46,5 @@ class DiscoveryMetric(Metric[DiscoveryConfig]):
         return Score(headline=headline, values=values, curves=curves)
 
 
-def _found(steps: np.ndarray, evaluations: np.ndarray) -> list[float]:
+def _found(steps: np.ndarray, evaluations: np.ndarray) -> list[float | None]:
     return [float((steps <= x).mean()) for x in evaluations]

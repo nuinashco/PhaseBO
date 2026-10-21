@@ -4,7 +4,7 @@
 
 Writes into the run directory: convex_hull.png, the energy above the hull over a
 4-element field's square, and for a benchmark run one <metric>.png per metric with
-curves in metrics.json, random picking's dashed.
+curves in metrics.json: a panel per curve, random picking's dashed.
 """
 
 import json
@@ -116,24 +116,34 @@ def _save_hull_map(
 
 
 def _save_curves(
-    curves: dict[str, list[float]],
+    curves: dict[str, list[float | None]],
     path: Path,
     *,
     evaluations: Sequence[int],
     title: str,
     dpi: int,
 ) -> None:
-    """Save every curve of one metric over the evaluations after the start."""
+    """Save one panel per curve of a metric, over the evaluations after the start.
+
+    Each panel draws the curve and, dashed, its `/random` partner.
+    """
     import matplotlib.pyplot as plt
 
-    figure, axes = plt.subplots()
-    for name, values in curves.items():
-        # A curve named `.../random` or `random` is random picking's exact value.
-        style = "--" if name.split("/")[-1] == "random" else "-"
-        axes.plot(evaluations, values, style, marker="o", ms=3, label=name)
-    axes.set_xlabel("Evaluations after the start")
-    axes.set_title(title)
-    axes.legend(fontsize=8)
+    names = [name for name in curves if not name.endswith("/random")]
+    figure, panels = plt.subplots(
+        1, len(names), figsize=(4 * len(names), 3.5), squeeze=False
+    )
+    for axes, name in zip(panels[0], names, strict=True):
+        # None marks a point where the curve is undefined; matplotlib skips NaN.
+        values = np.array(curves[name], dtype=float)
+        axes.plot(evaluations, values, "-", marker="o", ms=3, label="BO")
+        if f"{name}/random" in curves:
+            random = np.array(curves[f"{name}/random"], dtype=float)
+            axes.plot(evaluations, random, "--", label="random")
+        axes.set_title(name, fontsize=10)
+        axes.set_xlabel("Evaluations after the start")
+        axes.legend(fontsize=8)
+    figure.suptitle(title)
     _save(figure, path, dpi=dpi)
 
 

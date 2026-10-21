@@ -18,12 +18,15 @@ class MetricConfig(KindConfig):
 
 @frozen
 class Score:
-    """What a metric measured: a line to print, named values, and curves."""
+    """What a metric measured: a line to print, named values, and curves.
+
+    Each curve has one value per entry of `Replays.evaluations`, None where it is
+    undefined, and a curve `x` comes with `x/random`, random picking's exact value.
+    """
 
     headline: str
     values: dict[str, float]
-    # Each curve has one value per entry of `Replays.evaluations`.
-    curves: dict[str, list[float]] = field(factory=dict)
+    curves: dict[str, list[float | None]] = field(factory=dict)
 
 
 @define
@@ -76,9 +79,10 @@ def to_wandb(
     }
     rows = [
         {
-            f"{kind}/{name}": curve[step]
+            f"{kind}/{name}": value
             for kind, score in scores.items()
             for name, curve in score.curves.items()
+            if (value := curve[step]) is not None
         }
         for step in range(len(evaluations))
     ]

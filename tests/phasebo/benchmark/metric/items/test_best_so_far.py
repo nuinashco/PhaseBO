@@ -11,10 +11,11 @@ def measure(replays):
 
 def test_best_so_far_starts_at_the_start_and_drops_with_a_target(made):
     curves = measure(made([{0: 2}, {}])).curves
+    mean = np.array(curves["mean"], dtype=float)
 
-    assert curves["mean"][0] == curves["random"][0]
-    assert np.all(np.diff(curves["mean"]) <= 0)
-    assert curves["mean"][2] < curves["mean"][1]
+    assert mean[0] == curves["mean/random"][0]
+    assert np.all(np.diff(mean) <= 0)
+    assert mean[2] < mean[1]
 
 
 def test_best_so_far_of_random_picking_converges_on_random(random_replays):

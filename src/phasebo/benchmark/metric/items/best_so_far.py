@@ -54,5 +54,5 @@ class BestSoFarMetric(Metric[BestSoFarConfig]):
             values=summarise(
                 "at_budget", best_mev[:, -1], random=float(random_mev[-1])
             ),
-            curves={"mean": mean_mev.tolist(), "random": random_mev.tolist()},
+            curves={"mean": mean_mev.tolist(), "mean/random": random_mev.tolist()},
         )

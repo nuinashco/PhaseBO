@@ -107,3 +107,20 @@ def test_read_formulas_returns_the_first_column(tmp_path):
     formulas = _launch.read_formulas(tmp_path / "f.csv", key="system.candidates.file")
 
     assert formulas == ["Li2 S1", "Li1 Cl1"]
+
+
+def test_family_tags_name_each_choice_and_setting():
+    tags = _launch.family_tags(
+        surrogate=GPConfig(kind="gp"), acquisition=QLogEIConfig(kind="qlogei")
+    )
+
+    assert tags == [
+        "surrogate=gp",
+        "surrogate.kernel=matern52",
+        "surrogate.noise_mev=0.0",
+        "acquisition=qlogei",
+    ]
+
+
+def test_field_name_is_the_processed_tables(system):
+    assert _launch.field_name(system) == "processed"
