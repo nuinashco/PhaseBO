@@ -71,18 +71,23 @@ def to_json(scores: Mapping[str, Score], evaluations: list[int]) -> dict[str, An
 def to_wandb(
     scores: Mapping[str, Score], evaluations: list[int]
 ) -> tuple[dict[str, float], list[dict[str, float]]]:
-    """Return W&B's summary values and one row of curve points per evaluation count."""
+    """Return W&B's summary values and one row of curve points per evaluation count.
+
+    Random picking's exact values stay in metrics.json: in W&B a run of the random
+    batch rule is the comparison.
+    """
     summary = {
         f"{kind}/{name}": value
         for kind, score in scores.items()
         for name, value in score.values.items()
+        if not name.endswith("/random")
     }
     rows = [
         {
             f"{kind}/{name}": value
             for kind, score in scores.items()
             for name, curve in score.curves.items()
-            if (value := curve[step]) is not None
+            if not name.endswith("/random") and (value := curve[step]) is not None
         }
         for step in range(len(evaluations))
     ]

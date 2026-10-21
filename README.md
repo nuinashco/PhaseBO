@@ -72,11 +72,12 @@ simulation), and, with `tracker=wandb`, logged as curves over evaluations:
 
 With `tracker=wandb`, a benchmark run is named after its batch rule (`qlogei-<time>` unless `run_name` is set),
 grouped by phase field, typed `benchmark` and tagged with every family setting (`surrogate.kernel=matern52`), so the
-W&B table filters and groups by setting. Each metric's curves are plotted against `evaluations` beside random's,
-the summary holds the metrics' values, and the run's outputs (`paths.parquet`, `metrics.json`, `config.yaml`,
+W&B table filters and groups by setting. Each metric's curves are plotted against `evaluations`, the summary
+holds the metrics' values, and the run's outputs (`paths.parquet`, `metrics.json`, `config.yaml`,
 `data.json`) are saved as its `replays-<run id>` artifact, so any later comparison can start from W&B alone. The
-project's "Benchmarks" view shows the headline values side by side, then each curve with random's dashed, and the
-system charts collapsed.
+project's "Benchmarks" view shows the headline values side by side, then each curve, one line per run, and the
+system charts collapsed. Random picking's exact values stay in `metrics.json`; in W&B, a `bo/acquisition=random`
+run is the comparison.
 
 ## Usage
 

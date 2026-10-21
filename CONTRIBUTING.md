@@ -170,8 +170,9 @@ src/phasebo/<domain>/<family>/
 
 `<Family>Factory.from_config({"kind": ..., ...})` validates against the item's config and builds it. A metric
 returns a `Score`: a headline the command prints, values for `metrics.json` and the W&B summary, and curves over
-`Replays.evaluations`. A curve `x` comes with `x/random`, random picking's exact value, so every plot (W&B's, the
-saved view's, `plot_run.py`'s) pairs them without knowing the metric.
+`Replays.evaluations`. A value or curve `x` comes with `x/random`, random picking's exact value: `metrics.json`
+and `plot_run.py` keep it, while W&B gets BO's alone, since there a run of the random batch rule is the
+comparison.
 
 ## Extending
 

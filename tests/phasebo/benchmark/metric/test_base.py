@@ -31,6 +31,18 @@ def test_to_wandb_summarises_values_and_logs_one_row_per_evaluation():
     assert (summary, rows) == ({"a/x": 1.0}, [{"a/c": 0.0}, {"a/c": 1.0}])
 
 
+def test_to_wandb_leaves_random_pickings_exact_values_out():
+    scores = {
+        "a": Score(
+            headline="",
+            values={"x": 1.0, "x/random": 0.5},
+            curves={"c": [1.0], "c/random": [0.5]},
+        )
+    }
+
+    assert to_wandb(scores, [0]) == ({"a/x": 1.0}, [{"a/c": 1.0}])
+
+
 def test_to_wandb_leaves_undefined_curve_points_out():
     scores = {"a": Score(headline="", values={}, curves={"c": [None, 2.0]})}
 

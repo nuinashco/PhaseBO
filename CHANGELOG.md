@@ -27,11 +27,11 @@ All notable changes to this project will be documented in this file.
   all CPUs by default) and scores it against random picking's exact odds. The same `seed` gives every setting the
   same starting sets, and results do not depend on the number of workers. It writes `paths.parquet` (every
   evaluation of every repeat: batch, formula, energy above the hull, whether a target) and `metrics.json`, prints
-  one line per metric, and with `tracker=wandb` logs each metric's curves against `evaluations` beside random's,
-  its values as the summary, and its outputs as a `replays-<run id>` artifact. A run is named after its batch rule
+  one line per metric, and with `tracker=wandb` logs each metric's curves against `evaluations`, its values as
+  the summary, and its outputs as a `replays-<run id>` artifact. A run is named after its batch rule
   (`qlogei-<time>`) unless `run_name` is set.
-- `scripts/wandb_workspace.py` saves a "Benchmarks" view in W&B: the headline values side by side, each curve with
-  random's dashed, the system charts collapsed.
+- `scripts/wandb_workspace.py` saves a "Benchmarks" view in W&B: the headline values side by side, each curve
+  with one line per run, the system charts collapsed; a `bo/acquisition=random` run is the comparison there.
 - `benchmark/metric`, a list of metrics, all four by default: `steps_to_hit` (evaluations to each target, the
   first and their mean, a miss counting as the budget), `discovery` (the share of runs that found each target,
   batch by batch), `best_so_far` (the lowest energy known) and `hazard_ratio` (BO's chance per batch of picking a

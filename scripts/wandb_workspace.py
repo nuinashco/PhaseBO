@@ -3,10 +3,10 @@
     uv run scripts/wandb_workspace.py                   # a new view
     uv run scripts/wandb_workspace.py --url <view url>  # rewrite that view
 
-Each curve's panel draws it with its `/random` partner, against evaluations. Panels
-come from the newest benchmark run's curves, so rerun it after adding a metric. The
-project is the one configs/benchmark.yaml logs to; system charts close the view,
-collapsed.
+Each curve's panel draws one line per run, against evaluations: a run of the random
+batch rule is the comparison. Panels come from the newest benchmark run's curves, so
+rerun it after adding a metric. The project is the one configs/benchmark.yaml logs
+to; system charts close the view, collapsed.
 """
 
 from typing import Any
@@ -22,8 +22,7 @@ from phasebo.config import BenchmarkConfig
 
 rootutils.setup_root(__file__, indicator=".project-root")
 
-# Summary values compared run by run. A title shows random's value, read from the
-# newest run, so it holds for runs of that run's field and budget.
+# Summary values compared run by run.
 HEADLINES = {
     "hazard_ratio/theta": "Hazard ratio",
     "discovery/found/mean": "Targets found",
@@ -52,7 +51,7 @@ def main(*, url: str | None) -> None:
     history: Any = newest.history_keys
     keys = sorted(key for key in history["keys"] if not key.startswith("_"))
     sections = [
-        _build_headline_section(newest.summary),
+        _build_headline_section(),
         *_build_metric_sections(keys),
         _build_system_section(keys),
     ]
@@ -90,15 +89,14 @@ def _fetch_newest_benchmark(entity: str, project: str) -> Any:
     return api.run("/".join(newest.path))
 
 
-def _build_headline_section(summary: Any) -> Any:
+def _build_headline_section() -> Any:
     import wandb_workspaces.reports.v2 as wr
     import wandb_workspaces.workspaces as ws
 
-    bars: list[Any] = []
-    for key, title in HEADLINES.items():
-        random = summary.get(f"{key.removesuffix('/mean')}/random")
-        label = title if random is None else f"{title}; random {random:.2f}"
-        bars.append(wr.BarPlot(title=label, metrics=[key], legend_template=LEGEND))
+    bars: list[Any] = [
+        wr.BarPlot(title=title, metrics=[key], legend_template=LEGEND)
+        for key, title in HEADLINES.items()
+    ]
     layout = ws.SectionLayoutSettings(columns=4, rows=1)
     return ws.Section(
         name="Headline", panels=bars, is_open=True, layout_settings=layout
@@ -109,6 +107,7 @@ def _build_metric_sections(keys: list[str]) -> list[Any]:
     import wandb_workspaces.reports.v2 as wr
     import wandb_workspaces.workspaces as ws
 
+    # Runs logged before W&B left random's exact curves out still carry `.../random`.
     curves = [
         key
         for key in keys
@@ -120,11 +119,10 @@ def _build_metric_sections(keys: list[str]) -> list[Any]:
     for key in curves:
         metric = key.split("/")[0]
         by_metric.setdefault(metric, []).append(
-            # W&B draws a panel's second metric dashed: here, random's.
             wr.LinePlot(
-                title=f"{key.removeprefix(f'{metric}/')} (dashed: random)",
+                title=key.removeprefix(f"{metric}/"),
                 x="evaluations",
-                y=[key, f"{key}/random"],
+                y=[key],
                 title_x="evaluations after the start",
                 legend_template=LEGEND,
             )
