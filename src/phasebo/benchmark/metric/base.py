@@ -31,12 +31,9 @@ class Score:
 
 @define
 class Metric[C: MetricConfig](Configurable[C], ABC):
-    """Measure of how well replays found the targets, or low energies.
+    """Measure of how well replays found the targets, or low energies."""
 
-    `reading` tells a reader of its curves what they show, in plain words; the W&B
-    view prints it above them.
-    """
-
+    # Plain words on the metric's curves; the W&B view prints them above its panels.
     reading: ClassVar[str]
 
     @abstractmethod
@@ -77,11 +74,9 @@ def to_json(scores: Mapping[str, Score], evaluations: list[int]) -> dict[str, An
 def to_wandb(
     scores: Mapping[str, Score], evaluations: list[int]
 ) -> tuple[dict[str, float], list[dict[str, float]]]:
-    """Return W&B's summary values and one row of curve points per evaluation count.
-
-    Random picking's exact values stay in metrics.json: in W&B a run of the random
-    batch rule is the comparison.
-    """
+    """Return W&B's summary values and one row of curve points per evaluation count."""
+    # Random picking's exact values stay in metrics.json; in W&B a run of the random
+    # batch rule is the comparison.
     summary = {
         f"{kind}/{name}": value
         for kind, score in scores.items()
