@@ -17,7 +17,6 @@ dependencies = [
     "botorch>=0.18.1",
     "click>=8.5",
     "hydra-core>=1.4.0rc1",  # 1.3.x crashes on Python 3.14 (argparse help check).
-    "matplotlib>=3.11",
     "numpy>=2.5",
     "omegaconf>=2.4",
     "pandas>=3.0",
@@ -25,7 +24,6 @@ dependencies = [
     "pydantic>=2.14",
     "pymatgen>=2026.9.24",
     "rootutils>=1.0.7",
-    "scipy>=1.17",
     "structlog>=26.1",
     "torch>=2.14",
     "wandb>=0.31",
@@ -47,15 +45,18 @@ dev = [
     "pytest>=9.1",
     "ruff>=0.17",
 ]
+# Notebooks and scripts/plot_run.py.
 notebooks = [
     # 0.25.0 pairs KaTeX 0.18 with KaTeX 0.16 CSS, so sub- and superscripts are not shrunk.
     "marimo>=0.24.2,<0.25",
+    "matplotlib>=3.11",
     "plotly>=7.1",
+    "scipy>=1.17",
 ]
 
 [tool.uv.sources]
 # The conventions repo at the template's commit; `copier update` moves the pin.
-conventions-hooks = { git = "https://github.com/nuinashco/conventions.git", rev = "d5e5fbbf748eee354c36b1f7dbf331c395e6a021" }
+conventions-hooks = { git = "https://github.com/nuinashco/conventions.git", rev = "16275e2561811e667db5d2fc538420205855eeca" }
 # The default Linux torch wheels pull in the CUDA toolkit.
 torch = [{ index = "pytorch-cpu", marker = "sys_platform == 'linux'" }]
 
@@ -74,16 +75,7 @@ module-name = ["phasebo", "nuikit"]
 [tool.ruff]
 line-length = 88
 src = ["src", "tests"]
-extend-exclude = [
-    "CONVENTIONS.md",  # Vendored guide: fix it upstream, not here.
-    # Pre-template code, rewritten by the feat/bo-families branch (CONTRIBUTING,
-    # Deviations).
-    "src/phasebo/phase_field.py",
-    "src/phasebo/phase_field_bo.py",
-    "tests/conftest.py",
-    "tests/test_phase_field.py",
-    "tests/test_phase_field_bo.py",
-]
+extend-exclude = ["CONVENTIONS.md"]  # Vendored guide: fix it upstream, not here.
 
 [tool.ruff.lint]
 select = [
@@ -128,14 +120,6 @@ ban-relative-imports = "all"
 
 [tool.pyright]
 include = ["src", "tests", "scripts"]
-exclude = [
-    # Pre-template code (CONTRIBUTING, Deviations).
-    "src/phasebo/phase_field.py",
-    "src/phasebo/phase_field_bo.py",
-    "tests/conftest.py",
-    "tests/test_phase_field.py",
-    "tests/test_phase_field_bo.py",
-]
 strict = ["src/nuikit"]
 typeCheckingMode = "standard"
 venvPath = "."
@@ -153,7 +137,21 @@ root_packages = ["phasebo", "nuikit"]
 name = "Layers: cli on top, paths at the bottom, every module placed"
 type = "layers"
 containers = ["phasebo"]
-layers = ["cli", "config", "phase_field_bo | data | candidates", "phase_field", "paths"]
+layers = ["cli", "config", "bo", "field | data", "paths"]
+exhaustive = true
+
+[[tool.importlinter.contracts]]
+name = "BO: the loops use the families, the batch rules use the surrogate"
+type = "layers"
+containers = ["phasebo.bo"]
+layers = ["replay | proposal", "acquisition | start", "surrogate"]
+exhaustive = true
+
+[[tool.importlinter.contracts]]
+name = "Field: points build on the hull; candidates stand apart"
+type = "layers"
+containers = ["phasebo.field"]
+layers = ["points", "hull | candidates"]
 exhaustive = true
 
 [[tool.importlinter.contracts]]

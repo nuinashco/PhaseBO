@@ -1,7 +1,10 @@
 # Entry config of `phasebo-benchmark`: values set below change every run of this repo.
-# Every setting, with its default and description: defaults/benchmark.yaml (generated).
+# Every setting with its default: defaults/benchmark.yaml (generated).
 defaults:
   - defaults/benchmark@_here_
   - system: LiSnSCl
+  - bo/surrogate: gp
+  - bo/acquisition: qlogei
+  - bo/start: random
   - hydra: default
   - _self_

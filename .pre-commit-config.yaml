@@ -1,7 +1,5 @@
 # Installed by `make setup` (pre-commit and commit-msg stages).
 default_stages: [pre-commit]  # Only the commit-msg hook runs at that stage.
-# Pre-template code is excluded until it is rewritten (CONTRIBUTING, Deviations).
-exclude: ^(src/phasebo/(phase_field|phase_field_bo)\.py|tests/(conftest|test_phase_field|test_phase_field_bo)\.py)$
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v6.0.0

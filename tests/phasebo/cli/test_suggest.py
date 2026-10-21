@@ -2,30 +2,28 @@
 
 import pandas as pd
 
+from phasebo.bo.acquisition.items.ts import TSConfig
+from phasebo.bo.surrogate.items.gp import GPConfig
 from phasebo.cli import suggest
 from phasebo.config import BOConfig, SuggestConfig
 
 
-def test_suggest_picks_the_batch_from_the_candidates_file(
+def test_suggest_writes_the_batch_and_each_candidate_prediction(
     system, candidates, tmp_path, capsys
 ):
-    cfg = SuggestConfig(run_name="r", system=system, bo=BOConfig(batch_size=2))
+    cfg = SuggestConfig(
+        run_name="r",
+        system=system,
+        bo=BOConfig(
+            surrogate=GPConfig(kind="gp"), acquisition=TSConfig(kind="ts"), batch_size=2
+        ),
+    )
 
     run_dir = suggest.run(cfg, runs_dir=tmp_path / "runs")
 
-    picks = pd.read_csv(run_dir / "next.csv")["composition"].tolist()
-    posterior = pd.read_csv(run_dir / "posterior.csv")["Candidates"]
+    picks = pd.read_csv(run_dir / "next.csv")["formula"].tolist()
+    posterior = pd.read_csv(run_dir / "posterior.csv")
     assert (len(picks), set(picks) <= set(candidates)) == (2, True)
-    assert sorted(posterior) == sorted(candidates)
+    assert list(posterior.columns) == ["formula", "mean_mev", "std_mev"]
     assert capsys.readouterr().out.split() == " ".join(picks).split()
-    assert (run_dir / "convex_hull.png").is_file()
-
-
-def test_suggest_passes_the_bo_settings_to_the_model(system, tmp_path, capsys):
-    bo = BOConfig(acquisition="ts", kernel="rbf", noise_mev=None, batch_size=2)
-    cfg = SuggestConfig(run_name="r", system=system, bo=bo)
-
-    suggest.run(cfg, runs_dir=tmp_path / "runs")
-
-    expected = "Model: rbf kernel, ts acquisition, batch 2, noise fitted"
-    assert expected in capsys.readouterr().err
+    assert (run_dir / "data.json").is_file()

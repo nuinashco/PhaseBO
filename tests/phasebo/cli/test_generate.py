@@ -13,5 +13,5 @@ def test_generate_writes_the_generated_candidates(system, tmp_path):
 
     written = pd.read_csv(run_dir / "candidates_list.csv")["formula"].tolist()
     rows = _launch.load_table(system).rows
-    assert written == _launch.generate_formulas(system, rows, excluded=None)
+    assert written == _launch.generate_formulas(system, explored=list(rows["formula"]))
     assert (run_dir / "data.json").is_file()

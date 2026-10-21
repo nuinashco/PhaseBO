@@ -20,16 +20,16 @@ cp .env.example .env   # only to mirror runs to Weights & Biases
 
 | command | does | writes |
 |---|---|---|
-| `phasebo-suggest` | picks the next compositions to compute from the computed ones | `next.csv`, `posterior.csv`, `convex_hull.png` |
-| `phasebo-benchmark` | replays BO over the computed compositions, as if computing them, from random starting ones | `bo_path.csv`, `BO_Path_in_<field>.txt`, `convergence.png`, `convex_hull.png` |
-| `phasebo-generate` | lists the charge-balanced cells at points not computed yet | `candidates_list.csv` |
+| `phasebo-suggest` | picks the next compositions to compute from the computed ones | `next.csv`, `posterior.csv` |
+| `phasebo-benchmark` | replays BO over the computed compositions, as if computing them, from random starting ones | `bo_path.csv` |
+| `phasebo-generate` | lists the smallest charge-balanced cell of each point not computed yet | `candidates_list.csv` |
 | `phasebo-data` (`make data`) | checks that every processed table still matches its raw files and its script | |
-| `phasebo-configs` (`make configs`) | regenerates `configs/defaults/` from the config schemas (`--check` only reports) | `configs/` |
+| `phasebo-configs` (`make configs`) | regenerates `configs/defaults/` and each kind's `configs/bo/<group>/<kind>.yaml` from the config schemas (`--check` only reports) | `configs/` |
 
 The first three write to `runs/<run_name>/`, along with the resolved `config.yaml`, `run.json` (git SHA, dirty flag,
 command line, start time) and `data.json` (the processed table, its script and its raw files, by sha256). Runs are
 seeded (`seed=42` unless overridden), so a run repeats exactly. Inputs are checked before the run directory is
-created: a missing file stops the command with an error.
+created: a missing file, or a starting set larger than the field allows, stops the command with an error.
 
 ## Data
 
@@ -46,8 +46,8 @@ changed since the table was written, naming the script to rerun.
 | `LiSnSCl` | `LiSnSCl_700eV.csv`: 286 compositions, 91 references | `process_LiSnSCl_700eV.py` | total, DFT at 700 eV |
 | `LiSnSCl_multifidel` | `LiSnSCl_multifidel.csv`: the same compositions, plus 46 oxygen phases its script drops | `process_LiSnSCl_multifidel.py` | above the hull: `dft`, and `nn` from a neural network |
 
-`phasebo-suggest` and `phasebo-benchmark` need total energies until BO is rebuilt, so they run on `LiSnSCl`;
-`phasebo-generate` runs on both.
+BO models one fidelity (`fidelity=dft` by default; `fidelity=nn` models the neural network instead). Each point
+keeps its lowest-energy cell; a benchmark's targets are the explored points on the hull of the modelled fidelity.
 
 ## Usage
 
@@ -71,9 +71,10 @@ changed since the table was written, naming the script to rerun.
 4. Run a command, overriding any value Hydra-style:
 
    ```bash
-   uv run phasebo-suggest system=LiSnSCl bo.acquisition=ts
-   uv run phasebo-benchmark n_starts=8 seed=1 run_name=ts-8-starts
-   uv run phasebo-benchmark -m bo.acquisition=qlogei,ts seed=0,1,2 'run_name=sweep/${hydra:job.num}'
+   uv run phasebo-suggest system=LiSnSCl bo/acquisition=ts
+   uv run phasebo-benchmark bo.start.size=8 seed=1 run_name=8-starts
+   uv run phasebo-benchmark bo/acquisition=random            # the random baseline, same starts
+   uv run phasebo-benchmark -m bo/acquisition=qlogei,ts seed=0,1,2 'run_name=sweep/${hydra:job.num}'
    ```
 
    `tracker=wandb` mirrors a run to Weights & Biases; the run directory stays the source of truth.
@@ -81,13 +82,23 @@ changed since the table was written, naming the script to rerun.
 ## Configs
 
 `configs/defaults/<command>.yaml` lists every setting of a command with its default, commented where the options or
-the meaning are not obvious: the Gaussian process (`bo.kernel`, `bo.noise_mev`, ...), batch size, seeding, logging,
-tracking. It is generated from the schemas in `src/phasebo/config.py`, so it is never edited. To change a value:
+the meaning are not obvious: seeding, logging, tracking, the batch size, the replay's length. It is generated from
+the schemas in `src/phasebo/config.py`, so it is never edited. BO's parts are config groups: each kind has its own
+generated file, `configs/bo/<group>/<kind>.yaml`, with every setting and its default, and presets name variants:
+
+| group | kinds | settings |
+|---|---|---|
+| `bo/surrogate` | `gp`; preset `paper` (fitted noise, as in the paper) | `kernel` (`matern12`, `matern32`, `matern52` as in the paper; `rbf`), `noise_mev` (std; `null` fits it) |
+| `bo/acquisition` | `qlogei` (batch log expected improvement), `ts` (Thompson sampling), `random` (the baseline; a benchmark skips the GP fit) | |
+| `bo/start` (benchmark) | `random`: explored points off the hull | `size` |
+
+To change a value:
 
 | for | edit |
 |---|---|
 | one run | `key=value` on the command line; the run directory records it |
 | another phase field | a file in `configs/system/`, chosen with `system=<name>` |
+| another kind | `bo/<group>=<kind>`, e.g. `bo/acquisition=ts` |
 | every run of this repo | `configs/<command>.yaml`, the entry config, below its `defaults:` list |
 | the default itself | the schema, then `make configs` |
 
