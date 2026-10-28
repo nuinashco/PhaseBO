@@ -31,5 +31,6 @@ class RandomAcquisition(Acquisition[RandomAcquisitionConfig]):
         *,
         size: int,
         rng: np.random.Generator,
+        cheap_mev: np.ndarray | None = None,
     ) -> list[int]:
         return rng.choice(len(choices), size=size, replace=False).tolist()

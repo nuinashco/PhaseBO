@@ -21,7 +21,7 @@ cp .env.example .env   # only to mirror runs to Weights & Biases
 | command | does | writes |
 |---|---|---|
 | `phasebo-suggest` | picks the next compositions to compute from the computed ones | `next.csv`, `posterior.csv` |
-| `phasebo-benchmark` | replays BO over the computed compositions, as if computing them, from 300 random starting sets, and scores it against random picking | `paths.parquet`, `metrics.json` |
+| `phasebo-benchmark` | replays BO over the computed compositions, as if computing them, from 300 random starting sets, and scores it against random picking | `paths.parquet`, `metrics.json`; `cheap.parquet` with a cheap source |
 | `phasebo-generate` | lists the smallest charge-balanced cell of each point not computed yet | `candidates_list.csv` |
 | `phasebo-compare` | compares benchmark runs with the first, game by game | `comparison.json` |
 | `phasebo-data` (`make data`) | checks that every processed table still matches its raw files and its script | |
@@ -69,6 +69,42 @@ simulation), and, with `tracker=wandb`, logged as curves over evaluations:
 
 `bo/acquisition=random` checks the setup: its scores match random's values within their error.
 
+### Multi-fidelity
+
+With `benchmark/cheap`, every game also knows a cheap energy for each computed composition from the start, as if
+a fast, rough model had screened them all for free. BO still picks DFT evaluations, and the budget and the
+metrics count only those. The run writes `cheap.parquet`: every game's cheap energy at each explored composition,
+beside its DFT energy, so their agreement can be measured.
+
+| `benchmark/cheap=` | the cheap energy |
+|---|---|
+| `table` | another fidelity of the processed table (`benchmark.cheap.fidelity`, `nn` by default, which `system=LiSnSCl_multifidel` has), the same in every game |
+| `noisy` | the modelled total energies with a random error per cell (`random_mev`) and a smooth one shared by nearby compositions (`smooth_mev`, `lengthscale`), then the hull rebuilt; drawn anew in every game, the same for every setting of one seed; needs total energies (`system=LiSnSCl`) |
+
+Three surrogates use the cheap energies and predict DFT's: `multitask` (BoTorch's multi-task GP, which learns
+how far DFT follows the cheap energies), `multifidelity` (its multi-fidelity GP, the source as an input) and
+`delta` (the cheap energy plus a GP of its error, fitted where DFT is known). All assume zero noise by default, as
+the cheap model's output is as deterministic as DFT's. `bo/acquisition=screen` is their baseline: DFT in cheap
+order, never learning from DFT. Each refuses to run without a cheap source, and `phasebo-suggest` has none yet.
+
+```bash
+uv run phasebo-benchmark benchmark/cheap=noisy benchmark.cheap.random_mev=50 bo/surrogate=multitask
+uv run phasebo-benchmark benchmark/cheap=noisy benchmark.cheap.random_mev=50 bo/acquisition=screen
+```
+
+Evaluations until the first stable composition / until each, averaged (LiSnSCl, qLogEI, 300 games):
+
+| setting | `random_mev=25` | `random_mev=0 smooth_mev=100` |
+|---|---|---|
+| no cheap source (`bo/surrogate=gp`) | 23.9 / 28.6 | 23.9 / 28.6 |
+| `bo/acquisition=screen` | 4.9 / 11.7 | 14.6 / 22.7 |
+| `bo/surrogate=multitask` | 5.0 / 11.5 | 10.0 / 18.6 |
+| `bo/surrogate=multifidelity` | 6.9 / 14.9 | 5.6 / 11.2 |
+| `bo/surrogate=delta` | 6.0 / 13.9 | 8.4 / 14.7 |
+
+The screen is hard to beat when the cheap errors are random: nothing in them can be learned. Errors that nearby
+compositions share can be, so there the surrogates beat it.
+
 ### Comparing settings
 
 `phasebo-compare` compares benchmark runs with the first one listed, the baseline, usually a
@@ -100,7 +136,7 @@ With `tracker=wandb`, a benchmark run is named after its batch rule (`qlogei-<ti
 grouped by phase field, typed `benchmark` and tagged with every family setting (`surrogate.kernel=matern52`), so the
 W&B table filters and groups by setting. Each metric's curves are plotted against `evaluations`, the summary
 holds the metrics' values, and the run's outputs (`paths.parquet`, `metrics.json`, `config.yaml`,
-`data.json`) are saved as its `replays-<run id>` artifact, so any later comparison can start from W&B alone. The
+`data.json`, and `cheap.parquet` with a cheap source) are saved as its `replays-<run id>` artifact, so any later comparison can start from W&B alone. The
 project's "Benchmarks" view opens with a "How to read" note (the setup and what each headline bar means), then
 shows the headline values side by side, each metric's curves under a short explanation, one line per run, the
 `phasebo-compare` runs' tables (logged with `tracker=wandb`), and the system charts collapsed. Random picking's

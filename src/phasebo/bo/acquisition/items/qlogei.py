@@ -29,6 +29,7 @@ class QLogEIAcquisition(Acquisition[QLogEIConfig]):
         *,
         size: int,
         rng: np.random.Generator,
+        cheap_mev: np.ndarray | None = None,
     ) -> list[int]:
         import torch
         from botorch.acquisition.logei import qLogExpectedImprovement

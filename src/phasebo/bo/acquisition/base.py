@@ -19,10 +19,12 @@ class AcquisitionConfig(KindConfig):
 class Acquisition[C: AcquisitionConfig](Configurable[C], ABC):
     """Rule that picks the next batch, from a fitted surrogate or without one.
 
-    A rule with `needs_model` False ignores the surrogate, so a replay does not fit it.
+    A rule with `needs_model` False ignores the surrogate, so a replay does not fit it;
+    one with `needs_cheap` reads each choice's cheap energy.
     """
 
     needs_model: ClassVar[bool] = True
+    needs_cheap: ClassVar[bool] = False
 
     @abstractmethod
     def pick(
@@ -32,6 +34,7 @@ class Acquisition[C: AcquisitionConfig](Configurable[C], ABC):
         *,
         size: int,
         rng: np.random.Generator,
+        cheap_mev: np.ndarray | None = None,
     ) -> list[int]:
         """Return the indices of `size` distinct `choices` to evaluate next."""
 

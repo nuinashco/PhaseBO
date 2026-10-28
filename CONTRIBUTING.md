@@ -18,13 +18,14 @@ flowchart TD
         replay["replay.py<br/>repeats in parallel"]:::side
         start["start/<br/>starting sets"]:::pure
         baseline["baseline.py<br/>random's exact odds"]:::pure
+        cheap["cheap/<br/>a cheap energy per point"]:::pure
         comparison --> metric --> replay --> start
         metric --> baseline
     end
     subgraph bo["bo/: Bayesian optimisation"]
         proposal["proposal.py<br/>suggest's batch"]:::pure
         acquisition["acquisition/<br/>batch rules"]:::pure
-        surrogate["surrogate/<br/>gp (BoTorch)"]:::pure
+        surrogate["surrogate/<br/>gp, multi-fidelity (BoTorch)"]:::pure
         proposal --> acquisition --> surrogate
     end
     subgraph field["field/: the phase field"]
@@ -57,8 +58,10 @@ Every layer may import the ones below it and `nuikit`. `phasebo` holds this proj
   (`acquisition`), and `proposal.py` drives them for `phasebo-suggest`.
 - `benchmark/` scores the method: `replay.py` replays BO over the computed points from many starting sets (the
   `start` family), and the `metric` family measures the replays next to random picking's exact odds
-  (`baseline.py`). A run computes several metrics at once (FAM-4's `multiple`). `comparison.py` checks that
-  runs played the same games and asks each metric how a run differs from a baseline.
+  (`baseline.py`). A `cheap` source gives every repeat each point's cheap energy before BO picks, drawn from the
+  repeat's own stream; the commands hand the replay its draw, so `replay.py` never imports the family. A run
+  computes several metrics at once (FAM-4's `multiple`). `comparison.py` checks that runs played the same games
+  and asks each metric how a run differs from a baseline.
 
 None of them writes a file; the commands in `cli/` do. Figures are not part of a run:
 `uv run --group notebooks scripts/plot_run.py runs/<run_name>` draws the hull map and each metric's curves into the
@@ -70,9 +73,10 @@ what an entry point sets up before it runs. Copier writes it; fixes go upstream 
 Dependencies point down: `cli` > `config` > `benchmark` > `bo` > `field` | `data` > `paths`, and any layer may import
 `nuikit`. Inside `benchmark`, metrics import the replays, which import the starting sets; inside `bo`, `proposal`
 imports the batch rules, which import the surrogate; inside `field`, `points` imports `hull`; inside `data`,
-`store` imports `table`. Scripts sit outside the package and may import any of it. The import-linter contracts in
-`pyproject.toml` enforce every one of these orders and keep `nuikit` from importing `phasebo`. The layers contracts
-are exhaustive, so a new module fails `make check` until it is placed.
+`store` imports `table`; the cheap sources import nothing else in `benchmark`. Scripts sit outside the package and
+may import any of it. The import-linter contracts in `pyproject.toml` enforce every one of these orders and keep
+`nuikit` from importing `phasebo`. The layers contracts are exhaustive, so a new module fails `make check` until it
+is placed.
 
 ### A command
 
@@ -90,10 +94,10 @@ sequenceDiagram
     C->>L: start: logging, seed, runs/<run_name>/, W&B mirror
     C->>L: write_data: data.json, the sidecar's provenance
     C->>R: replay_many: repeat r starts from stream r of the seed, on every worker
-    R-->>C: Replays: each repeat's start and batches
+    R-->>C: Replays: each repeat's start, batches and cheap draw
     C->>M: measure, per chosen metric
     M-->>C: Scores: headline, values, curves
-    C->>C: paths.parquet, metrics.json, W&B curves, summary and artifact, then print the headlines
+    C->>C: paths.parquet, cheap.parquet with a cheap source, metrics.json, W&B curves, summary and artifact, then print the headlines
 ```
 
 ## Repository layout
@@ -105,10 +109,12 @@ configs/                  Hydra YAML; generated files say so in a leading commen
   generate.yaml
   data.yaml               composed by phasebo-data once per phase field
   defaults/               every setting of each entry config with its default (generated)
-  bo/surrogate/           gp.yaml (generated), paper.yaml (preset: the paper's fitted noise)
-  bo/acquisition/         qlogei.yaml, ts.yaml, random.yaml (generated)
+  bo/surrogate/           gp.yaml, multitask.yaml, multifidelity.yaml, delta.yaml (generated), paper.yaml (preset:
+                          the paper's fitted noise)
+  bo/acquisition/         qlogei.yaml, ts.yaml, random.yaml, screen.yaml (generated)
   benchmark/start/        random.yaml (generated)
   benchmark/metric/       one file per metric, selected together (generated)
+  benchmark/cheap/        table.yaml, noisy.yaml (generated); none is selected by default
   system/                 phase fields: processed table, elements, candidate space
   hydra/default.yaml      Hydra writes nothing; the app writes runs/
 data/                     tracked (see Deviations)
@@ -131,6 +137,7 @@ src/phasebo/
     proposal.py           suggest's next batch and the prediction at every candidate point
   benchmark/              BO scored against random picking
     start/                family: a replay's starting set
+    cheap/                family: each point's cheap energy, known before BO picks
     metric/               family, several per run: what the replays achieved
     replay.py             one replay, and many in parallel (Replays)
     baseline.py           random picking's exact odds
@@ -159,9 +166,10 @@ of a kind (`bo/surrogate=paper`). A `multiple` family is selected as a list, eac
 
 | family | kinds | chosen by |
 |---|---|---|
-| `bo/surrogate` | `gp`: BoTorch single-task GP, Matern 1/2, 3/2, 5/2 or RBF, fixed or fitted noise | `bo/surrogate=gp` (default), `bo/surrogate=paper` |
-| `bo/acquisition` | `qlogei`, `ts`, `random`; `random` has `needs_model = False`, so the replay does not fit the GP | `bo/acquisition=<kind>` |
+| `bo/surrogate` | `gp`: BoTorch single-task GP, Matern 1/2, 3/2, 5/2 or RBF, fixed or fitted noise; `multitask`, `multifidelity`, `delta` have `needs_cheap = True` and predict DFT's: the first two also fit every explored point's cheap energy, `delta` fits the cheap error where DFT is known and adds it to the cheap energy | `bo/surrogate=gp` (default), `bo/surrogate=paper`, `bo/surrogate=<kind>` |
+| `bo/acquisition` | `qlogei`, `ts`, `random`, `screen`; `random` and `screen` have `needs_model = False`, so the replay does not fit the GP; `screen` has `needs_cheap = True` and picks the lowest cheap energies | `bo/acquisition=<kind>` |
 | `benchmark/start` | `random`: explored points off the hull, from the repeat's own stream | `benchmark/start=random` |
+| `benchmark/cheap` | `table`: another fidelity of the processed table; `noisy`: the modelled total energies with random and smooth errors, the hull rebuilt, per repeat | `benchmark/cheap=<kind>`; none by default, and a kind that `needs_cheap` then refuses to run |
 | `benchmark/metric` (multiple) | `steps_to_hit`, `discovery`, `best_so_far`, `hazard_ratio` | `benchmark/metric=[...]`, all four by default |
 
 ```text
@@ -219,6 +227,9 @@ ratio from one joint fit, as the hazard ratio does.
 - **GP priors are fixed** (CFG-7): every Matern kernel keeps BoTorch's pre-0.12 Matern 5/2 priors, Gamma(3, 6)
   on each lengthscale and Gamma(2, 0.15) on the outputscale, so `kernel` changes only nu. For `matern52` they
   reproduce the paper's GP; for `matern12` and `matern32` they are a choice, made to change one thing at a time.
+  `multitask` and `delta` build their kernels the same way; `multifidelity` keeps BoTorch's fidelity kernel and
+  its priors, since that kernel couples the coordinates with the source. It ties the cheap error's prior size to
+  the signal's, so `multifidelity` stays unsure even of an exact cheap source.
 - **BoTorch draws from torch's global generator** (RUN-2 asks for an explicit one): fitting a GP, qLogEI's MC
   sampler and Thompson sampling take no generator. `seed_everything` seeds it once per run, and a benchmark seeds
   it again in each repeat from that repeat's stream, so runs repeat whatever `benchmark.workers` is; starting sets

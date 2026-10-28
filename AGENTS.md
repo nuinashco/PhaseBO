@@ -33,9 +33,9 @@ make data           # check data/processed/ against data/raw/; scripts/process_*
 - `src/phasebo/field/`: the phase field: the oracle hull, one entry per point, candidate generation.
 - `src/phasebo/bo/`: Bayesian optimisation: the `surrogate` and `acquisition` families and suggest's batch
   (`proposal.py`).
-- `src/phasebo/benchmark/`: BO scored against random picking: the `start` family, replays in parallel
-  (`replay.py`), the `metric` family (several per run), random's exact odds (`baseline.py`) and paired
-  comparisons of runs (`comparison.py`). Figures are drawn
+- `src/phasebo/benchmark/`: BO scored against random picking: the `start` family, the `cheap` family (each
+  point's cheap energy, known before BO picks), replays in parallel (`replay.py`), the `metric` family (several
+  per run), random's exact odds (`baseline.py`) and paired comparisons of runs (`comparison.py`). Figures are drawn
   by `scripts/plot_run.py`, not by commands.
 - `scripts/`: exploratory or one-time runnables, never imported; they may import the package and compose
   `configs/`. Anything `make`, CI or a test depends on is a `cli/` command; a script that is rerun or shared becomes

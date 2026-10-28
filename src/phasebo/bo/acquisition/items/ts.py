@@ -29,6 +29,7 @@ class TSAcquisition(Acquisition[TSConfig]):
         *,
         size: int,
         rng: np.random.Generator,
+        cheap_mev: np.ndarray | None = None,
     ) -> list[int]:
         import torch
         from botorch.generation import MaxPosteriorSampling
