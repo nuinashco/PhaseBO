@@ -20,7 +20,7 @@ class ScreenConfig(AcquisitionConfig):
 @AcquisitionFactory.register("screen")
 @define
 class ScreenAcquisition(Acquisition[ScreenConfig]):
-    """Batch of the choices with the lowest cheap energies; ties keep choice order."""
+    """Batch of the choices with the lowest cheap energies; ties broken at random."""
 
     needs_model: ClassVar[bool] = False
     needs_cheap: ClassVar[bool] = True
@@ -37,4 +37,6 @@ class ScreenAcquisition(Acquisition[ScreenConfig]):
         if cheap_mev is None:
             msg = f"acquisition {self.kind!r} needs cheap energies"
             raise ValueError(msg)
-        return np.argsort(cheap_mev, kind="stable")[:size].tolist()
+        # Ties are common: every point on the cheap hull has exactly 0.
+        tiebreak = rng.random(len(cheap_mev))
+        return np.lexsort((tiebreak, cheap_mev))[:size].tolist()

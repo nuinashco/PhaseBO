@@ -15,10 +15,22 @@ def test_screen_picks_the_lowest_cheap_energies_without_a_model():
         choices,
         size=2,
         rng=np.random.default_rng(0),
-        cheap_mev=np.array([30.0, 5.0, 20.0, 5.0, 1.0]),
+        cheap_mev=np.array([30.0, 5.0, 20.0, 6.0, 1.0]),
     )
 
     assert (screen.needs_model, screen.needs_cheap, picked) == (False, True, [4, 1])
+
+
+def test_screen_breaks_ties_with_its_generator():
+    screen = AcquisitionFactory.from_config({"kind": "screen"})
+    tied = np.zeros(6)
+
+    def first(seed):
+        rng = np.random.default_rng(seed)
+        return screen.pick(None, np.zeros((6, 2)), size=1, rng=rng, cheap_mev=tied)[0]
+
+    assert first(1) == first(1)
+    assert len({first(seed) for seed in range(20)}) > 1
 
 
 def test_screen_refuses_to_pick_without_cheap_energies():
