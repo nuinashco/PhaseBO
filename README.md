@@ -46,6 +46,7 @@ file changed since the table was written, naming the script to rerun.
 |---|---|---|---|
 | `LiSnSCl` | `LiSnSCl_700eV.csv`: 286 compositions, 91 references | `process_LiSnSCl_700eV.py` | total, DFT at 700 eV |
 | `LiSnSCl_multifidel` | `LiSnSCl_multifidel.csv`: the same compositions, plus 46 oxygen phases its script drops | `process_LiSnSCl_multifidel.py` | above the hull: `dft`, and `nn` from a neural network |
+| `fake_LiSnSCl_<size>_<seed>` | none: the real `LiSnSCl` table sets their trend | `make_fake_fields.py` | total, fake; three frameworks per four-element composition |
 
 BO models one fidelity (`fidelity=dft` by default; `fidelity=nn` models the neural network instead). Each point
 keeps its lowest-energy cell; a benchmark's targets are the explored points on the hull of the modelled fidelity.
@@ -54,6 +55,13 @@ A table may place each cell in a structure framework. A point is then a composit
 is built from every framework's cells, a composition's winning framework is its lowest point, and the targets are
 the stable compositions in their winning framework. Models see the framework as a category after the
 coordinates.
+
+The fake fields (`scripts/make_fake_fields.py`, 15 of them) stand in for framework data that does not exist yet:
+every charge-balanced Li-Sn-S-Cl composition with at most `<size>` atoms per cell (12, 16, 20, 24, 32: 21 to 502
+four-element compositions), 3 seeds each. Compositions of fewer elements are the references; every four-element
+one sits in cubic, hexagonal and wurtzite frameworks. A formation energy is the real field's trend (a GP fitted to
+the real energies) plus a roughness the size of that fit's noise (25 meV/atom), and each framework adds a smooth
+offset (50 meV/atom, lengthscale 0.15 in atomic fractions), so different frameworks win in different regions.
 
 ## Benchmark
 
@@ -85,7 +93,7 @@ beside its DFT energy, so their agreement can be measured.
 | `benchmark/cheap=` | the cheap energy |
 |---|---|
 | `table` | another fidelity of the processed table (`benchmark.cheap.fidelity`, `nn` by default, which `system=LiSnSCl_multifidel` has), the same in every game; energies above the hull are used as the table gives them, without rebuilding the hull |
-| `noisy` | the modelled total energies with a random error per cell (`random_mev`), a smooth one shared by nearby compositions (`smooth_mev`, `lengthscale`, `kernel`) and a fixed one per framework (`bias_mev`, e.g. `'+benchmark.cheap.bias_mev={cubic:30,wurtzite:-15}'`), then the hull rebuilt; drawn anew in every game, the same for every setting of one seed; needs total energies (`system=LiSnSCl`) |
+| `noisy` | the modelled total energies with a random error per cell (`random_mev`), a smooth one shared by nearby compositions (`smooth_mev`, `lengthscale`, `kernel`) and a fixed one per framework (`bias_mev`, e.g. `'+benchmark.cheap.bias_mev={cubic:30,wurtzite:-15}'`), then the hull rebuilt; drawn anew in every game, the same for every setting of one seed; needs total energies (`system=LiSnSCl`, the fake fields) |
 
 Four surrogates use the cheap energies and predict DFT's: `multitask` (BoTorch's multi-task GP, which learns
 how far DFT follows the cheap energies), `multifidelity` (its multi-fidelity GP, the source as an input), `delta`
@@ -118,6 +126,33 @@ The screen is hard to beat when the cheap errors are random: nothing in them can
 to +2.55) need more. Errors that nearby compositions share can be learned, so there every surrogate beats it:
 `multitask` by 4.60 (3.80 to 5.45), `delta` by 6.27 (5.11 to 7.41) and `multifidelity` by 9.03 (7.81 to 10.27).
 All of this comes from a single field, LiSnSCl with 3 targets.
+
+### Frameworks
+
+On a fake field with frameworks, the question becomes the whole map: which framework wins at each composition, and
+which compositions are stable. After 32 evaluations (`system=fake_LiSnSCl_20_0`: 115 compositions in 3
+frameworks, 7 stable; qLogEI, 100 games):
+
+| setting | stable found (of 7) | evaluations per stable | right framework | stable-set F1 |
+|---|---|---|---|---|
+| random picking (`bo/acquisition=random`) | 0.7 | 30.7 | | |
+| no cheap source (`bo/surrogate=gp`) | 3.5 | 24.8 | 58% | 0.65 |
+| `bo/acquisition=screen`, random errors (`random_mev=25`) | 6.7 | 10.0 | 78% | 0.96 |
+| `bo/surrogate=delta`, random errors | 6.4 | 12.5 | 77% | 0.91 |
+| `bo/surrogate=joint`, random errors | 6.6 | 11.0 | 78% | 0.95 |
+| `bo/acquisition=screen`, patterned errors (`random_mev=0 smooth_mev=50`, bias cubic +30, wurtzite -15) | 6.95 | 8.5 | 78% | 0.99 |
+| `bo/surrogate=delta`, patterned errors | 6.99 | 8.8 | **99%** | 1.00 |
+| `bo/surrogate=joint`, patterned errors | 6.97 | 9.5 | 92% | 1.00 |
+
+With a cheap source, every rule finds nearly every stable composition. The difference is the map: when the cheap
+model ranks the frameworks wrongly by a fixed amount, `delta` and `joint` learn that from a few DFT points and name
+the right winner for 92-99% of compositions; the screen keeps the cheap model's mistakes (78%). With random errors
+there is nothing to learn. `joint` takes about 15 times as long as `delta` here (9 minutes against 40 s).
+
+```bash
+uv run phasebo-benchmark system=fake_LiSnSCl_20_0 benchmark/cheap=noisy benchmark.cheap.random_mev=0 \
+  benchmark.cheap.smooth_mev=50 '+benchmark.cheap.bias_mev={cubic:30,wurtzite:-15}' bo/surrogate=delta
+```
 
 ### Comparing settings
 

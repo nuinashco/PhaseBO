@@ -117,11 +117,13 @@ configs/                  Hydra YAML; generated files say so in a leading commen
   benchmark/start/        random.yaml (generated)
   benchmark/metric/       one file per metric, selected together (generated)
   benchmark/cheap/        table.yaml, noisy.yaml (generated); none is selected by default
-  system/                 phase fields: processed table, elements, candidate space
+  system/                 phase fields: processed table, elements, candidate space; fake_*.yaml are written by
+                          scripts/make_fake_fields.py
   hydra/default.yaml      Hydra writes nothing; the app writes runs/
 data/                     tracked (see Deviations)
   raw/                    datasets as published, never edited
   processed/              one table per phase field and the sidecar pinning it, written by scripts/process_*.py
+                          or, for the fake fields, scripts/make_fake_fields.py
 src/phasebo/
   cli/                    one module per console script, plus _launch.py, their shared start-up
   config.py               entry config schemas + GENERATED (files `make configs` writes)
@@ -154,6 +156,7 @@ tests/                    mirrors src/; tests/nuikit/ comes with the template
   integration/            end to end, `-m integration`
 scripts/                  exploratory or one-time runnables, never imported; rerun ones become cli/ commands
   process_<source>.py     one per raw source: writes its processed table and sidecar
+  make_fake_fields.py     fake fields with three frameworks, calibrated to LiSnSCl: tables, sidecars, configs
   plot_run.py             a run's figures: hull map, each metric's curves
   wandb_workspace.py      saves the project's "Benchmarks" view in W&B, or with --report a shareable report
 notebooks/                exploration only, outputs stripped; reference/ for third-party notebooks
@@ -233,6 +236,10 @@ ratio from one joint fit, as the hazard ratio does.
   scales them with its own outputscale priors. `multifidelity` keeps BoTorch's fidelity kernel and its priors,
   since that kernel couples the coordinates with the source. It ties the cheap error's prior size to the signal's,
   so `multifidelity` stays unsure even of an exact cheap source.
+- **`scripts/make_fake_fields.py` keeps its recipe as constants** (CFG-7): its sizes, seeds, frameworks and
+  offsets are module constants, not a config. Each fake table's sidecar pins the script's sha256, so the recipe is
+  pinned with the tables it wrote; a config would need a pin of its own. It also writes its
+  `configs/system/fake_LiSnSCl_*.yaml`, which `.gitattributes` marks as generated.
 - **BoTorch draws from torch's global generator** (RUN-2 asks for an explicit one): fitting a GP, qLogEI's MC
   sampler and Thompson sampling take no generator. `seed_everything` seeds it once per run, and a benchmark seeds
   it again in each repeat from that repeat's stream, so runs repeat whatever `benchmark.workers` is; starting sets

@@ -1,0 +1,13 @@
+{
+  "script": {
+    "path": "scripts/make_fake_fields.py",
+    "sha256": "a08961425b5f9a3d6dc4e8ab0f66e3c8b6ed71696dc76f12e1b3b0007f9f98e5"
+  },
+  "table_sha256": "f588904bff6d8adf56d21dff786a9e61ccb1cf6901d7fc704ed65f4da76905b1",
+  "raw": [
+    {
+      "path": "data/processed/LiSnSCl.csv",
+      "sha256": "90a94ce999fb41d6b89abd78ed8cb68beb39f55c919590f3327609f5cd0e4d1a"
+    }
+  ]
+}
