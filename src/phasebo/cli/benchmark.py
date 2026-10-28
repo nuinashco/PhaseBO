@@ -19,7 +19,8 @@ runs/<run_name>/ with paths.parquet (every evaluation of every repeat) and
 metrics.json (each metric next to random picking's exact value, and its curves
 over evaluations); `tracker=wandb` also logs them. Prints one line per metric.
 With `benchmark/cheap`, every game knows each point's cheap energy from the start;
-the budget and the metrics still count DFT evaluations.
+the budget and the metrics still count DFT evaluations, and cheap.parquet holds
+every game's cheap energies.
 """
 
 import functools
@@ -104,6 +105,8 @@ def run(cfg: BenchmarkConfig, *, runs_dir: Path) -> Path:
         draw_cheap=draw_cheap,
     )
     replays.table().to_parquet(run_dir / "paths.parquet", index=False)
+    if replays.cheap_mev is not None:
+        replays.cheap_table().to_parquet(run_dir / "cheap.parquet", index=False)
     scores = {kind: metric.measure(replays) for kind, metric in metrics.items()}
     evaluations = replays.evaluations.tolist()
     text = json.dumps(to_json(scores, evaluations), indent=2, ensure_ascii=False)
@@ -132,6 +135,14 @@ def _log_to_wandb(
     run = wandb.run
     if run is not None:
         outputs = wandb.Artifact(f"replays-{run.id}", type="replays")
-        for name in ("paths.parquet", "metrics.json", "config.yaml", "data.json"):
-            outputs.add_file(str(run_dir / name))
+        for name in (
+            "paths.parquet",
+            "cheap.parquet",
+            "metrics.json",
+            "config.yaml",
+            "data.json",
+        ):
+            # cheap.parquet exists only with a cheap source.
+            if (run_dir / name).is_file():
+                outputs.add_file(str(run_dir / name))
         run.log_artifact(outputs)

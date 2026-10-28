@@ -71,6 +71,18 @@ def test_benchmark_with_a_noisy_source_runs_the_screen(system, tmp_path, capsys)
     assert "first hit after 2.0 evaluations" in capsys.readouterr().out
 
 
+def test_benchmark_with_a_cheap_source_writes_each_games_cheap_energies(
+    system, points, tmp_path
+):
+    cheap = NoisyCheapConfig(kind="noisy")
+
+    run_dir = benchmark.run(config(system, cheap=cheap), runs_dir=tmp_path / "runs")
+
+    drawn = pd.read_parquet(run_dir / "cheap.parquet")
+    assert len(drawn) == 2 * len(points.pool)
+    assert list(drawn.columns) == ["repeat", "formula", "cheap_mev", "e_above_hull_mev"]
+
+
 def test_benchmark_refuses_a_multi_fidelity_model_without_a_cheap_source(
     system, tmp_path
 ):

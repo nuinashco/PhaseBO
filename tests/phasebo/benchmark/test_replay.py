@@ -136,6 +136,20 @@ def test_replay_many_draws_each_repeats_cheap_energies_from_its_own_stream(point
     assert (len(set(first)), drawn[4:]) == (4, first)
 
 
+def test_cheap_table_lists_each_repeats_energy_at_every_explored_point(points):
+    def draw(*, rng):
+        return rng.random(len(points.formulas))
+
+    table = run_many(points, draw_cheap=draw).cheap_table()
+
+    first = table.loc[table["repeat"] == 0]
+    assert len(table) == 4 * len(points.pool)
+    assert set(first["formula"]) == {points.formulas[i] for i in points.pool}
+    assert not np.array_equal(
+        first["cheap_mev"].to_numpy(), table.loc[table["repeat"] == 1, "cheap_mev"]
+    )
+
+
 def test_replay_many_does_not_depend_on_the_workers(points):
     assert run_many(points, workers=1).paths.equals(run_many(points, workers=2).paths)
 

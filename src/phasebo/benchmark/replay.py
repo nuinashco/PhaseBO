@@ -32,6 +32,8 @@ class Replays:
     max_iter: int
     # One row per evaluation: `repeat`, `batch` (0 for the starting set), `point`.
     paths: pd.DataFrame = field(eq=False)
+    # Each repeat's cheap energy at every point (meV/atom); None without a source.
+    cheap_mev: np.ndarray | None = field(default=None, eq=False)
 
     @classmethod
     def from_table(
@@ -117,6 +119,22 @@ class Replays:
             }
         )
 
+    def cheap_table(self) -> pd.DataFrame:
+        """Return each repeat's cheap energy at every explored point, beside DFT's."""
+        if self.cheap_mev is None:
+            msg = "these replays drew no cheap energies"
+            raise ValueError(msg)
+        pool = self.points.pool
+        repeats = len(self.cheap_mev)
+        return pd.DataFrame(
+            {
+                "repeat": np.repeat(np.arange(repeats), len(pool)),
+                "formula": np.tile(np.asarray(self.points.formulas)[pool], repeats),
+                "cheap_mev": self.cheap_mev[:, pool].ravel(),
+                "e_above_hull_mev": np.tile(self.points.energies_mev[pool], repeats),
+            }
+        )
+
 
 def replay_many(
     points: Points,
@@ -155,14 +173,22 @@ def replay_many(
         )
         for stream in streams
     )
+    played = cast("list[tuple[list[list[int]], np.ndarray | None]]", runs)
     rows = [
         (repeat, batch, point)
-        for repeat, batches in enumerate(cast("list[list[list[int]]]", runs))
+        for repeat, (batches, _) in enumerate(played)
         for batch, picked in enumerate(batches)
         for point in picked
     ]
     paths = pd.DataFrame(rows, columns=["repeat", "batch", "point"])
-    return Replays(points=points, batch_size=batch_size, max_iter=max_iter, paths=paths)
+    drawn = [cheap for _, cheap in played if cheap is not None]
+    return Replays(
+        points=points,
+        batch_size=batch_size,
+        max_iter=max_iter,
+        paths=paths,
+        cheap_mev=np.stack(drawn) if drawn else None,
+    )
 
 
 def replay(
@@ -226,7 +252,7 @@ def _replay_one(
     batch_size: int,
     max_iter: int,
     draw_cheap: CheapDraw | None,
-) -> list[list[int]]:
+) -> tuple[list[list[int]], np.ndarray | None]:
     # A third stream leaves the first two as they were without cheap energies.
     start_stream, search_stream, cheap_stream = stream.spawn(3)
     starting = start.pick(points, rng=np.random.default_rng(start_stream))
@@ -245,7 +271,7 @@ def _replay_one(
         cheap_mev=cheap_mev,
     )
     if not acquisition.needs_model:
-        return [starting, *search()]
+        return [starting, *search()], cheap_mev
     import torch
 
     threads = torch.get_num_threads()
@@ -255,6 +281,6 @@ def _replay_one(
     torch.set_num_threads(1)
     try:
         torch.manual_seed(int(search_stream.generate_state(1)[0]))
-        return [starting, *search()]
+        return [starting, *search()], cheap_mev
     finally:
         torch.set_num_threads(threads)
