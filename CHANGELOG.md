@@ -71,6 +71,9 @@ All notable changes to this project will be documented in this file.
   `bo/surrogate=joint` (one GP over both sources, the source a category) see the framework as a category through
   BoTorch's MixedSingleTaskGP; `multitask` and `multifidelity` refuse such fields, and so does `phasebo-suggest`.
   `benchmark.cheap.bias_mev` adds a fixed error per framework, so the fake cheap source can rank frameworks wrongly.
+- The `map` metric, on by default: after every batch, the share of compositions whose winning framework a run
+  names right, and the F1 of the compositions it believes stable against the true ones (within `tolerance_mev`,
+  10 meV/atom); the run then writes `beliefs.parquet`, each game's believed energy of every explored point.
 - Tests on synthetic phase fields; the project follows the nuinashco/conventions `rnd` template (`make check`).
 - Optional `notebooks` dependency group (marimo, plotly; matplotlib and scipy for `scripts/plot_run.py`).
 

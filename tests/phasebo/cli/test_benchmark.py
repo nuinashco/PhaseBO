@@ -9,6 +9,7 @@ from nuikit.errors import ConfigError
 
 from phasebo.benchmark.cheap.items.noisy import NoisyCheapConfig
 from phasebo.benchmark.metric.items.hazard_ratio import HazardRatioConfig
+from phasebo.benchmark.metric.items.map import MapConfig
 from phasebo.benchmark.metric.items.steps_to_hit import StepsToHitConfig
 from phasebo.benchmark.start.items.random import RandomStartConfig
 from phasebo.bo.acquisition.items.qlogei import QLogEIConfig
@@ -110,3 +111,17 @@ def test_benchmark_refuses_a_surrogate_that_cannot_model_frameworks(
         benchmark.run(
             config(framework_system, bo=bo, cheap=cheap), runs_dir=tmp_path / "runs"
         )
+
+
+def test_benchmark_writes_beliefs_for_the_map(framework_system, tmp_path, capsys):
+    cfg = config(framework_system)
+    protocol = cfg.benchmark.model_copy(
+        update={"metric": {"map": MapConfig(kind="map")}}
+    )
+
+    run_dir = benchmark.run(
+        cfg.model_copy(update={"benchmark": protocol}), runs_dir=tmp_path / "runs"
+    )
+
+    assert (run_dir / "beliefs.parquet").is_file()
+    assert "right framework for" in capsys.readouterr().out

@@ -27,7 +27,7 @@ def run_one(points, surrogate, *, acquisition=None, max_iter=3, cheap_mev=None):
         max_iter=max_iter,
         rng=np.random.default_rng(0),
         cheap_mev=cheap_mev,
-    )
+    ).batches
     return starting, batches
 
 
@@ -262,3 +262,71 @@ def test_a_table_with_frameworks_rebuilds_the_same_replays(framework_points):
 
     assert "framework" in replays.table()
     assert rebuilt.paths["point"].tolist() == pool[:3].tolist()
+
+
+def test_replay_records_a_belief_per_step_when_asked(points, first_choices):
+    starting = StartFactory.from_config(START).pick(
+        points, rng=np.random.default_rng(0)
+    )
+
+    game = replay.replay(
+        points,
+        starting,
+        surrogate=SurrogateFactory.from_config({"kind": "gp"}),
+        acquisition=first_choices,
+        batch_size=2,
+        max_iter=3,
+        rng=np.random.default_rng(0),
+        record_beliefs=True,
+    )
+
+    assert game.beliefs is not None
+    assert game.beliefs.shape == (4, len(points.pool), 2)
+    known = np.isin(points.pool, starting)
+    assert game.beliefs[0, known, 1].tolist() == [0.0] * int(known.sum())
+
+
+def test_a_rule_without_a_model_or_cheap_energies_records_no_beliefs(points):
+    _, game = (
+        None,
+        replay.replay(
+            points,
+            StartFactory.from_config(START).pick(points, rng=np.random.default_rng(0)),
+            surrogate=SurrogateFactory.from_config({"kind": "gp"}),
+            acquisition=AcquisitionFactory.from_config({"kind": "random"}),
+            batch_size=2,
+            max_iter=3,
+            rng=np.random.default_rng(0),
+            record_beliefs=True,
+        ),
+    )
+
+    assert game.beliefs is None
+
+
+def test_a_beliefs_table_rebuilds_the_same_beliefs(points):
+    replays = replay.replay_many(
+        points,
+        start=StartFactory.from_config(START),
+        surrogate=SurrogateFactory.from_config({"kind": "gp"}),
+        acquisition=AcquisitionFactory.from_config({"kind": "screen"}),
+        batch_size=2,
+        max_iter=3,
+        repeats=2,
+        seed=0,
+        workers=1,
+        draw_cheap=lambda *, rng: rng.random(len(points.formulas)),
+        record_beliefs=True,
+    )
+
+    rebuilt = replay.Replays.from_table(
+        points,
+        replays.table(),
+        batch_size=2,
+        max_iter=3,
+        beliefs=replays.beliefs_table(),
+    )
+
+    assert replays.beliefs is not None
+    assert rebuilt.beliefs is not None
+    assert np.array_equal(rebuilt.beliefs, replays.beliefs)

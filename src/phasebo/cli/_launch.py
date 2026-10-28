@@ -150,11 +150,13 @@ def load_benchmark(
             f"{cfg.system.processed} changed since {run_dir.name} ran; check out its "
             "commit or rerun it"
         )
+    beliefs = run_dir / "beliefs.parquet"
     replays = Replays.from_table(
         points,
         pd.read_parquet(run_dir / "paths.parquet"),
         batch_size=cfg.bo.batch_size,
         max_iter=cfg.benchmark.max_iter,
+        beliefs=pd.read_parquet(beliefs) if beliefs.is_file() else None,
     )
     return cfg, loaded, replays
 

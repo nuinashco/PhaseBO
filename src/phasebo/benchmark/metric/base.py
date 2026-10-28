@@ -48,6 +48,8 @@ class Metric[C: MetricConfig](Configurable[C], ABC):
 
     # Plain words on the metric's curves; the W&B view prints them above its panels.
     reading: ClassVar[str]
+    # Whether it reads `Replays.beliefs`, which the replay then records.
+    needs_beliefs: ClassVar[bool] = False
 
     @abstractmethod
     def measure(self, replays: Replays) -> Score:

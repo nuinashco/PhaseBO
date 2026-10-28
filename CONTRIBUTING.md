@@ -96,10 +96,10 @@ sequenceDiagram
     C->>L: start: logging, seed, runs/<run_name>/, W&B mirror
     C->>L: write_data: data.json, the sidecar's provenance
     C->>R: replay_many: repeat r starts from stream r of the seed, on every worker
-    R-->>C: Replays: each repeat's start, batches and cheap draw
+    R-->>C: Replays: each repeat's start, batches, cheap draw and, when a metric needs them, beliefs
     C->>M: measure, per chosen metric
     M-->>C: Scores: headline, values, curves
-    C->>C: paths.parquet, cheap.parquet with a cheap source, metrics.json, W&B curves, summary and artifact, then print the headlines
+    C->>C: paths.parquet, cheap.parquet with a cheap source, beliefs.parquet with the map metric, metrics.json, W&B curves, summary and artifact, then print the headlines
 ```
 
 ## Repository layout
@@ -172,7 +172,7 @@ of a kind (`bo/surrogate=paper`). A `multiple` family is selected as a list, eac
 | `bo/acquisition` | `qlogei`, `ts`, `random`, `screen`; `random` and `screen` have `needs_model = False`, so the replay does not fit the GP; `screen` has `needs_cheap = True` and picks the lowest cheap energies | `bo/acquisition=<kind>` |
 | `benchmark/start` | `random`: explored points off the hull, from the repeat's own stream | `benchmark/start=random` |
 | `benchmark/cheap` | `table`: another fidelity of the processed table; `noisy`: the modelled total energies with random and smooth errors, the hull rebuilt, per repeat | `benchmark/cheap=<kind>`; none by default, and a kind that `needs_cheap` then refuses to run |
-| `benchmark/metric` (multiple) | `steps_to_hit`, `discovery`, `best_so_far`, `hazard_ratio` | `benchmark/metric=[...]`, all four by default |
+| `benchmark/metric` (multiple) | `steps_to_hit`, `discovery`, `best_so_far`, `hazard_ratio`, `map`; `map` has `needs_beliefs = True`, so the replay records what each game believed after each batch | `benchmark/metric=[...]`, all five by default |
 
 ```text
 src/phasebo/<domain>/<family>/

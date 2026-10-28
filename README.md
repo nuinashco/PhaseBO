@@ -71,6 +71,7 @@ simulation), and, with `tracker=wandb`, logged as curves over evaluations:
 | `discovery` | the share of runs that found each target after every batch | 0.89 of 3 found within 32 (random 0.61) |
 | `best_so_far` | the lowest energy above the hull known after every batch | 2.8 meV/atom after 32 (random 4.9) |
 | `hazard_ratio` | BO's chance per batch of picking a target, as a multiple of random's, with a 95% interval; and batch by batch | 1.50 (1.33 to 1.68); 0.5 in the first batch, 2.2 in the eighth |
+| `map` | after every batch, the share of compositions whose winning framework the run names right, and the F1 of the compositions it believes stable against the true ones (1 is perfect; stable means within `tolerance_mev`, 10 meV/atom, of the hull); writes `beliefs.parquet` | stable-set F1 0.46 after 32 (random 0.04) |
 
 `bo/acquisition=random` checks the setup: its scores match random's values within their error.
 
@@ -149,7 +150,7 @@ With `tracker=wandb`, a benchmark run is named after its batch rule (`qlogei-<ti
 grouped by phase field, typed `benchmark` and tagged with every family setting (`surrogate.kernel=matern52`), so the
 W&B table filters and groups by setting. Each metric's curves are plotted against `evaluations`, the summary
 holds the metrics' values, and the run's outputs (`paths.parquet`, `metrics.json`, `config.yaml`,
-`data.json`, and `cheap.parquet` with a cheap source) are saved as its
+`data.json`, `cheap.parquet` with a cheap source and `beliefs.parquet` with the map) are saved as its
 `replays-<run id>` artifact, so any later comparison can start from W&B alone. The
 project's "Benchmarks" view opens with a "How to read" note (the setup and what each headline bar means), then
 shows the headline values side by side, each metric's curves under a short explanation, one line per run, the
@@ -206,7 +207,7 @@ default, and presets name variants:
 | `bo/acquisition` | `qlogei` (batch log expected improvement), `ts` (Thompson sampling), `random` (the baseline; a benchmark skips the GP fit), `screen` (DFT in cheap order) | |
 | `benchmark/start` | `random`: explored points off the hull | `size` (8) |
 | `benchmark/cheap` | none by default; `table`, `noisy` | `table.fidelity` (`nn`); `noisy.random_mev` (25), `smooth_mev` (0), `lengthscale` (0.2), `bias_mev` (none) |
-| `benchmark/metric` (a list) | `steps_to_hit`, `discovery`, `best_so_far`, `hazard_ratio`: all four by default | `hazard_ratio.level` (0.95) |
+| `benchmark/metric` (a list) | `steps_to_hit`, `discovery`, `best_so_far`, `hazard_ratio`, `map`: all five by default | `hazard_ratio.level` (0.95), `map.tolerance_mev` (10) |
 
 To change a value:
 
