@@ -29,7 +29,9 @@ class NoisyCheapConfig(CheapConfig):
         default=0.0, description="std in meV/atom, shared by nearby points"
     )
     lengthscale: PositiveFloat = Field(
-        default=0.2, description="of the smooth error's Matern 5/2, in atomic fractions"
+        default=0.2,
+        description="of the smooth error's Matern 5/2, over all elements' atomic "
+        "fractions: moving x between two elements is a distance x*sqrt(2)",
     )
 
 
@@ -42,8 +44,13 @@ class NoisyCheap(Cheap[NoisyCheapConfig]):
     """
 
     def check(self, rows: pd.DataFrame, points: Points, *, fidelity: str) -> None:
-        totals_ev = _select_cells(rows, points, fidelity=fidelity)["total_energy_ev"]
-        if totals_ev.isna().to_numpy().any():
+        cells = _select_cells(rows, points, fidelity=fidelity)
+        bare = sorted(set(points.names) - set(cells["point"]))
+        if bare:
+            # Commands build points from these rows, so only a caller's bug gets here.
+            msg = f"{len(bare)} points, such as {bare[0]}, have no {fidelity!r} rows"
+            raise ValueError(msg)
+        if cells["total_energy_ev"].isna().to_numpy().any():
             raise DataError(
                 f"the {fidelity!r} rows give energies above the hull, and "
                 "benchmark/cheap=noisy needs total energies; choose a phase field "
@@ -83,10 +90,13 @@ class NoisyCheap(Cheap[NoisyCheapConfig]):
         with quiet_gpytorch():
             from gpytorch.kernels import MaternKernel
 
+        # Coordinates leave out the first element; with its fraction back, moving
+        # atoms between any two elements covers the same distance.
+        fractions = np.column_stack([1 - coords.sum(axis=1), coords])
         kernel = MaternKernel(nu=2.5).double()
-        kernel.lengthscale = torch.tensor(self.config.lengthscale)
+        kernel.lengthscale = torch.tensor(self.config.lengthscale, dtype=torch.float64)
         with torch.no_grad():
-            correlation = kernel(torch.as_tensor(coords)).to_dense().numpy()
+            correlation = kernel(torch.as_tensor(fractions)).to_dense().numpy()
         return np.linalg.cholesky(correlation + _JITTER * np.eye(len(coords)))
 
 

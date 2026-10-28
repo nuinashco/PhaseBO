@@ -47,3 +47,10 @@ def test_noisy_source_refuses_rows_without_total_energies(nn_rows, points):
 
     with pytest.raises(DataError, match="needs total energies"):
         noisy().check(only_nn, nn_points, fidelity="nn")
+
+
+def test_noisy_source_refuses_points_without_rows(rows, points):
+    lost = points.names[points.pool[0]]
+
+    with pytest.raises(ValueError, match="have no 'dft' rows"):
+        noisy().check(rows.loc[rows["point"] != lost], points, fidelity="dft")

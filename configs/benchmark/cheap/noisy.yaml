@@ -3,4 +3,4 @@
 kind: "noisy"
 random_mev: 25.0  # std in meV/atom, independent per cell; both errors go on total energies, then the hull is rebuilt
 smooth_mev: 0.0  # std in meV/atom, shared by nearby points
-lengthscale: 0.2  # of the smooth error's Matern 5/2, in atomic fractions
+lengthscale: 0.2  # of the smooth error's Matern 5/2, over all elements' atomic fractions: moving x between two elements is a distance x*sqrt(2)
