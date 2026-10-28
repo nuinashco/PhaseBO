@@ -1,7 +1,11 @@
 """`phasebo-suggest` ranks the candidates and writes the next batch to compute."""
 
 import pandas as pd
+import pytest
 
+from nuikit.errors import ConfigError
+
+from phasebo.bo.acquisition.items.screen import ScreenConfig
 from phasebo.bo.acquisition.items.ts import TSConfig
 from phasebo.bo.surrogate.items.gp import GPConfig
 from phasebo.cli import suggest
@@ -27,3 +31,16 @@ def test_suggest_writes_the_batch_and_each_candidate_prediction(
     assert list(posterior.columns) == ["formula", "mean_mev", "std_mev"]
     assert capsys.readouterr().out.split() == " ".join(picks).split()
     assert (run_dir / "data.json").is_file()
+
+
+def test_suggest_refuses_a_rule_that_needs_cheap_energies(system, tmp_path):
+    cfg = SuggestConfig(
+        run_name="r",
+        system=system,
+        bo=BOConfig(
+            surrogate=GPConfig(kind="gp"), acquisition=ScreenConfig(kind="screen")
+        ),
+    )
+
+    with pytest.raises(ConfigError, match="only phasebo-benchmark has them"):
+        suggest.run(cfg, runs_dir=tmp_path / "runs")

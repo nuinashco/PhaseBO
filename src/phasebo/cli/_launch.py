@@ -1,7 +1,7 @@
 """Command start-up, and the inputs that need the config schemas to be read."""
 
 import json
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from pathlib import Path
 
 import numpy as np
@@ -9,12 +9,14 @@ import pandas as pd
 import structlog
 
 from nuikit import runs, seeding
-from nuikit.errors import DataError
+from nuikit.errors import ConfigError, DataError
 from nuikit.logging import configure_logging
 from nuikit.registry import KindConfig
 
 from phasebo import paths
 from phasebo.benchmark.replay import Replays
+from phasebo.bo.acquisition.base import Acquisition
+from phasebo.bo.surrogate.base import Surrogate
 from phasebo.config import BenchmarkConfig, RunConfig, SearchConfig, SystemConfig
 from phasebo.data import store
 from phasebo.field import candidates
@@ -78,6 +80,13 @@ def tag_families(**configs: KindConfig) -> list[str]:
         settings = config.model_dump(mode="json", exclude={"kind"})
         tags += [f"{role}.{key}={value}" for key, value in settings.items()]
     return tags
+
+
+def require_cheap(parts: Mapping[str, Surrogate | Acquisition], *, fix: str) -> None:
+    """Raise `ConfigError` if a family choice needs cheap energies the run lacks."""
+    for role, part in parts.items():
+        if part.needs_cheap:
+            raise ConfigError(f"{role} {part.kind!r} needs cheap energies; {fix}")
 
 
 def load_table(system: SystemConfig) -> store.LoadedTable:

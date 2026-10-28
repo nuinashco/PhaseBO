@@ -80,6 +80,13 @@ metrics count only those.
 | `table` | another fidelity of the processed table (`benchmark.cheap.fidelity`, `nn` by default, which `system=LiSnSCl_multifidel` has), the same in every game |
 | `noisy` | the modelled total energies with a random error per cell (`random_mev`) and a smooth one shared by nearby compositions (`smooth_mev`, `lengthscale`), then the hull rebuilt; drawn anew in every game, the same for every setting of one seed; needs total energies (`system=LiSnSCl`) |
 
+`bo/acquisition=screen` picks DFT in cheap order, never learning from DFT: the baseline for any model that uses
+the cheap energies. It refuses to run without a cheap source, and `phasebo-suggest` has none yet.
+
+```bash
+uv run phasebo-benchmark benchmark/cheap=noisy benchmark.cheap.random_mev=50 bo/acquisition=screen
+```
+
 ### Comparing settings
 
 `phasebo-compare` compares benchmark runs with the first one listed, the baseline, usually a

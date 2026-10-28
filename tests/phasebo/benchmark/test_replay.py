@@ -78,6 +78,18 @@ def test_replay_fits_every_explored_points_cheap_energy(
     assert recording_surrogate.cheap_sizes == [len(points.pool)] * 3
 
 
+def test_replay_offers_the_rule_each_choices_cheap_energy(points, recording_surrogate):
+    screen = AcquisitionFactory.from_config({"kind": "screen"})
+
+    starting, batches = run_one(
+        points, recording_surrogate, acquisition=screen, cheap_mev=points.energies_mev
+    )
+
+    left = [int(i) for i in points.pool if i not in starting]
+    lowest = sorted(left, key=lambda i: points.energies_mev[i])[:2]
+    assert sorted(batches[0]) == sorted(lowest)
+
+
 def test_replay_stops_when_every_explored_point_is_evaluated(
     points, recording_surrogate
 ):

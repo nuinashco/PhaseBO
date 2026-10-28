@@ -7,10 +7,12 @@ import pytest
 
 from nuikit.errors import ConfigError
 
+from phasebo.benchmark.cheap.items.noisy import NoisyCheapConfig
 from phasebo.benchmark.metric.items.hazard_ratio import HazardRatioConfig
 from phasebo.benchmark.metric.items.steps_to_hit import StepsToHitConfig
 from phasebo.benchmark.start.items.random import RandomStartConfig
 from phasebo.bo.acquisition.items.qlogei import QLogEIConfig
+from phasebo.bo.acquisition.items.screen import ScreenConfig
 from phasebo.bo.surrogate.items.gp import GPConfig
 from phasebo.cli import benchmark
 from phasebo.config import BenchmarkConfig, BOConfig, ProtocolConfig
@@ -20,12 +22,13 @@ BO = BOConfig(
 )
 
 
-def config(system, *, size=2):
+def config(system, *, size=2, bo=BO, cheap=None):
     return BenchmarkConfig(
         run_name="r",
         system=system,
-        bo=BO,
+        bo=bo,
         benchmark=ProtocolConfig(
+            cheap=cheap,
             start=RandomStartConfig(kind="random", size=size),
             repeats=2,
             max_iter=2,
@@ -55,3 +58,13 @@ def test_benchmark_refuses_an_oversized_start_before_creating_the_run(system, tm
     with pytest.raises(ConfigError, match=r"benchmark\.start\.size"):
         benchmark.run(config(system, size=100), runs_dir=tmp_path / "runs")
     assert not (tmp_path / "runs").exists()
+
+
+def test_benchmark_with_a_noisy_source_runs_the_screen(system, tmp_path, capsys):
+    bo = BO.model_copy(update={"acquisition": ScreenConfig(kind="screen")})
+    cheap = NoisyCheapConfig(kind="noisy", random_mev=0.0)
+
+    benchmark.run(config(system, bo=bo, cheap=cheap), runs_dir=tmp_path / "runs")
+
+    # Exact cheap energies put a target in every first batch.
+    assert "first hit after 2.0 evaluations" in capsys.readouterr().out

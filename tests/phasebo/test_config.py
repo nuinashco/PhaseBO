@@ -31,7 +31,7 @@ def test_family_fields_are_validated_by_their_kind(system):
 
 
 def test_an_unknown_kind_names_the_registered_ones(system):
-    with pytest.raises(ConfigError, match="registered: qlogei, random, ts"):
+    with pytest.raises(ConfigError, match="registered: qlogei, random, screen, ts"):
         SuggestConfig.model_validate(
             {
                 "system": system.model_dump(),

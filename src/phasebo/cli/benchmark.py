@@ -10,6 +10,8 @@ Usage:
 
     phasebo-benchmark benchmark/metric=[steps_to_hit,hazard_ratio]
 
+    phasebo-benchmark benchmark/cheap=noisy bo/acquisition=screen   # its baseline
+
 Replays BO from `benchmark.repeats` starting sets, in parallel, and writes
 runs/<run_name>/ with paths.parquet (every evaluation of every repeat) and
 metrics.json (each metric next to random picking's exact value, and its curves
@@ -58,7 +60,12 @@ def run(cfg: BenchmarkConfig, *, runs_dir: Path) -> Path:
     surrogate = SurrogateFactory.from_config(cfg.bo.surrogate)
     acquisition = AcquisitionFactory.from_config(cfg.bo.acquisition)
     draw_cheap = None
-    if protocol.cheap is not None:
+    if protocol.cheap is None:
+        _launch.require_cheap(
+            {"bo.surrogate": surrogate, "bo.acquisition": acquisition},
+            fix="set benchmark/cheap=table or benchmark/cheap=noisy",
+        )
+    else:
         cheap = CheapFactory.from_config(protocol.cheap)
         cheap.check(loaded.rows, points, fidelity=cfg.fidelity)
         draw_cheap = functools.partial(

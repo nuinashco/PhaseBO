@@ -63,6 +63,8 @@ All notable changes to this project will be documented in this file.
   `noisy` fakes one from the modelled total energies, with a random error per cell (`random_mev`) and a smooth one
   shared by nearby compositions (`smooth_mev`, `lengthscale`), the hull rebuilt and the errors drawn anew in every
   game.
+  `bo/acquisition=screen` picks DFT in cheap order, never learning from DFT; it refuses to run without a cheap
+  source, and `phasebo-suggest` has none.
 - Tests on synthetic phase fields; the project follows the nuinashco/conventions `rnd` template (`make check`).
 - Optional `notebooks` dependency group (marimo, plotly; matplotlib and scipy for `scripts/plot_run.py`).
 

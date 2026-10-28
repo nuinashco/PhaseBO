@@ -110,7 +110,7 @@ configs/                  Hydra YAML; generated files say so in a leading commen
   data.yaml               composed by phasebo-data once per phase field
   defaults/               every setting of each entry config with its default (generated)
   bo/surrogate/           gp.yaml (generated), paper.yaml (preset: the paper's fitted noise)
-  bo/acquisition/         qlogei.yaml, ts.yaml, random.yaml (generated)
+  bo/acquisition/         qlogei.yaml, ts.yaml, random.yaml, screen.yaml (generated)
   benchmark/start/        random.yaml (generated)
   benchmark/metric/       one file per metric, selected together (generated)
   benchmark/cheap/        table.yaml, noisy.yaml (generated); none is selected by default
@@ -166,9 +166,9 @@ of a kind (`bo/surrogate=paper`). A `multiple` family is selected as a list, eac
 | family | kinds | chosen by |
 |---|---|---|
 | `bo/surrogate` | `gp`: BoTorch single-task GP, Matern 1/2, 3/2, 5/2 or RBF, fixed or fitted noise | `bo/surrogate=gp` (default), `bo/surrogate=paper` |
-| `bo/acquisition` | `qlogei`, `ts`, `random`; `random` has `needs_model = False`, so the replay does not fit the GP | `bo/acquisition=<kind>` |
+| `bo/acquisition` | `qlogei`, `ts`, `random`, `screen`; `random` and `screen` have `needs_model = False`, so the replay does not fit the GP; `screen` has `needs_cheap = True` and picks the lowest cheap energies | `bo/acquisition=<kind>` |
 | `benchmark/start` | `random`: explored points off the hull, from the repeat's own stream | `benchmark/start=random` |
-| `benchmark/cheap` | `table`: another fidelity of the processed table; `noisy`: the modelled total energies with random and smooth errors, the hull rebuilt, per repeat | `benchmark/cheap=<kind>`; none by default |
+| `benchmark/cheap` | `table`: another fidelity of the processed table; `noisy`: the modelled total energies with random and smooth errors, the hull rebuilt, per repeat | `benchmark/cheap=<kind>`; none by default, and a kind that `needs_cheap` then refuses to run |
 | `benchmark/metric` (multiple) | `steps_to_hit`, `discovery`, `best_so_far`, `hazard_ratio` | `benchmark/metric=[...]`, all four by default |
 
 ```text
