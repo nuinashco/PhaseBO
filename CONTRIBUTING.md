@@ -29,7 +29,7 @@ flowchart TD
         proposal --> acquisition --> surrogate
     end
     subgraph field["field/: the phase field"]
-        points["points.py<br/>one entry per point"]:::pure
+        points["points.py<br/>one entry per composition<br/>and framework"]:::pure
         hull["hull.py<br/>oracle hull"]:::pure
         candidates["candidates.py<br/>new cells"]:::pure
         points --> hull
@@ -53,7 +53,9 @@ Every layer may import the ones below it and `nuikit`. `phasebo` holds this proj
 - `data/` is processed data: the canonical table (`table.py`, pure) and its files with their sidecars (`store.py`).
 - `field/` is the phase field: the oracle hull, one entry per point (its lowest cell, its `pymatgen` phase diagram
   coordinates, its energy above the hull, whether it is a reference or a target), and the candidates: the
-  smallest charge-balanced cell of each point not computed yet, which `phasebo-generate` lists without any BO.
+  smallest charge-balanced cell of each point not computed yet, which `phasebo-generate` lists without any BO. In a
+  table with a `framework` column, a point is a composition in one framework, and a model sees the framework as a
+  category after the coordinates (`Points.inputs`, `Points.categories`).
 - `bo/` is the method: two families decide how BO models the points (`surrogate`) and picks a batch
   (`acquisition`), and `proposal.py` drives them for `phasebo-suggest`.
 - `benchmark/` scores the method: `replay.py` replays BO over the computed points from many starting sets (the
@@ -109,8 +111,8 @@ configs/                  Hydra YAML; generated files say so in a leading commen
   generate.yaml
   data.yaml               composed by phasebo-data once per phase field
   defaults/               every setting of each entry config with its default (generated)
-  bo/surrogate/           gp.yaml, multitask.yaml, multifidelity.yaml, delta.yaml (generated), paper.yaml (preset:
-                          the paper's fitted noise)
+  bo/surrogate/           gp.yaml, multitask.yaml, multifidelity.yaml, delta.yaml, joint.yaml (generated),
+                          paper.yaml (preset: the paper's fitted noise)
   bo/acquisition/         qlogei.yaml, ts.yaml, random.yaml, screen.yaml (generated)
   benchmark/start/        random.yaml (generated)
   benchmark/metric/       one file per metric, selected together (generated)
@@ -166,7 +168,7 @@ of a kind (`bo/surrogate=paper`). A `multiple` family is selected as a list, eac
 
 | family | kinds | chosen by |
 |---|---|---|
-| `bo/surrogate` | `gp`: BoTorch single-task GP, Matern 1/2, 3/2, 5/2 or RBF, fixed or fitted noise; `multitask`, `multifidelity`, `delta` have `needs_cheap = True` and predict DFT's: the first two also fit every explored point's cheap energy, `delta` fits the cheap error where DFT is known and adds it to the cheap energy | `bo/surrogate=gp` (default), `bo/surrogate=paper`, `bo/surrogate=<kind>` |
+| `bo/surrogate` | `gp`: BoTorch single-task GP, Matern 1/2, 3/2, 5/2 or RBF, fixed or fitted noise; `multitask`, `multifidelity`, `delta`, `joint` have `needs_cheap = True` and predict DFT's: `multitask`, `multifidelity` and `joint` (one GP, the source a category) also fit every explored point's cheap energy, `delta` fits the cheap error where DFT is known and adds it to the cheap energy; `gp`, `delta` and `joint` have `handles_categories = True`, so they model fields with frameworks | `bo/surrogate=gp` (default), `bo/surrogate=paper`, `bo/surrogate=<kind>` |
 | `bo/acquisition` | `qlogei`, `ts`, `random`, `screen`; `random` and `screen` have `needs_model = False`, so the replay does not fit the GP; `screen` has `needs_cheap = True` and picks the lowest cheap energies | `bo/acquisition=<kind>` |
 | `benchmark/start` | `random`: explored points off the hull, from the repeat's own stream | `benchmark/start=random` |
 | `benchmark/cheap` | `table`: another fidelity of the processed table; `noisy`: the modelled total energies with random and smooth errors, the hull rebuilt, per repeat | `benchmark/cheap=<kind>`; none by default, and a kind that `needs_cheap` then refuses to run |
@@ -227,9 +229,10 @@ ratio from one joint fit, as the hazard ratio does.
 - **GP priors are fixed** (CFG-7): every Matern kernel keeps BoTorch's pre-0.12 Matern 5/2 priors, Gamma(3, 6)
   on each lengthscale and Gamma(2, 0.15) on the outputscale, so `kernel` changes only nu. For `matern52` they
   reproduce the paper's GP; for `matern12` and `matern32` they are a choice, made to change one thing at a time.
-  `multitask` and `delta` build their kernels the same way; `multifidelity` keeps BoTorch's fidelity kernel and
-  its priors, since that kernel couples the coordinates with the source. It ties the cheap error's prior size to
-  the signal's, so `multifidelity` stays unsure even of an exact cheap source.
+  `multitask`, `delta` and `joint` build their kernels the same way; with categories, BoTorch's MixedSingleTaskGP
+  scales them with its own outputscale priors. `multifidelity` keeps BoTorch's fidelity kernel and its priors,
+  since that kernel couples the coordinates with the source. It ties the cheap error's prior size to the signal's,
+  so `multifidelity` stays unsure even of an exact cheap source.
 - **BoTorch draws from torch's global generator** (RUN-2 asks for an explicit one): fitting a GP, qLogEI's MC
   sampler and Thompson sampling take no generator. `seed_everything` seeds it once per run, and a benchmark seeds
   it again in each repeat from that repeat's stream, so runs repeat whatever `benchmark.workers` is; starting sets

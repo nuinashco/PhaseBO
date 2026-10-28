@@ -8,7 +8,7 @@ from attrs import define, field
 from pydantic import Field, NonNegativeFloat, PositiveFloat
 from pymatgen.core import Composition
 
-from nuikit.errors import DataError
+from nuikit.errors import ConfigError, DataError
 
 from phasebo.benchmark.cheap.base import CheapConfig, CheapSource, CheapSourceFactory
 from phasebo.bo.surrogate.base import MATERN_NU, quiet_gpytorch
@@ -20,11 +20,11 @@ _JITTER = 1e-8
 
 
 class NoisyCheapConfig(CheapConfig):
-    """Noisy source settings: a random and a smooth error, mixed."""
+    """Noisy source settings: a random and a smooth error, mixed, and a bias."""
 
     random_mev: NonNegativeFloat = Field(
         default=25.0,
-        description="std in meV/atom, independent per cell; both errors go on total "
+        description="std in meV/atom, independent per cell; the errors go on total "
         "energies, then the hull is rebuilt",
     )
     smooth_mev: NonNegativeFloat = Field(
@@ -39,6 +39,10 @@ class NoisyCheapConfig(CheapConfig):
         default="matern52",
         description="matern12|matern32|matern52; of the smooth error",
     )
+    bias_mev: dict[str, float] = Field(
+        default_factory=dict,
+        description="framework: meV/atom on each of its cells' total energy",
+    )
 
 
 @CheapSourceFactory.register("noisy")
@@ -46,7 +50,8 @@ class NoisyCheapConfig(CheapConfig):
 class NoisyCheapSource(CheapSource[NoisyCheapConfig]):
     """Errors added to each cell's total energy, then the hull rebuilt; drawn per game.
 
-    Both errors are drawn whatever their size, so settings of one seed share them.
+    Both errors are drawn whatever their size, so settings of one seed share them. A
+    composition's frameworks share its smooth error.
     """
 
     _factors: dict[tuple[tuple[int, ...], bytes], np.ndarray] = field(
@@ -54,6 +59,13 @@ class NoisyCheapSource(CheapSource[NoisyCheapConfig]):
     )
 
     def check(self, rows: pd.DataFrame, points: Points, *, fidelity: str) -> None:
+        unknown = sorted(set(self.config.bias_mev) - set(points.framework_names))
+        if unknown:
+            known = ", ".join(points.framework_names) or "none"
+            raise ConfigError(
+                f"benchmark.cheap.bias_mev names {unknown[0]!r}, not a framework of "
+                f"this field ({known}); name only those"
+            )
         cells = _select_cells(rows, points, fidelity=fidelity)
         bare = sorted(set(points.names) - set(cells["point"]))
         if bare:
@@ -68,7 +80,7 @@ class NoisyCheapSource(CheapSource[NoisyCheapConfig]):
             )
         if self.config.smooth_mev > 0:
             # Built here, in the command's process, so every worker gets it with `self`.
-            self._factor_correlation(points.coords)
+            self._factor_correlation(points.coords[_first_of_each(points)])
 
     def draw(
         self,
@@ -79,15 +91,23 @@ class NoisyCheapSource(CheapSource[NoisyCheapConfig]):
         rng: np.random.Generator,
     ) -> np.ndarray:
         cells = _select_cells(rows, points, fidelity=fidelity)
-        index = {name: i for i, name in enumerate(points.names)}
-        at = np.array([index[name] for name in cells["point"]])
+        frameworks = [None] * len(cells)
+        if "framework" in cells:
+            frameworks = [None if pd.isna(f) else f for f in cells["framework"]]
+        at = points.find(cells["point"].tolist(), frameworks)
+        first = _first_of_each(points)
+        composition = {points.names[i]: c for c, i in enumerate(first)}
         formulas = cells["formula"].tolist()
         random_error_mev = self.config.random_mev * rng.normal(size=len(cells))
-        normals = rng.normal(size=len(points.formulas))
-        error_mev = random_error_mev
+        normals = rng.normal(size=len(first))
+        bias_mev = np.array(
+            [self.config.bias_mev.get(f, 0.0) if f else 0.0 for f in frameworks]
+        )
+        error_mev = random_error_mev + bias_mev
         if self.config.smooth_mev > 0:
-            shared = self._factor_correlation(points.coords) @ normals
-            error_mev = error_mev + self.config.smooth_mev * shared[at]
+            shared = self._factor_correlation(points.coords[first]) @ normals
+            of = np.array([composition[name] for name in cells["point"]])
+            error_mev = error_mev + self.config.smooth_mev * shared[of]
         atoms = np.array([Composition(f).num_atoms for f in formulas])
         totals_ev = cells["total_energy_ev"].to_numpy(dtype=float)
         above_mev = hull.measure(
@@ -119,6 +139,13 @@ class NoisyCheapSource(CheapSource[NoisyCheapConfig]):
         with torch.no_grad():
             correlation = kernel(torch.as_tensor(fractions)).to_dense().numpy()
         return np.linalg.cholesky(correlation + _JITTER * np.eye(len(coords)))
+
+
+def _first_of_each(points: Points) -> np.ndarray:
+    """Return each composition's first point, in field order."""
+    # Field order, so a field without frameworks draws as before.
+    _, first = np.unique(np.asarray(points.names), return_index=True)
+    return np.sort(first)
 
 
 def _select_cells(rows: pd.DataFrame, points: Points, *, fidelity: str) -> pd.DataFrame:

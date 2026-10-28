@@ -62,6 +62,7 @@ def run(cfg: BenchmarkConfig, *, runs_dir: Path) -> Path:
     starting.check(points, budget=cfg.bo.batch_size * protocol.max_iter)
     surrogate = SurrogateFactory.from_config(cfg.bo.surrogate)
     acquisition = AcquisitionFactory.from_config(cfg.bo.acquisition)
+    _launch.require_categories(surrogate, points)
     draw_cheap = None
     if protocol.cheap is None:
         _launch.refuse_needing_cheap(

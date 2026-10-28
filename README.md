@@ -36,11 +36,11 @@ created: a missing file, or a starting set larger than the field allows, stops t
 
 `data/raw/` holds the datasets as published; they are never edited. One script per source,
 `scripts/process_<source>.py`, reads its raw file, drops the rows with elements outside the phase field and writes
-`data/processed/<field>.csv`: one row per composition and fidelity, with its point (reduced composition), a
-reference flag and one energy, total (eV per cell) or above the hull (meV/atom). Next to each table,
-`<field>.json` records the sha256 of the table, of its script and of its raw files. Tables and sidecars are
-committed; `make data`, the tests and every command fail on a table edited by hand, or on a script or raw file
-changed since the table was written, naming the script to rerun.
+`data/processed/<field>.csv`: one row per cell and fidelity, with its point (reduced composition), a reference
+flag, one energy, total (eV per cell) or above the hull (meV/atom), and where given its framework. Next to each
+table, `<field>.json` records the sha256 of the table, of its script and of its raw files. Tables and sidecars
+are committed; `make data`, the tests and every command fail on a table edited by hand, or on a script or raw
+file changed since the table was written, naming the script to rerun.
 
 | phase field | raw | script | energies |
 |---|---|---|---|
@@ -49,6 +49,11 @@ changed since the table was written, naming the script to rerun.
 
 BO models one fidelity (`fidelity=dft` by default; `fidelity=nn` models the neural network instead). Each point
 keeps its lowest-energy cell; a benchmark's targets are the explored points on the hull of the modelled fidelity.
+
+A table may place each cell in a structure framework. A point is then a composition in one framework: the hull
+is built from every framework's cells, a composition's winning framework is its lowest point, and the targets are
+the stable compositions in their winning framework. Models see the framework as a category after the
+coordinates.
 
 ## Benchmark
 
@@ -79,13 +84,15 @@ beside its DFT energy, so their agreement can be measured.
 | `benchmark/cheap=` | the cheap energy |
 |---|---|
 | `table` | another fidelity of the processed table (`benchmark.cheap.fidelity`, `nn` by default, which `system=LiSnSCl_multifidel` has), the same in every game; energies above the hull are used as the table gives them, without rebuilding the hull |
-| `noisy` | the modelled total energies with a random error per cell (`random_mev`) and a smooth one shared by nearby compositions (`smooth_mev`, `lengthscale`, `kernel`), then the hull rebuilt; drawn anew in every game, the same for every setting of one seed; needs total energies (`system=LiSnSCl`) |
+| `noisy` | the modelled total energies with a random error per cell (`random_mev`), a smooth one shared by nearby compositions (`smooth_mev`, `lengthscale`, `kernel`) and a fixed one per framework (`bias_mev`, e.g. `'+benchmark.cheap.bias_mev={cubic:30,wurtzite:-15}'`), then the hull rebuilt; drawn anew in every game, the same for every setting of one seed; needs total energies (`system=LiSnSCl`) |
 
-Three surrogates use the cheap energies and predict DFT's: `multitask` (BoTorch's multi-task GP, which learns
-how far DFT follows the cheap energies), `multifidelity` (its multi-fidelity GP, the source as an input) and
-`delta` (the cheap energy plus a GP of its error, fitted where DFT is known). All assume zero noise by default, as
-the cheap model's output is as deterministic as DFT's. `bo/acquisition=screen` is their baseline: DFT in cheap
-order, never learning from DFT. Each refuses to run without a cheap source, and `phasebo-suggest` has none yet.
+Four surrogates use the cheap energies and predict DFT's: `multitask` (BoTorch's multi-task GP, which learns
+how far DFT follows the cheap energies), `multifidelity` (its multi-fidelity GP, the source as an input), `delta`
+(the cheap energy plus a GP of its error, fitted where DFT is known) and `joint` (one GP of both sources, the
+source as a category). Only `delta` and `joint`, like `gp`, model fields with frameworks. All assume zero noise by
+default, as the cheap model's output is as deterministic as DFT's. `bo/acquisition=screen` is their baseline: DFT
+in cheap order, never learning from DFT. Each refuses to run without a cheap source, and `phasebo-suggest` has none
+yet.
 
 ```bash
 uv run phasebo-benchmark benchmark/cheap=noisy bo/surrogate=multitask
@@ -142,7 +149,8 @@ With `tracker=wandb`, a benchmark run is named after its batch rule (`qlogei-<ti
 grouped by phase field, typed `benchmark` and tagged with every family setting (`surrogate.kernel=matern52`), so the
 W&B table filters and groups by setting. Each metric's curves are plotted against `evaluations`, the summary
 holds the metrics' values, and the run's outputs (`paths.parquet`, `metrics.json`, `config.yaml`,
-`data.json`, and `cheap.parquet` with a cheap source) are saved as its `replays-<run id>` artifact, so any later comparison can start from W&B alone. The
+`data.json`, and `cheap.parquet` with a cheap source) are saved as its
+`replays-<run id>` artifact, so any later comparison can start from W&B alone. The
 project's "Benchmarks" view opens with a "How to read" note (the setup and what each headline bar means), then
 shows the headline values side by side, each metric's curves under a short explanation, one line per run, the
 `phasebo-compare` runs' tables (logged with `tracker=wandb`), and the system charts collapsed. Random picking's
@@ -194,9 +202,10 @@ default, and presets name variants:
 
 | group | kinds | settings |
 |---|---|---|
-| `bo/surrogate` | `gp`; preset `paper` (fitted noise, as in the paper) | `kernel` (`matern12`, `matern32`, `matern52` as in the paper; `rbf`), `noise_mev` (std; `null` fits it) |
-| `bo/acquisition` | `qlogei` (batch log expected improvement), `ts` (Thompson sampling), `random` (the baseline; a benchmark skips the GP fit) | |
+| `bo/surrogate` | `gp`; preset `paper` (fitted noise, as in the paper); with a cheap source, `multitask`, `multifidelity`, `delta`, `joint` | `kernel` (`matern12`, `matern32`, `matern52` as in the paper; `rbf`), `noise_mev` (std; `null` fits it) |
+| `bo/acquisition` | `qlogei` (batch log expected improvement), `ts` (Thompson sampling), `random` (the baseline; a benchmark skips the GP fit), `screen` (DFT in cheap order) | |
 | `benchmark/start` | `random`: explored points off the hull | `size` (8) |
+| `benchmark/cheap` | none by default; `table`, `noisy` | `table.fidelity` (`nn`); `noisy.random_mev` (25), `smooth_mev` (0), `lengthscale` (0.2), `bias_mev` (none) |
 | `benchmark/metric` (a list) | `steps_to_hit`, `discovery`, `best_so_far`, `hazard_ratio`: all four by default | `hazard_ratio.level` (0.95) |
 
 To change a value:

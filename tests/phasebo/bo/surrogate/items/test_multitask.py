@@ -6,7 +6,7 @@ from phasebo.bo.surrogate.base import CheapEnergies, SurrogateFactory
 def test_multitask_passes_its_kernel_name_to_the_data_kernel(points):
     pool = points.pool
     cheap = CheapEnergies(
-        coords=points.coords[pool], energies_mev=points.energies_mev[pool]
+        inputs=points.coords[pool], energies_mev=points.energies_mev[pool]
     )
     surrogate = SurrogateFactory.from_config(
         {"kind": "multitask", "kernel": "matern12"}

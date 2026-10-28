@@ -1,5 +1,6 @@
 """Delta surrogate: the cheap energy plus a Gaussian process of its error."""
 
+from collections.abc import Sequence
 from typing import Any, ClassVar, override
 
 import numpy as np
@@ -25,21 +26,23 @@ class DeltaSurrogate(Surrogate[DeltaConfig]):
     """Cheap energy plus a GP of DFT minus cheap; predicts only where cheap is known."""
 
     needs_cheap: ClassVar[bool] = True
+    handles_categories: ClassVar[bool] = True
 
     def fit(
         self,
-        coords: np.ndarray,
+        inputs: np.ndarray,
         energies_mev: np.ndarray,
         *,
         cheap: CheapEnergies | None = None,
+        categories: Sequence[int] = (),
     ) -> Fit:
         import torch
 
         known = require_cheap(cheap, f"surrogate {self.kind!r}")
         settings = self.config.model_dump(exclude={"kind"})
-        at = _find(torch.as_tensor(coords), torch.as_tensor(known.coords)).numpy()
+        at = _find(torch.as_tensor(inputs), torch.as_tensor(known.inputs)).numpy()
         error = GPSurrogate(GPConfig(kind="gp", **settings)).fit(
-            coords, energies_mev - known.energies_mev[at]
+            inputs, energies_mev - known.energies_mev[at], categories=categories
         )
         return Fit(
             model=_shift(error.model, known),
@@ -47,9 +50,9 @@ class DeltaSurrogate(Surrogate[DeltaConfig]):
         )
 
 
-def _find(rows: Any, coords: Any) -> Any:
-    """Return each of `rows`' index in `coords` (tensors); fail on a row not in it."""
-    matches = (rows.unsqueeze(-2) == coords).all(dim=-1)
+def _find(rows: Any, inputs: Any) -> Any:
+    """Return each of `rows`' index in `inputs` (tensors); fail on a row not in it."""
+    matches = (rows.unsqueeze(-2) == inputs).all(dim=-1)
     if not bool(matches.any(dim=-1).all()):
         msg = "delta predicts only at points with a cheap energy"
         raise ValueError(msg)
@@ -63,7 +66,7 @@ def _shift(error: Any, known: CheapEnergies) -> Any:
     from botorch.posteriors.gpytorch import GPyTorchPosterior
     from gpytorch.distributions import MultivariateNormal
 
-    coords = torch.as_tensor(known.coords, dtype=torch.float64)
+    known_inputs = torch.as_tensor(known.inputs, dtype=torch.float64)
     offsets_mev = -torch.as_tensor(known.energies_mev, dtype=torch.float64)
 
     class Shifted(Model):
@@ -86,7 +89,7 @@ def _shift(error: Any, known: CheapEnergies) -> Any:
             if output_indices not in (None, [0]):
                 msg = "delta has one output; output_indices can only be [0]"
                 raise NotImplementedError(msg)
-            at = _find(X, coords)
+            at = _find(X, known_inputs)
             base = error.posterior(X, observation_noise=observation_noise)
             normal = base.distribution
             return GPyTorchPosterior(

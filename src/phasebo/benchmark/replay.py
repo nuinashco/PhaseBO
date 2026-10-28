@@ -6,7 +6,6 @@ from typing import Protocol, cast
 import numpy as np
 import pandas as pd
 from attrs import field, frozen
-from pymatgen.core import Composition
 
 from nuikit.errors import DataError
 
@@ -36,11 +35,21 @@ class Replays:
 
     @classmethod
     def from_table(
-        cls, points: Points, table: pd.DataFrame, *, batch_size: int, max_iter: int
+        cls,
+        points: Points,
+        table: pd.DataFrame,
+        *,
+        batch_size: int,
+        max_iter: int,
     ) -> Replays:
         """Return the replays that `table()` wrote, over the same `points`."""
-        index = {formula: i for i, formula in enumerate(points.formulas)}
-        unknown = sorted(set(table["formula"]) - set(index))
+        frameworks = [None] * len(table)
+        if "framework" in table:
+            frameworks = [None if pd.isna(f) else f for f in table["framework"]]
+        keys = list(zip(table["formula"], frameworks, strict=True))
+        cells = zip(points.formulas, points.frameworks, strict=True)
+        index = {key: i for i, key in enumerate(cells)}
+        unknown = sorted({str(key) for key in keys if key not in index})
         if unknown:
             raise DataError(
                 f"{len(unknown)} evaluated formulas, such as {unknown[0]}, are not "
@@ -50,7 +59,7 @@ class Replays:
             {
                 "repeat": table["repeat"].to_numpy(),
                 "batch": table["batch"].to_numpy(),
-                "point": [index[formula] for formula in table["formula"]],
+                "point": [index[key] for key in keys],
             }
         )
         return cls(points=points, batch_size=batch_size, max_iter=max_iter, paths=paths)
@@ -78,11 +87,9 @@ class Replays:
 
     @property
     def target_names(self) -> list[str]:
-        """Return each target's reduced formula, in `points.targets` order."""
-        return [
-            Composition(self.points.formulas[i]).reduced_composition.formula
-            for i in self.points.targets
-        ]
+        """Return each target's label, in `points.targets` order."""
+        labels = self.points.labels
+        return [labels[i] for i in self.points.targets]
 
     def list_starts(self) -> list[tuple[int, ...]]:
         """Return each repeat's starting points, sorted."""
@@ -105,10 +112,13 @@ class Replays:
         return hits
 
     def table(self) -> pd.DataFrame:
-        """Return every evaluation: repeat, batch, formula, energy, whether a target."""
+        """Return every evaluation: repeat, batch, formula, energy, whether a target.
+
+        A field with frameworks adds each evaluation's framework.
+        """
         point = self.paths["point"].to_numpy()
         targets = set(self.points.targets.tolist())
-        return pd.DataFrame(
+        table = pd.DataFrame(
             {
                 "repeat": self.paths["repeat"],
                 "batch": self.paths["batch"],
@@ -117,6 +127,9 @@ class Replays:
                 "target": [int(i) in targets for i in point],
             }
         )
+        if self.points.framework_names:
+            table.insert(3, "framework", [self.points.frameworks[i] for i in point])
+        return table
 
     def cheap_table(self) -> pd.DataFrame:
         """Return each repeat's cheap energy at every explored point, beside DFT's."""
@@ -125,7 +138,7 @@ class Replays:
             raise ValueError(msg)
         pool = self.points.pool
         repeats = len(self.cheap_mev)
-        return pd.DataFrame(
+        table = pd.DataFrame(
             {
                 "repeat": np.repeat(np.arange(repeats), len(pool)),
                 "formula": np.tile(np.asarray(self.points.formulas)[pool], repeats),
@@ -133,6 +146,10 @@ class Replays:
                 "e_above_hull_mev": np.tile(self.points.energies_mev[pool], repeats),
             }
         )
+        if self.points.framework_names:
+            frameworks = np.asarray(self.points.frameworks, dtype=object)[pool]
+            table.insert(2, "framework", np.tile(frameworks, repeats))
+        return table
 
 
 def replay_many(
@@ -203,15 +220,16 @@ def replay(
 ) -> list[list[int]]:
     """Return the batches BO picks after `starting`, up to `max_iter` of them.
 
-    Each batch comes from the explored points not evaluated yet, sorted by
-    coordinates; the replay ends early when none are left. `cheap_mev`, one per
-    point, is known from the start: the surrogate gets every explored point's, the
-    acquisition each choice's.
+    Each batch comes from the explored points not evaluated yet, sorted by their
+    inputs (coordinates, then framework); the replay ends early when none are left.
+    `cheap_mev`, one per point, is known from the start: the surrogate gets every
+    explored point's, the acquisition each choice's.
     """
+    inputs = points.inputs
     cheap = None
     if cheap_mev is not None:
         cheap = CheapEnergies(
-            coords=points.coords[points.pool], energies_mev=cheap_mev[points.pool]
+            inputs=inputs[points.pool], energies_mev=cheap_mev[points.pool]
         )
     evaluated = list(starting)
     batches: list[list[int]] = []
@@ -219,19 +237,22 @@ def replay(
         done = set(evaluated)
         left = sorted(
             (int(i) for i in points.pool if i not in done),
-            key=lambda i: tuple(points.coords[i]),
+            key=lambda i: tuple(inputs[i]),
         )
         if not left:
             break
         fit = None
         if acquisition.needs_model:
             fit = surrogate.fit(
-                points.coords[evaluated], points.energies_mev[evaluated], cheap=cheap
+                inputs[evaluated],
+                points.energies_mev[evaluated],
+                cheap=cheap,
+                categories=points.categories,
             )
         size = min(batch_size, len(left))
         picked = acquisition.pick(
             fit,
-            points.coords[left],
+            inputs[left],
             size=size,
             rng=rng,
             cheap_mev=None if cheap_mev is None else cheap_mev[left],

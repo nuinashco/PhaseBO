@@ -91,3 +91,22 @@ def test_benchmark_refuses_a_multi_fidelity_model_without_a_cheap_source(
     with pytest.raises(ConfigError, match="set benchmark/cheap=table"):
         benchmark.run(config(system, bo=bo), runs_dir=tmp_path / "runs")
     assert not (tmp_path / "runs").exists()
+
+
+def test_benchmark_writes_each_evaluations_framework(framework_system, tmp_path):
+    run_dir = benchmark.run(config(framework_system), runs_dir=tmp_path / "runs")
+
+    paths = pd.read_parquet(run_dir / "paths.parquet")
+    assert set(paths["framework"]) == {"cubic", "wurtzite"}
+
+
+def test_benchmark_refuses_a_surrogate_that_cannot_model_frameworks(
+    framework_system, tmp_path
+):
+    bo = BO.model_copy(update={"surrogate": MultiTaskConfig(kind="multitask")})
+    cheap = NoisyCheapConfig(kind="noisy")
+
+    with pytest.raises(ConfigError, match="cannot model this field's frameworks"):
+        benchmark.run(
+            config(framework_system, bo=bo, cheap=cheap), runs_dir=tmp_path / "runs"
+        )

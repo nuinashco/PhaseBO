@@ -2,7 +2,7 @@
 
 import warnings
 from abc import ABC, abstractmethod
-from collections.abc import Iterator
+from collections.abc import Iterator, Sequence
 from contextlib import contextmanager
 from typing import Any, ClassVar, Literal
 
@@ -24,7 +24,7 @@ class SurrogateConfig(KindConfig):
 class CheapEnergies:
     """Cheap energies above the hull of the points BO may pick, known before it does."""
 
-    coords: np.ndarray = field(eq=False)
+    inputs: np.ndarray = field(eq=False)  # As `Surrogate.fit` takes them.
     energies_mev: np.ndarray = field(eq=False)
 
 
@@ -59,20 +59,23 @@ class Surrogate[C: SurrogateConfig](Configurable[C], ABC):
     """Model fitted to the evaluated points, predicting the rest.
 
     A surrogate with `needs_cheap` also fits the cheap energies and predicts DFT's;
-    the others ignore them.
+    the others ignore them. One with `handles_categories` takes inputs whose
+    `categories` columns are categories, such as a framework, not coordinates.
     """
 
     needs_cheap: ClassVar[bool] = False
+    handles_categories: ClassVar[bool] = False
 
     @abstractmethod
     def fit(
         self,
-        coords: np.ndarray,
+        inputs: np.ndarray,
         energies_mev: np.ndarray,
         *,
         cheap: CheapEnergies | None = None,
+        categories: Sequence[int] = (),
     ) -> Fit:
-        """Return the model fitted to energies above the hull at `coords` (meV/atom)."""
+        """Return the model fitted to energies above the hull at `inputs` (meV/atom)."""
 
 
 class SurrogateFactory(ConfigurableFactory[Surrogate[Any]]):
@@ -104,6 +107,61 @@ def build_kernel(name: KernelName, dims: int) -> Any:
     )
 
 
+def build_gp(
+    x: Any,
+    g: Any,
+    *,
+    kernel: KernelName,
+    noise_mev: float | None,
+    categories: Sequence[int] = (),
+    input_transform: Any = None,
+) -> Any:
+    """Return an unfitted BoTorch GP of `g` over `x`, `categories` as categories."""
+    with quiet_gpytorch():
+        from botorch.models import MixedSingleTaskGP, SingleTaskGP
+
+        variances = build_noise_variances(g, noise_mev)
+        if not categories:
+            return SingleTaskGP(
+                x,
+                g,
+                train_Yvar=variances,
+                covar_module=build_kernel(kernel, x.shape[1]),
+                input_transform=input_transform,
+            )
+        return MixedSingleTaskGP(
+            x,
+            g,
+            cat_dims=list(categories),
+            train_Yvar=variances,
+            cont_kernel_factory=_build_matern_factory(kernel),
+            input_transform=input_transform,
+        )
+
+
+def _build_matern_factory(name: KernelName) -> Any:
+    """Return MixedSingleTaskGP's kernel factory for `name`; None for BoTorch's own."""
+    nu = MATERN_NU.get(name)
+    if nu is None:
+        return None
+
+    def factory(batch_shape: Any, ard_num_dims: int, active_dims: list[int]) -> Any:
+        from gpytorch.kernels import MaternKernel
+        from gpytorch.priors import GammaPrior
+
+        # BoTorch's pre-0.12 Matern 5/2 lengthscale prior, as in `build_kernel`;
+        # MixedSingleTaskGP scales the kernel itself, with its own outputscale priors.
+        return MaternKernel(
+            nu=nu,
+            ard_num_dims=ard_num_dims,
+            active_dims=active_dims,
+            batch_shape=batch_shape,
+            lengthscale_prior=GammaPrior(3.0, 6.0),
+        )
+
+    return factory
+
+
 def build_noise_variances(g: Any, noise_mev: float | None) -> Any:
     """Return a variance per observation of `g`, or None for a fitted noise."""
     import torch
@@ -112,16 +170,16 @@ def build_noise_variances(g: Any, noise_mev: float | None) -> Any:
 
 
 def stack_sources(
-    coords: np.ndarray, energies_mev: np.ndarray, *, cheap: CheapEnergies
+    inputs: np.ndarray, energies_mev: np.ndarray, *, cheap: CheapEnergies
 ) -> tuple[Any, Any]:
-    """Return cheap then DFT inputs (coordinates, source 0 or 1), negated energies."""
+    """Return cheap then DFT inputs, with their source (0, 1) last, negated energies."""
     import torch
 
     def tag(rows: np.ndarray, source: float) -> Any:
         x = torch.as_tensor(rows, dtype=torch.float64)
         return torch.cat([x, torch.full((len(x), 1), source, dtype=x.dtype)], dim=1)
 
-    x = torch.cat([tag(cheap.coords, 0.0), tag(coords, 1.0)])
+    x = torch.cat([tag(cheap.inputs, 0.0), tag(inputs, 1.0)])
     both_mev = np.concatenate([cheap.energies_mev, energies_mev])
     return x, -torch.as_tensor(both_mev, dtype=torch.float64)[:, None]
 

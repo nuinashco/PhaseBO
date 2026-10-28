@@ -1,6 +1,7 @@
 """Replays evaluate a starting set, then batches; repeats are paired and repeatable."""
 
 import numpy as np
+import pandas as pd
 import pytest
 
 from nuikit.errors import DataError
@@ -244,3 +245,20 @@ def test_from_table_refuses_formulas_of_another_field(made, points):
 
     with pytest.raises(DataError, match="not points of this field"):
         replay.Replays.from_table(points, table, batch_size=2, max_iter=3)
+
+
+def test_a_table_with_frameworks_rebuilds_the_same_replays(framework_points):
+    pool = framework_points.pool
+    paths = pd.DataFrame(
+        {"repeat": [0, 0, 0], "batch": [0, 1, 1], "point": pool[:3].tolist()}
+    )
+    replays = replay.Replays(
+        points=framework_points, batch_size=2, max_iter=1, paths=paths
+    )
+
+    rebuilt = replay.Replays.from_table(
+        framework_points, replays.table(), batch_size=2, max_iter=1
+    )
+
+    assert "framework" in replays.table()
+    assert rebuilt.paths["point"].tolist() == pool[:3].tolist()
