@@ -57,6 +57,12 @@ All notable changes to this project will be documented in this file.
 - A benchmark's own settings: `benchmark/start` (`random`, `size` explored points off the hull, 8 by default as
   in the paper's real use; it was 23 with no recorded reason) and `benchmark.max_iter` (batches after the start, 8
   by default: 32 picks).
+- Multi-fidelity benchmarks: `benchmark/cheap` gives every game a cheap energy for each computed composition from
+  the start, as a free screen by a fast model would; BO still picks DFT evaluations, and the budget and metrics
+  count only those. `table` reads another fidelity of the processed table (`nn` in `LiSnSCl_multifidel`);
+  `noisy` fakes one from the modelled total energies, with a random error per cell (`random_mev`) and a smooth one
+  shared by nearby compositions (`smooth_mev`, `lengthscale`), the hull rebuilt and the errors drawn anew in every
+  game.
 - Tests on synthetic phase fields; the project follows the nuinashco/conventions `rnd` template (`make check`).
 - Optional `notebooks` dependency group (marimo, plotly; matplotlib and scipy for `scripts/plot_run.py`).
 

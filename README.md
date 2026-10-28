@@ -69,6 +69,17 @@ simulation), and, with `tracker=wandb`, logged as curves over evaluations:
 
 `bo/acquisition=random` checks the setup: its scores match random's values within their error.
 
+### Multi-fidelity
+
+With `benchmark/cheap`, every game also knows a cheap energy for each computed composition from the start, as if
+a fast, rough model had screened them all for free. BO still picks DFT evaluations, and the budget and the
+metrics count only those.
+
+| `benchmark/cheap=` | the cheap energy |
+|---|---|
+| `table` | another fidelity of the processed table (`benchmark.cheap.fidelity`, `nn` by default, which `system=LiSnSCl_multifidel` has), the same in every game |
+| `noisy` | the modelled total energies with a random error per cell (`random_mev`) and a smooth one shared by nearby compositions (`smooth_mev`, `lengthscale`), then the hull rebuilt; drawn anew in every game, the same for every setting of one seed; needs total energies (`system=LiSnSCl`) |
+
 ### Comparing settings
 
 `phasebo-compare` compares benchmark runs with the first one listed, the baseline, usually a

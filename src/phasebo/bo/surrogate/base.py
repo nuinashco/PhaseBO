@@ -4,10 +4,10 @@ import warnings
 from abc import ABC, abstractmethod
 from collections.abc import Iterator
 from contextlib import contextmanager
-from typing import Any, Literal
+from typing import Any, ClassVar, Literal
 
 import numpy as np
-from attrs import define, frozen
+from attrs import define, field, frozen
 
 from nuikit.registry import Configurable, ConfigurableFactory, KindConfig
 
@@ -18,6 +18,14 @@ _MATERN_NU = {"matern12": 0.5, "matern32": 1.5, "matern52": 2.5}
 
 class SurrogateConfig(KindConfig):
     """Settings of a surrogate model."""
+
+
+@frozen
+class CheapEnergies:
+    """Cheap energies above the hull of the points BO may pick, known before it does."""
+
+    coords: np.ndarray = field(eq=False)
+    energies_mev: np.ndarray = field(eq=False)
 
 
 @frozen
@@ -48,10 +56,22 @@ class Fit:
 
 @define
 class Surrogate[C: SurrogateConfig](Configurable[C], ABC):
-    """Model fitted to the evaluated points, predicting the rest."""
+    """Model fitted to the evaluated points, predicting the rest.
+
+    A surrogate with `needs_cheap` also fits the cheap energies and predicts DFT's;
+    the others ignore them.
+    """
+
+    needs_cheap: ClassVar[bool] = False
 
     @abstractmethod
-    def fit(self, coords: np.ndarray, energies_mev: np.ndarray) -> Fit:
+    def fit(
+        self,
+        coords: np.ndarray,
+        energies_mev: np.ndarray,
+        *,
+        cheap: CheapEnergies | None = None,
+    ) -> Fit:
         """Return the model fitted to energies above the hull at `coords` (meV/atom)."""
 
 

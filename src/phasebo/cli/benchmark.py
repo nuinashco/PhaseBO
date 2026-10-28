@@ -14,8 +14,11 @@ Replays BO from `benchmark.repeats` starting sets, in parallel, and writes
 runs/<run_name>/ with paths.parquet (every evaluation of every repeat) and
 metrics.json (each metric next to random picking's exact value, and its curves
 over evaluations); `tracker=wandb` also logs them. Prints one line per metric.
+With `benchmark/cheap`, every game knows each point's cheap energy from the start;
+the budget and the metrics still count DFT evaluations.
 """
 
+import functools
 import json
 from pathlib import Path
 
@@ -28,6 +31,7 @@ from nuikit.errors import cli_boundary
 
 from phasebo import paths
 from phasebo.benchmark import replay
+from phasebo.benchmark.cheap.base import CheapFactory
 from phasebo.benchmark.metric.base import MetricFactory, Score, to_json, to_wandb
 from phasebo.benchmark.start.base import StartFactory
 from phasebo.bo.acquisition.base import AcquisitionFactory
@@ -53,12 +57,22 @@ def run(cfg: BenchmarkConfig, *, runs_dir: Path) -> Path:
     starting.check(points, budget=cfg.bo.batch_size * protocol.max_iter)
     surrogate = SurrogateFactory.from_config(cfg.bo.surrogate)
     acquisition = AcquisitionFactory.from_config(cfg.bo.acquisition)
+    draw_cheap = None
+    if protocol.cheap is not None:
+        cheap = CheapFactory.from_config(protocol.cheap)
+        cheap.check(loaded.rows, points, fidelity=cfg.fidelity)
+        draw_cheap = functools.partial(
+            cheap.draw, loaded.rows, points, fidelity=cfg.fidelity
+        )
     metrics = {
         kind: MetricFactory.from_config(config)
         for kind, config in protocol.metric.items()
     }
     tags = _launch.tag_families(
-        surrogate=cfg.bo.surrogate, acquisition=cfg.bo.acquisition, start=protocol.start
+        surrogate=cfg.bo.surrogate,
+        acquisition=cfg.bo.acquisition,
+        start=protocol.start,
+        **({} if protocol.cheap is None else {"cheap": protocol.cheap}),
     )
     run_dir, _ = _launch.start(
         cfg,
@@ -78,6 +92,7 @@ def run(cfg: BenchmarkConfig, *, runs_dir: Path) -> Path:
         repeats=protocol.repeats,
         seed=cfg.seed,
         workers=protocol.workers,
+        draw_cheap=draw_cheap,
     )
     replays.table().to_parquet(run_dir / "paths.parquet", index=False)
     scores = {kind: metric.measure(replays) for kind, metric in metrics.items()}

@@ -31,6 +31,11 @@ class Points:
     references: np.ndarray = field(eq=False)
 
     @property
+    def names(self) -> tuple[str, ...]:
+        """Return each point's reduced formula, its name in a processed table."""
+        return tuple(Composition(f).reduced_composition.formula for f in self.formulas)
+
+    @property
     def pool(self) -> np.ndarray:
         """Return the indices of the explored points, those BO may pick."""
         return np.flatnonzero(~self.references)

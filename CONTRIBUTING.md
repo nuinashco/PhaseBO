@@ -18,6 +18,7 @@ flowchart TD
         replay["replay.py<br/>repeats in parallel"]:::side
         start["start/<br/>starting sets"]:::pure
         baseline["baseline.py<br/>random's exact odds"]:::pure
+        cheap["cheap/<br/>a cheap energy per point"]:::pure
         comparison --> metric --> replay --> start
         metric --> baseline
     end
@@ -57,8 +58,10 @@ Every layer may import the ones below it and `nuikit`. `phasebo` holds this proj
   (`acquisition`), and `proposal.py` drives them for `phasebo-suggest`.
 - `benchmark/` scores the method: `replay.py` replays BO over the computed points from many starting sets (the
   `start` family), and the `metric` family measures the replays next to random picking's exact odds
-  (`baseline.py`). A run computes several metrics at once (FAM-4's `multiple`). `comparison.py` checks that
-  runs played the same games and asks each metric how a run differs from a baseline.
+  (`baseline.py`). A `cheap` source gives every repeat each point's cheap energy before BO picks, drawn from the
+  repeat's own stream; the commands hand the replay its draw, so `replay.py` never imports the family. A run
+  computes several metrics at once (FAM-4's `multiple`). `comparison.py` checks that runs played the same games
+  and asks each metric how a run differs from a baseline.
 
 None of them writes a file; the commands in `cli/` do. Figures are not part of a run:
 `uv run --group notebooks scripts/plot_run.py runs/<run_name>` draws the hull map and each metric's curves into the
@@ -70,9 +73,10 @@ what an entry point sets up before it runs. Copier writes it; fixes go upstream 
 Dependencies point down: `cli` > `config` > `benchmark` > `bo` > `field` | `data` > `paths`, and any layer may import
 `nuikit`. Inside `benchmark`, metrics import the replays, which import the starting sets; inside `bo`, `proposal`
 imports the batch rules, which import the surrogate; inside `field`, `points` imports `hull`; inside `data`,
-`store` imports `table`. Scripts sit outside the package and may import any of it. The import-linter contracts in
-`pyproject.toml` enforce every one of these orders and keep `nuikit` from importing `phasebo`. The layers contracts
-are exhaustive, so a new module fails `make check` until it is placed.
+`store` imports `table`; the cheap sources import nothing else in `benchmark`. Scripts sit outside the package and
+may import any of it. The import-linter contracts in `pyproject.toml` enforce every one of these orders and keep
+`nuikit` from importing `phasebo`. The layers contracts are exhaustive, so a new module fails `make check` until it
+is placed.
 
 ### A command
 
@@ -109,6 +113,7 @@ configs/                  Hydra YAML; generated files say so in a leading commen
   bo/acquisition/         qlogei.yaml, ts.yaml, random.yaml (generated)
   benchmark/start/        random.yaml (generated)
   benchmark/metric/       one file per metric, selected together (generated)
+  benchmark/cheap/        table.yaml, noisy.yaml (generated); none is selected by default
   system/                 phase fields: processed table, elements, candidate space
   hydra/default.yaml      Hydra writes nothing; the app writes runs/
 data/                     tracked (see Deviations)
@@ -131,6 +136,7 @@ src/phasebo/
     proposal.py           suggest's next batch and the prediction at every candidate point
   benchmark/              BO scored against random picking
     start/                family: a replay's starting set
+    cheap/                family: each point's cheap energy, known before BO picks
     metric/               family, several per run: what the replays achieved
     replay.py             one replay, and many in parallel (Replays)
     baseline.py           random picking's exact odds
@@ -162,6 +168,7 @@ of a kind (`bo/surrogate=paper`). A `multiple` family is selected as a list, eac
 | `bo/surrogate` | `gp`: BoTorch single-task GP, Matern 1/2, 3/2, 5/2 or RBF, fixed or fitted noise | `bo/surrogate=gp` (default), `bo/surrogate=paper` |
 | `bo/acquisition` | `qlogei`, `ts`, `random`; `random` has `needs_model = False`, so the replay does not fit the GP | `bo/acquisition=<kind>` |
 | `benchmark/start` | `random`: explored points off the hull, from the repeat's own stream | `benchmark/start=random` |
+| `benchmark/cheap` | `table`: another fidelity of the processed table; `noisy`: the modelled total energies with random and smooth errors, the hull rebuilt, per repeat | `benchmark/cheap=<kind>`; none by default |
 | `benchmark/metric` (multiple) | `steps_to_hit`, `discovery`, `best_so_far`, `hazard_ratio` | `benchmark/metric=[...]`, all four by default |
 
 ```text

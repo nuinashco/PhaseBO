@@ -13,7 +13,7 @@ from phasebo.bo.surrogate.base import SurrogateFactory
 START = {"kind": "random", "size": 2}
 
 
-def run_one(points, surrogate, *, acquisition=None, max_iter=3):
+def run_one(points, surrogate, *, acquisition=None, max_iter=3, cheap_mev=None):
     starting = StartFactory.from_config(START).pick(
         points, rng=np.random.default_rng(0)
     )
@@ -25,11 +25,14 @@ def run_one(points, surrogate, *, acquisition=None, max_iter=3):
         batch_size=2,
         max_iter=max_iter,
         rng=np.random.default_rng(0),
+        cheap_mev=cheap_mev,
     )
     return starting, batches
 
 
-def run_many(points, *, acquisition=None, surrogate=None, seed=0, workers=1):
+def run_many(
+    points, *, acquisition=None, surrogate=None, seed=0, workers=1, draw_cheap=None
+):
     return replay.replay_many(
         points,
         start=StartFactory.from_config(START),
@@ -40,6 +43,7 @@ def run_many(points, *, acquisition=None, surrogate=None, seed=0, workers=1):
         repeats=4,
         seed=seed,
         workers=workers,
+        draw_cheap=draw_cheap,
     )
 
 
@@ -59,6 +63,19 @@ def test_replay_fits_a_model_based_rule_to_every_point_evaluated(
     run_one(points, recording_surrogate, acquisition=first_choices)
 
     assert recording_surrogate.sizes == [2, 4, 6]
+
+
+def test_replay_fits_every_explored_points_cheap_energy(
+    points, recording_surrogate, first_choices
+):
+    run_one(
+        points,
+        recording_surrogate,
+        acquisition=first_choices,
+        cheap_mev=points.energies_mev,
+    )
+
+    assert recording_surrogate.cheap_sizes == [len(points.pool)] * 3
 
 
 def test_replay_stops_when_every_explored_point_is_evaluated(
@@ -84,6 +101,27 @@ def test_replay_many_starts_every_setting_from_the_same_sets(
     starts = random["batch"] == 0
     assert random.loc[starts].equals(model.loc[starts])
     assert not random.equals(model)
+
+
+def test_replay_many_draws_cheap_energies_without_moving_other_draws(points):
+    def draw(*, rng):
+        return rng.random(len(points.formulas))
+
+    assert run_many(points).paths.equals(run_many(points, draw_cheap=draw).paths)
+
+
+def test_replay_many_draws_each_repeats_cheap_energies_from_its_own_stream(points):
+    drawn = []
+
+    def draw(*, rng):
+        drawn.append(rng.random())
+        return rng.random(len(points.formulas))
+
+    run_many(points, draw_cheap=draw)
+    first = list(drawn)
+    run_many(points, draw_cheap=draw)
+
+    assert (len(set(first)), drawn[4:]) == (4, first)
 
 
 def test_replay_many_does_not_depend_on_the_workers(points):

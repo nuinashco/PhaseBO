@@ -5,6 +5,7 @@ from attrs import define
 from pydantic import Field, NonNegativeFloat
 
 from phasebo.bo.surrogate.base import (
+    CheapEnergies,
     Fit,
     KernelName,
     Surrogate,
@@ -35,7 +36,13 @@ class GPConfig(SurrogateConfig):
 class GPSurrogate(Surrogate[GPConfig]):
     """Gaussian process on standardised energies, with a fixed or fitted noise."""
 
-    def fit(self, coords: np.ndarray, energies_mev: np.ndarray) -> Fit:
+    def fit(
+        self,
+        coords: np.ndarray,
+        energies_mev: np.ndarray,
+        *,
+        cheap: CheapEnergies | None = None,
+    ) -> Fit:
         import torch
 
         x = torch.as_tensor(coords, dtype=torch.float64)

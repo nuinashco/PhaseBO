@@ -18,6 +18,7 @@ from nuikit.configgen import ConfigFile
 from nuikit.logging import LogFormat, LogLevel
 from nuikit.registry import ConfigurableFactory
 
+from phasebo.benchmark.cheap.base import CheapConfig, CheapFactory
 from phasebo.benchmark.metric.base import MetricConfig, MetricFactory
 from phasebo.benchmark.start.base import StartConfig, StartFactory
 from phasebo.bo.acquisition.base import AcquisitionConfig, AcquisitionFactory
@@ -60,6 +61,7 @@ type _AcquisitionField = Annotated[
     SerializeAsAny[AcquisitionConfig], _by_kind(AcquisitionFactory)
 ]
 type _StartField = Annotated[SerializeAsAny[StartConfig], _by_kind(StartFactory)]
+type _CheapField = Annotated[SerializeAsAny[CheapConfig], _by_kind(CheapFactory)]
 type _MetricsField = Annotated[
     dict[str, SerializeAsAny[MetricConfig]], _by_kinds(MetricFactory)
 ]
@@ -145,6 +147,7 @@ class ProtocolConfig(Schema):
     max_iter: PositiveInt = Field(default=8, description="BO batches after the start")
     workers: PositiveInt | None = Field(default=None, description="null: one per CPU")
     metric: _MetricsField = Field(default_factory=dict)
+    cheap: _CheapField | None = None
 
 
 class SearchConfig(RunConfig):
@@ -210,6 +213,7 @@ GENERATED = (
             "bo/acquisition",
             "benchmark/start",
             "benchmark/metric",
+            "benchmark/cheap",
         ),
     ),
     ConfigFile("defaults/generate.yaml", GenerateConfig, groups=("system",)),
