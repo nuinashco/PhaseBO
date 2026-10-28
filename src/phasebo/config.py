@@ -122,6 +122,9 @@ class RunConfig(Schema):
         default=None, description="wandb: mirror the run to W&B; null: run dir only"
     )
     wandb_project: str = "phasebo"
+    wandb_entity: str | None = Field(
+        default=None, description="null: your default entity"
+    )
 
 
 class BOConfig(Schema):

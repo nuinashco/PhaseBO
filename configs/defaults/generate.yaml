@@ -8,3 +8,4 @@ log_level: "info"  # debug|info|warning|error
 log_format: "auto"  # auto|console|json; auto: console in a terminal, JSON otherwise
 tracker: null  # wandb: mirror the run to W&B; null: run dir only
 wandb_project: "phasebo"
+wandb_entity: null  # null: your default entity
