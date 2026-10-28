@@ -94,10 +94,10 @@ sequenceDiagram
     C->>L: start: logging, seed, runs/<run_name>/, W&B mirror
     C->>L: write_data: data.json, the sidecar's provenance
     C->>R: replay_many: repeat r starts from stream r of the seed, on every worker
-    R-->>C: Replays: each repeat's start and batches
+    R-->>C: Replays: each repeat's start, batches and cheap draw
     C->>M: measure, per chosen metric
     M-->>C: Scores: headline, values, curves
-    C->>C: paths.parquet, metrics.json, W&B curves, summary and artifact, then print the headlines
+    C->>C: paths.parquet, cheap.parquet with a cheap source, metrics.json, W&B curves, summary and artifact, then print the headlines
 ```
 
 ## Repository layout
@@ -166,7 +166,7 @@ of a kind (`bo/surrogate=paper`). A `multiple` family is selected as a list, eac
 
 | family | kinds | chosen by |
 |---|---|---|
-| `bo/surrogate` | `gp`: BoTorch single-task GP, Matern 1/2, 3/2, 5/2 or RBF, fixed or fitted noise; `multitask`, `multifidelity`, `delta` have `needs_cheap = True`: they also fit every explored point's cheap energy and predict DFT's | `bo/surrogate=gp` (default), `bo/surrogate=paper`, `bo/surrogate=<kind>` |
+| `bo/surrogate` | `gp`: BoTorch single-task GP, Matern 1/2, 3/2, 5/2 or RBF, fixed or fitted noise; `multitask`, `multifidelity`, `delta` have `needs_cheap = True` and predict DFT's: the first two also fit every explored point's cheap energy, `delta` fits the cheap error where DFT is known and adds it to the cheap energy | `bo/surrogate=gp` (default), `bo/surrogate=paper`, `bo/surrogate=<kind>` |
 | `bo/acquisition` | `qlogei`, `ts`, `random`, `screen`; `random` and `screen` have `needs_model = False`, so the replay does not fit the GP; `screen` has `needs_cheap = True` and picks the lowest cheap energies | `bo/acquisition=<kind>` |
 | `benchmark/start` | `random`: explored points off the hull, from the repeat's own stream | `benchmark/start=random` |
 | `benchmark/cheap` | `table`: another fidelity of the processed table; `noisy`: the modelled total energies with random and smooth errors, the hull rebuilt, per repeat | `benchmark/cheap=<kind>`; none by default, and a kind that `needs_cheap` then refuses to run |
@@ -228,7 +228,8 @@ ratio from one joint fit, as the hazard ratio does.
   on each lengthscale and Gamma(2, 0.15) on the outputscale, so `kernel` changes only nu. For `matern52` they
   reproduce the paper's GP; for `matern12` and `matern32` they are a choice, made to change one thing at a time.
   `multitask` and `delta` build their kernels the same way; `multifidelity` keeps BoTorch's fidelity kernel and
-  its priors, since that kernel couples the coordinates with the source.
+  its priors, since that kernel couples the coordinates with the source. It ties the cheap error's prior size to
+  the signal's, so `multifidelity` stays unsure even of an exact cheap source.
 - **BoTorch draws from torch's global generator** (RUN-2 asks for an explicit one): fitting a GP, qLogEI's MC
   sampler and Thompson sampling take no generator. `seed_everything` seeds it once per run, and a benchmark seeds
   it again in each repeat from that repeat's stream, so runs repeat whatever `benchmark.workers` is; starting sets
