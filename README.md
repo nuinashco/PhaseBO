@@ -80,12 +80,30 @@ metrics count only those.
 | `table` | another fidelity of the processed table (`benchmark.cheap.fidelity`, `nn` by default, which `system=LiSnSCl_multifidel` has), the same in every game |
 | `noisy` | the modelled total energies with a random error per cell (`random_mev`) and a smooth one shared by nearby compositions (`smooth_mev`, `lengthscale`), then the hull rebuilt; drawn anew in every game, the same for every setting of one seed; needs total energies (`system=LiSnSCl`) |
 
-`bo/acquisition=screen` picks DFT in cheap order, never learning from DFT: the baseline for any model that uses
-the cheap energies. It refuses to run without a cheap source, and `phasebo-suggest` has none yet.
+Three surrogates fit the cheap energies of every explored composition along with the DFT ones, and predict DFT's:
+`multitask` (BoTorch's multi-task GP, which learns how far DFT follows the cheap energies), `multifidelity`
+(its multi-fidelity GP, the source as an input) and `delta` (the cheap energy plus a GP of its error). All
+assume zero noise by default, as the cheap model's output is as deterministic as DFT's. `bo/acquisition=screen`
+is their baseline: DFT in cheap order, never learning from DFT. Each refuses to run without a cheap source, and
+`phasebo-suggest` has none yet.
 
 ```bash
+uv run phasebo-benchmark benchmark/cheap=noisy benchmark.cheap.random_mev=50 bo/surrogate=multitask
 uv run phasebo-benchmark benchmark/cheap=noisy benchmark.cheap.random_mev=50 bo/acquisition=screen
 ```
+
+Evaluations until the first stable composition / until each, averaged (LiSnSCl, qLogEI, 300 games):
+
+| setting | `random_mev=25` | `random_mev=0 smooth_mev=100` |
+|---|---|---|
+| no cheap source (`bo/surrogate=gp`) | 23.9 / 28.6 | 23.9 / 28.6 |
+| `bo/acquisition=screen` | 4.9 / 11.7 | 11.2 / 19.7 |
+| `bo/surrogate=multitask` | 5.0 / 11.5 | 8.6 / 16.6 |
+| `bo/surrogate=multifidelity` | 6.9 / 14.9 | 4.8 / 10.0 |
+| `bo/surrogate=delta` | 6.0 / 13.9 | 6.7 / 12.0 |
+
+The screen is hard to beat when the cheap errors are random: nothing in them can be learned. Errors that nearby
+compositions share can be, so there the surrogates beat it.
 
 ### Comparing settings
 

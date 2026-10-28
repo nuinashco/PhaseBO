@@ -81,6 +81,14 @@ class SurrogateFactory(ConfigurableFactory[Surrogate[Any]]):
     config_group = "bo/surrogate"
 
 
+def require_cheap(cheap: CheapEnergies | None, kind: str) -> CheapEnergies:
+    """Return `cheap`; fail if a surrogate that needs them was given none."""
+    if cheap is None:
+        msg = f"surrogate {kind!r} needs cheap energies"
+        raise ValueError(msg)
+    return cheap
+
+
 def build_kernel(name: KernelName, dims: int) -> Any:
     """Return the kernel `name` over `dims` inputs; None for BoTorch's default."""
     nu = _MATERN_NU.get(name)
@@ -103,6 +111,21 @@ def build_noise_variances(g: Any, noise_mev: float | None) -> Any:
     return None if noise_mev is None else torch.full_like(g, noise_mev**2)
 
 
+def stack_sources(
+    coords: np.ndarray, energies_mev: np.ndarray, *, cheap: CheapEnergies
+) -> tuple[Any, Any]:
+    """Return cheap then DFT inputs (coordinates, source 0 or 1), negated energies."""
+    import torch
+
+    def tag(rows: np.ndarray, source: float) -> Any:
+        x = torch.as_tensor(rows, dtype=torch.float64)
+        return torch.cat([x, torch.full((len(x), 1), source, dtype=x.dtype)], dim=1)
+
+    x = torch.cat([tag(cheap.coords, 0.0), tag(coords, 1.0)])
+    both_mev = np.concatenate([cheap.energies_mev, energies_mev])
+    return x, -torch.as_tensor(both_mev, dtype=torch.float64)[:, None]
+
+
 @contextmanager
 def quiet_gpytorch() -> Iterator[None]:
     """Silence gpytorch's warnings that say nothing about the fit."""
@@ -113,6 +136,8 @@ def quiet_gpytorch() -> Iterator[None]:
         )
         # `gpytorch` raises a zero noise to its 1e-6 floor (standardised units).
         warnings.filterwarnings("ignore", message="Very small noise values detected")
+        # `linear_operator` builds sparse tensors for MultiTaskGP's task index.
+        warnings.filterwarnings("ignore", message="Sparse invariant checks")
         yield
 
 

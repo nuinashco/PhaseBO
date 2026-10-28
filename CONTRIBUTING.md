@@ -25,7 +25,7 @@ flowchart TD
     subgraph bo["bo/: Bayesian optimisation"]
         proposal["proposal.py<br/>suggest's batch"]:::pure
         acquisition["acquisition/<br/>batch rules"]:::pure
-        surrogate["surrogate/<br/>gp (BoTorch)"]:::pure
+        surrogate["surrogate/<br/>gp, multi-fidelity (BoTorch)"]:::pure
         proposal --> acquisition --> surrogate
     end
     subgraph field["field/: the phase field"]
@@ -109,7 +109,8 @@ configs/                  Hydra YAML; generated files say so in a leading commen
   generate.yaml
   data.yaml               composed by phasebo-data once per phase field
   defaults/               every setting of each entry config with its default (generated)
-  bo/surrogate/           gp.yaml (generated), paper.yaml (preset: the paper's fitted noise)
+  bo/surrogate/           gp.yaml, multitask.yaml, multifidelity.yaml, delta.yaml (generated), paper.yaml (preset:
+                          the paper's fitted noise)
   bo/acquisition/         qlogei.yaml, ts.yaml, random.yaml, screen.yaml (generated)
   benchmark/start/        random.yaml (generated)
   benchmark/metric/       one file per metric, selected together (generated)
@@ -165,7 +166,7 @@ of a kind (`bo/surrogate=paper`). A `multiple` family is selected as a list, eac
 
 | family | kinds | chosen by |
 |---|---|---|
-| `bo/surrogate` | `gp`: BoTorch single-task GP, Matern 1/2, 3/2, 5/2 or RBF, fixed or fitted noise | `bo/surrogate=gp` (default), `bo/surrogate=paper` |
+| `bo/surrogate` | `gp`: BoTorch single-task GP, Matern 1/2, 3/2, 5/2 or RBF, fixed or fitted noise; `multitask`, `multifidelity`, `delta` have `needs_cheap = True`: they also fit every explored point's cheap energy and predict DFT's | `bo/surrogate=gp` (default), `bo/surrogate=paper`, `bo/surrogate=<kind>` |
 | `bo/acquisition` | `qlogei`, `ts`, `random`, `screen`; `random` and `screen` have `needs_model = False`, so the replay does not fit the GP; `screen` has `needs_cheap = True` and picks the lowest cheap energies | `bo/acquisition=<kind>` |
 | `benchmark/start` | `random`: explored points off the hull, from the repeat's own stream | `benchmark/start=random` |
 | `benchmark/cheap` | `table`: another fidelity of the processed table; `noisy`: the modelled total energies with random and smooth errors, the hull rebuilt, per repeat | `benchmark/cheap=<kind>`; none by default, and a kind that `needs_cheap` then refuses to run |
@@ -226,6 +227,8 @@ ratio from one joint fit, as the hazard ratio does.
 - **GP priors are fixed** (CFG-7): every Matern kernel keeps BoTorch's pre-0.12 Matern 5/2 priors, Gamma(3, 6)
   on each lengthscale and Gamma(2, 0.15) on the outputscale, so `kernel` changes only nu. For `matern52` they
   reproduce the paper's GP; for `matern12` and `matern32` they are a choice, made to change one thing at a time.
+  `multitask` and `delta` build their kernels the same way; `multifidelity` keeps BoTorch's fidelity kernel and
+  its priors, since that kernel couples the coordinates with the source.
 - **BoTorch draws from torch's global generator** (RUN-2 asks for an explicit one): fitting a GP, qLogEI's MC
   sampler and Thompson sampling take no generator. `seed_everything` seeds it once per run, and a benchmark seeds
   it again in each repeat from that repeat's stream, so runs repeat whatever `benchmark.workers` is; starting sets

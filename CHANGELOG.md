@@ -62,9 +62,9 @@ All notable changes to this project will be documented in this file.
   count only those. `table` reads another fidelity of the processed table (`nn` in `LiSnSCl_multifidel`);
   `noisy` fakes one from the modelled total energies, with a random error per cell (`random_mev`) and a smooth one
   shared by nearby compositions (`smooth_mev`, `lengthscale`), the hull rebuilt and the errors drawn anew in every
-  game.
-  `bo/acquisition=screen` picks DFT in cheap order, never learning from DFT; it refuses to run without a cheap
-  source, and `phasebo-suggest` has none.
+  game. Models that use it: `bo/surrogate=multitask` (BoTorch's multi-task GP), `multifidelity` (its
+  multi-fidelity GP) and `delta` (the cheap energy plus a GP of its error), all with zero noise by default;
+  `bo/acquisition=screen` is their baseline, DFT in cheap order. `phasebo-suggest` stays single-fidelity.
 - Tests on synthetic phase fields; the project follows the nuinashco/conventions `rnd` template (`make check`).
 - Optional `notebooks` dependency group (marimo, plotly; matplotlib and scipy for `scripts/plot_run.py`).
 

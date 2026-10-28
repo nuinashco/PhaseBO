@@ -14,6 +14,7 @@ from phasebo.benchmark.start.items.random import RandomStartConfig
 from phasebo.bo.acquisition.items.qlogei import QLogEIConfig
 from phasebo.bo.acquisition.items.screen import ScreenConfig
 from phasebo.bo.surrogate.items.gp import GPConfig
+from phasebo.bo.surrogate.items.multitask import MultiTaskConfig
 from phasebo.cli import benchmark
 from phasebo.config import BenchmarkConfig, BOConfig, ProtocolConfig
 
@@ -68,3 +69,13 @@ def test_benchmark_with_a_noisy_source_runs_the_screen(system, tmp_path, capsys)
 
     # Exact cheap energies put a target in every first batch.
     assert "first hit after 2.0 evaluations" in capsys.readouterr().out
+
+
+def test_benchmark_refuses_a_multi_fidelity_model_without_a_cheap_source(
+    system, tmp_path
+):
+    bo = BO.model_copy(update={"surrogate": MultiTaskConfig(kind="multitask")})
+
+    with pytest.raises(ConfigError, match="set benchmark/cheap=table"):
+        benchmark.run(config(system, bo=bo), runs_dir=tmp_path / "runs")
+    assert not (tmp_path / "runs").exists()

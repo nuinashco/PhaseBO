@@ -10,6 +10,8 @@ Usage:
 
     phasebo-benchmark benchmark/metric=[steps_to_hit,hazard_ratio]
 
+    phasebo-benchmark benchmark/cheap=noisy bo/surrogate=multitask  # multi-fidelity
+
     phasebo-benchmark benchmark/cheap=noisy bo/acquisition=screen   # its baseline
 
 Replays BO from `benchmark.repeats` starting sets, in parallel, and writes
