@@ -12,7 +12,8 @@ All notable changes to this project will be documented in this file.
   lists every setting with its default.
 - Each run writes `runs/<run_name>/`: the resolved configuration, `run.json` (git commit, command line, start time),
   and results. `tracker=wandb` mirrors a run to Weights & Biases, typed by command (`benchmark`, `suggest`,
-  `generate`), grouped by phase field and tagged with every family setting, without the reporting-only settings.
+  `generate`, `compare`), grouped by phase field and tagged with every family setting, without the reporting-only
+  settings. Runs log to the project's team, `rai-polybo` (`wandb_entity`; `null` is your login's default entity).
 - A phase field is a file in `configs/system/`: its processed table, its elements (charge and an inclusive range
   of atoms per cell) and its candidate space.
 - One script per raw source (`scripts/process_<source>.py`) turns it into a committed, validated table in

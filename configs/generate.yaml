@@ -5,3 +5,5 @@ defaults:
   - system: LiSnSCl
   - hydra: default
   - _self_
+
+wandb_entity: rai-polybo

@@ -7,3 +7,5 @@ defaults:
   - bo/acquisition: qlogei
   - hydra: default
   - _self_
+
+wandb_entity: rai-polybo

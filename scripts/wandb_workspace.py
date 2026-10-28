@@ -73,9 +73,9 @@ def main(*, report: bool, url: str | None) -> None:
     import wandb
 
     with initialize_config_dir(str(paths.CONFIGS_DIR)):
-        project = BenchmarkConfig.from_hydra(compose("benchmark")).wandb_project
+        cfg = BenchmarkConfig.from_hydra(compose("benchmark"))
     api = wandb.Api()
-    entity = api.default_entity
+    project, entity = cfg.wandb_project, cfg.wandb_entity or api.default_entity
     if entity is None:
         raise DataError("no W&B entity to save to; run `wandb login`")
     newest = _fetch_newest_benchmark(api, entity=entity, project=project)

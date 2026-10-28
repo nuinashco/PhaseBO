@@ -4,7 +4,7 @@ Usage:
 
     phasebo-compare 'runs=[random-2026-10-21_13-42-13,qlogei-2026-10-21_13-41-18]'
 
-    phasebo-compare 'wandb=[tb44y6ic,c2hf25m5,gdpiqhh3]' tracker=wandb
+    phasebo-compare 'wandb=[jmrepo39,y8a5d7td,cp9ebf87]' tracker=wandb
 
 The first run listed (`runs` before `wandb`) is the baseline, typically one of
 `bo/acquisition=random`; every other run is compared with it. Runs must share their
@@ -54,7 +54,10 @@ def run(cfg: CompareConfig, *, runs_dir: Path) -> Path:
     with tempfile.TemporaryDirectory() as downloads:
         sources = [(name, runs_dir / name, f"runs/{name}") for name in cfg.runs]
         sources += _download_benchmarks(
-            cfg.wandb, project=cfg.wandb_project, into=Path(downloads)
+            cfg.wandb,
+            project=cfg.wandb_project,
+            entity=cfg.wandb_entity,
+            into=Path(downloads),
         )
         repeated = [name for name, n in Counter(s[0] for s in sources).items() if n > 1]
         if repeated:
@@ -108,7 +111,7 @@ def run(cfg: CompareConfig, *, runs_dir: Path) -> Path:
 
 
 def _download_benchmarks(
-    run_ids: list[str], *, project: str, into: Path
+    run_ids: list[str], *, project: str, entity: str | None, into: Path
 ) -> list[tuple[str, Path, str]]:
     """Download W&B benchmark runs' outputs: each run's name, directory and artifact."""
     if not run_ids:
@@ -117,7 +120,7 @@ def _download_benchmarks(
     from wandb.errors import CommError
 
     api = wandb.Api()
-    path = f"{api.default_entity}/{project}"
+    path = f"{entity or api.default_entity}/{project}"
     downloaded = []
     for run_id in run_ids:
         try:

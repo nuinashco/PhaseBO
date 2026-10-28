@@ -91,7 +91,8 @@ qlogei-2026-10-21_13-41-18
 ```
 
 It refuses runs that did not play the same games: another seed, start, phase field or budget, or a processed
-table changed since. With `wandb=`, it downloads the runs' `replays-<run id>` artifacts.
+table changed since. With `wandb=`, it downloads the runs' `replays-<run id>` artifacts from `<wandb_entity>/phasebo`
+(`wandb_entity=null` for runs logged to your default entity).
 
 ### In Weights & Biases
 
@@ -137,8 +138,9 @@ makes a view-only link that opens without a W&B account, if the organisation all
    uv run phasebo-benchmark -m bo/acquisition=qlogei,ts 'run_name=sweep/${hydra:job.num}'
    ```
 
-   `tracker=wandb` mirrors a run to Weights & Biases, with its command as the job type and its phase field as the
-   group; the run directory stays the source of truth.
+   `tracker=wandb` mirrors a run to Weights & Biases, in the project's team, `rai-polybo/phasebo`
+   (`wandb_entity=null` logs to your W&B login's default entity instead), with its command as the job type and
+   its phase field as the group; the run directory stays the source of truth.
 
 ## Configs
 
