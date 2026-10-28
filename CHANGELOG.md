@@ -12,7 +12,8 @@ All notable changes to this project will be documented in this file.
   lists every setting with its default.
 - Each run writes `runs/<run_name>/`: the resolved configuration, `run.json` (git commit, command line, start time),
   and results. `tracker=wandb` mirrors a run to Weights & Biases, typed by command (`benchmark`, `suggest`,
-  `generate`), grouped by phase field and tagged with every family setting, without the reporting-only settings.
+  `generate`, `compare`), grouped by phase field and tagged with every family setting, without the reporting-only
+  settings. Runs log to the project's team, `rai-polybo` (`wandb_entity`; `null` is your login's default entity).
 - A phase field is a file in `configs/system/`: its processed table, its elements (charge and an inclusive range
   of atoms per cell) and its candidate space.
 - One script per raw source (`scripts/process_<source>.py`) turns it into a committed, validated table in
@@ -37,7 +38,8 @@ All notable changes to this project will be documented in this file.
   `tracker=wandb` logs the table, which the "Benchmarks" view shows.
 - `scripts/wandb_workspace.py` saves a "Benchmarks" view in W&B: a "How to read" note, the headline values side
   by side, each metric's curves under its own explanation with one line per run, the system charts collapsed; a
-  `bo/acquisition=random` run is the comparison there.
+  `bo/acquisition=random` run is the comparison there. With `--report` it saves the same content as a report,
+  "PhaseBO benchmarks", which its Share button can open to people outside the project.
 - `benchmark/metric`, a list of metrics, all four by default: `steps_to_hit` (evaluations to each target, the
   first and their mean, a miss counting as the budget), `discovery` (the share of runs that found each target,
   batch by batch), `best_so_far` (the lowest energy known) and `hazard_ratio` (BO's chance per batch of picking a

@@ -23,7 +23,14 @@ from phasebo.field import points as field_points
 log = structlog.stdlib.get_logger()
 
 # How a run is reported, not what it computes: left out of W&B's config columns.
-_REPORTING = ("run_name", "log_level", "log_format", "tracker", "wandb_project")
+_REPORTING = (
+    "run_name",
+    "log_level",
+    "log_format",
+    "tracker",
+    "wandb_project",
+    "wandb_entity",
+)
 
 
 def start(
@@ -47,6 +54,7 @@ def start(
             cfg,
             run_dir,
             project=cfg.wandb_project,
+            entity=cfg.wandb_entity,
             job_type=job_type,
             group=group,
             tags=tags,

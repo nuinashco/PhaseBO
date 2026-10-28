@@ -11,3 +11,4 @@ defaults:
   - _self_
 
 run_name: ${bo.acquisition.kind}-${now:%Y-%m-%d_%H-%M-%S}
+wandb_entity: rai-polybo

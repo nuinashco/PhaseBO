@@ -35,6 +35,7 @@ def mirror_to_wandb(
     run_dir: Path,
     *,
     project: str,
+    entity: str | None = None,
     job_type: str | None = None,
     group: str | None = None,
     tags: Sequence[str] = (),
@@ -43,6 +44,7 @@ def mirror_to_wandb(
 ) -> None:
     """Start a W&B run named after `run_dir`, with its config but the `exclude` keys.
 
+    `entity` is the W&B team or user to log to, None the login's default.
     `job_type`, `group` and `tags` let the W&B table filter and group runs;
     `system_stats` False drops the CPU, memory and GPU charts. The run finishes when
     the process exits.
@@ -51,6 +53,7 @@ def mirror_to_wandb(
 
     run = wandb.init(
         project=project,
+        entity=entity,
         name=run_dir.name,
         dir=run_dir,
         job_type=job_type,
