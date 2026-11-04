@@ -5,17 +5,25 @@ import pytest
 from attrs import define, field
 
 from phasebo.bo.acquisition.base import Acquisition, AcquisitionConfig, require_fit
-from phasebo.bo.surrogate.base import Fit, Surrogate, SurrogateConfig
+from phasebo.bo.surrogate.base import CheapEnergies, Fit, Surrogate, SurrogateConfig
 
 
 @define
 class RecordingSurrogate(Surrogate[SurrogateConfig]):
-    """Surrogate that records how many points each fit gets, and models nothing."""
+    """Surrogate that records how many points, and cheap ones, each fit gets."""
 
     sizes: list[int] = field(factory=list)
+    cheap_sizes: list[int] = field(factory=list)
 
-    def fit(self, coords: np.ndarray, energies_mev: np.ndarray) -> Fit:
+    def fit(
+        self,
+        coords: np.ndarray,
+        energies_mev: np.ndarray,
+        *,
+        cheap: CheapEnergies | None = None,
+    ) -> Fit:
         self.sizes.append(len(coords))
+        self.cheap_sizes.append(0 if cheap is None else len(cheap.energies_mev))
         return Fit(model=None, best_f=float(-energies_mev.min()))
 
 
@@ -30,6 +38,7 @@ class FirstChoices(Acquisition[AcquisitionConfig]):
         *,
         size: int,
         rng: np.random.Generator,
+        cheap_mev: np.ndarray | None = None,
     ) -> list[int]:
         require_fit(fit, self.config.kind)
         return list(range(size))

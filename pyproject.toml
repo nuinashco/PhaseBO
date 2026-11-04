@@ -157,10 +157,10 @@ layers = ["proposal", "acquisition", "surrogate"]
 exhaustive = true
 
 [[tool.importlinter.contracts]]
-name = "Benchmark: comparisons use metrics, which score replays from starting sets"
+name = "Benchmark: comparisons use metrics, which score replays from starting sets; cheap sources stand apart"
 type = "layers"
 containers = ["phasebo.benchmark"]
-layers = ["comparison", "metric", "replay", "start | baseline"]
+layers = ["comparison", "metric", "replay", "start | baseline | cheap"]
 exhaustive = true
 
 [[tool.importlinter.contracts]]

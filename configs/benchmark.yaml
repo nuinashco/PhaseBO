@@ -7,6 +7,7 @@ defaults:
   - bo/acquisition: qlogei
   - benchmark/start: random
   - benchmark/metric: [steps_to_hit, discovery, best_so_far, hazard_ratio]
+  - benchmark/cheap: null  # table or noisy: a cheap energy for every point
   - hydra: default
   - _self_
 

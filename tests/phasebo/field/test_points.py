@@ -19,6 +19,20 @@ def test_from_rows_keeps_the_lowest_cell_of_each_point(points):
     )
 
 
+def test_names_are_the_reduced_formulas_of_the_lowest_cells():
+    rows = table.make_rows(
+        ["Li2 S1", "Li4 S2", "Li1"],
+        fidelity="nn",
+        reference=[False, False, True],
+        e_above_hull_mev=[5.0, 3.0, 0.0],
+    )
+    cleaned, _ = table.clean(rows, elements=["Li", "S"], source="t.csv")
+
+    built = field_points.Points.from_rows(cleaned, fidelity="nn", elements=["Li", "S"])
+
+    assert built.names == ("Li2 S1", "Li1")
+
+
 def test_targets_are_the_explored_points_on_the_hull(points):
     targets = [points.formulas[i] for i in points.targets]
 

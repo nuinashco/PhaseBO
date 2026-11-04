@@ -1,8 +1,7 @@
 """Benchmark replays: BO picks among the computed points, as if computing them."""
 
-import functools
 from collections.abc import Sequence
-from typing import cast
+from typing import Protocol, cast
 
 import numpy as np
 import pandas as pd
@@ -13,8 +12,14 @@ from nuikit.errors import DataError
 
 from phasebo.benchmark.start.base import Start
 from phasebo.bo.acquisition.base import Acquisition
-from phasebo.bo.surrogate.base import Surrogate
+from phasebo.bo.surrogate.base import CheapEnergies, Surrogate
 from phasebo.field.points import Points
+
+
+class CheapDraw(Protocol):
+    """Source of each point's cheap energy above the hull (meV/atom) for one repeat."""
+
+    def __call__(self, *, rng: np.random.Generator) -> np.ndarray: ...
 
 
 @frozen
@@ -26,6 +31,8 @@ class Replays:
     max_iter: int
     # One row per evaluation: `repeat`, `batch` (0 for the starting set), `point`.
     paths: pd.DataFrame = field(eq=False)
+    # Each repeat's cheap energy at every point (meV/atom); None without a source.
+    cheap_mev: np.ndarray | None = field(default=None, eq=False)
 
     @classmethod
     def from_table(
@@ -111,6 +118,22 @@ class Replays:
             }
         )
 
+    def cheap_table(self) -> pd.DataFrame:
+        """Return each repeat's cheap energy at every explored point, beside DFT's."""
+        if self.cheap_mev is None:
+            msg = "these replays drew no cheap energies"
+            raise ValueError(msg)
+        pool = self.points.pool
+        repeats = len(self.cheap_mev)
+        return pd.DataFrame(
+            {
+                "repeat": np.repeat(np.arange(repeats), len(pool)),
+                "formula": np.tile(np.asarray(self.points.formulas)[pool], repeats),
+                "cheap_mev": self.cheap_mev[:, pool].ravel(),
+                "e_above_hull_mev": np.tile(self.points.energies_mev[pool], repeats),
+            }
+        )
+
 
 def replay_many(
     points: Points,
@@ -123,12 +146,13 @@ def replay_many(
     repeats: int,
     seed: int,
     workers: int | None,
+    draw_cheap: CheapDraw | None = None,
 ) -> Replays:
     """Replay BO from `repeats` starting sets, on `workers` processes (None: all CPUs).
 
-    Repeat r draws its starting set from its own stream of `seed`, so every setting
-    run with one seed starts from the same sets, and its results do not depend on
-    `workers`.
+    Repeat r draws its starting set, and with `draw_cheap` each point's cheap energy,
+    from its own streams of `seed`, so every setting run with one seed starts from
+    the same sets and cheap energies, and its results do not depend on `workers`.
     """
     from joblib import Parallel, delayed
 
@@ -144,17 +168,26 @@ def replay_many(
             acquisition=acquisition,
             batch_size=batch_size,
             max_iter=max_iter,
+            draw_cheap=draw_cheap,
         )
         for stream in streams
     )
+    played = cast("list[tuple[list[list[int]], np.ndarray | None]]", runs)
     rows = [
         (repeat, batch, point)
-        for repeat, batches in enumerate(cast("list[list[list[int]]]", runs))
+        for repeat, (batches, _) in enumerate(played)
         for batch, picked in enumerate(batches)
         for point in picked
     ]
     paths = pd.DataFrame(rows, columns=["repeat", "batch", "point"])
-    return Replays(points=points, batch_size=batch_size, max_iter=max_iter, paths=paths)
+    drawn = [cheap for _, cheap in played if cheap is not None]
+    return Replays(
+        points=points,
+        batch_size=batch_size,
+        max_iter=max_iter,
+        paths=paths,
+        cheap_mev=np.stack(drawn) if drawn else None,
+    )
 
 
 def replay(
@@ -166,12 +199,20 @@ def replay(
     batch_size: int,
     max_iter: int,
     rng: np.random.Generator,
+    cheap_mev: np.ndarray | None = None,
 ) -> list[list[int]]:
     """Return the batches BO picks after `starting`, up to `max_iter` of them.
 
     Each batch comes from the explored points not evaluated yet, sorted by
-    coordinates; the replay ends early when none are left.
+    coordinates; the replay ends early when none are left. `cheap_mev`, one per
+    point, is known from the start: the surrogate gets every explored point's, the
+    acquisition each choice's.
     """
+    cheap = None
+    if cheap_mev is not None:
+        cheap = CheapEnergies(
+            coords=points.coords[points.pool], energies_mev=cheap_mev[points.pool]
+        )
     evaluated = list(starting)
     batches: list[list[int]] = []
     for _ in range(max_iter):
@@ -185,10 +226,16 @@ def replay(
         fit = None
         if acquisition.needs_model:
             fit = surrogate.fit(
-                points.coords[evaluated], points.energies_mev[evaluated]
+                points.coords[evaluated], points.energies_mev[evaluated], cheap=cheap
             )
         size = min(batch_size, len(left))
-        picked = acquisition.pick(fit, points.coords[left], size=size, rng=rng)
+        picked = acquisition.pick(
+            fit,
+            points.coords[left],
+            size=size,
+            rng=rng,
+            cheap_mev=None if cheap_mev is None else cheap_mev[left],
+        )
         batches.append([left[i] for i in picked])
         evaluated += batches[-1]
     return batches
@@ -203,21 +250,30 @@ def _replay_one(
     acquisition: Acquisition,
     batch_size: int,
     max_iter: int,
-) -> list[list[int]]:
-    start_stream, search_stream = stream.spawn(2)
+    draw_cheap: CheapDraw | None,
+) -> tuple[list[list[int]], np.ndarray | None]:
+    # A third stream leaves the first two as they were without cheap energies.
+    start_stream, search_stream, cheap_stream = stream.spawn(3)
     starting = start.pick(points, rng=np.random.default_rng(start_stream))
-    search = functools.partial(
-        replay,
-        points,
-        starting,
-        surrogate=surrogate,
-        acquisition=acquisition,
-        batch_size=batch_size,
-        max_iter=max_iter,
-        rng=np.random.default_rng(search_stream),
-    )
+
+    def play() -> tuple[list[list[int]], np.ndarray | None]:
+        cheap_mev = None
+        if draw_cheap is not None:
+            cheap_mev = draw_cheap(rng=np.random.default_rng(cheap_stream))
+        batches = replay(
+            points,
+            starting,
+            surrogate=surrogate,
+            acquisition=acquisition,
+            batch_size=batch_size,
+            max_iter=max_iter,
+            rng=np.random.default_rng(search_stream),
+            cheap_mev=cheap_mev,
+        )
+        return [starting, *batches], cheap_mev
+
     if not acquisition.needs_model:
-        return [starting, *search()]
+        return play()
     import torch
 
     threads = torch.get_num_threads()
@@ -227,6 +283,6 @@ def _replay_one(
     torch.set_num_threads(1)
     try:
         torch.manual_seed(int(search_stream.generate_state(1)[0]))
-        return [starting, *search()]
+        return play()
     finally:
         torch.set_num_threads(threads)

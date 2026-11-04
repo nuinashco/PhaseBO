@@ -1,6 +1,7 @@
 """Points of a phase field: one entry per reduced composition, with its coordinates."""
 
 from collections.abc import Collection, Sequence
+from functools import cached_property
 
 import numpy as np
 import pandas as pd
@@ -29,6 +30,11 @@ class Points:
     coords: np.ndarray = field(eq=False)
     energies_mev: np.ndarray = field(eq=False)  # Above the hull, per atom.
     references: np.ndarray = field(eq=False)
+
+    @cached_property
+    def names(self) -> tuple[str, ...]:
+        """Return each point's reduced formula, its name in a processed table."""
+        return tuple(Composition(f).reduced_composition.formula for f in self.formulas)
 
     @property
     def pool(self) -> np.ndarray:
