@@ -37,8 +37,10 @@ make data           # check data/processed/ against data/raw/; scripts/process_*
   point's cheap energy, known before BO picks), replays in parallel (`replay.py`), the `metric` family (several
   per run), random's exact odds (`baseline.py`) and paired comparisons of runs (`comparison.py`). Figures are drawn
   by `scripts/plot_run.py`, not by commands.
-- `src/phasebo/csp/`: crystal structure prediction ported from PolyBO: `framework.py` and `moves.py` (pure). It
-  never imports `bo`, `benchmark` or `data`.
+- `src/phasebo/csp/`: crystal structure prediction ported from PolyBO: `framework.py` and `moves.py` (pure), the
+  `mlip` and `search` families (one kind per fidelity level), `result.py`, `references.py`, `job.py` (one
+  composition, framework and level, seeded by its name) and `store.py` (each result as it finishes). It never
+  imports `bo`, `benchmark` or `data`. CHGNet and MACE are the `csp` dependency group; tests use `emt`.
 - `scripts/`: exploratory or one-time runnables, never imported; they may import the package and compose
   `configs/`. Anything `make`, CI or a test depends on is a `cli/` command; a script that is rerun or shared becomes
   one. A one-time conversion whose committed output is pinned by the sha256 of its inputs and itself stays a script.

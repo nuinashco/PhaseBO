@@ -60,6 +60,11 @@ notebooks = [
     "matplotlib>=3.11",
     "plotly>=7.1",
 ]
+# MLIPs for phasebo-csp; its emt kind needs neither.
+csp = [
+    "chgnet>=0.4.2",
+    "mace-torch>=0.3.17",
+]
 
 [tool.uv]
 default-groups = ["dev", "wandb"]
@@ -142,6 +147,8 @@ markers = ["integration: end-to-end runs that need external services or data"]
 filterwarnings = [
     # ASE 3.29 reshapes arrays the way NumPy 2.5 deprecates, on every Atoms it builds.
     "ignore:Setting the shape on a NumPy array:DeprecationWarning:ase",
+    # `pymatgen` leaves spglib's old error handling on when it reads a space group.
+    "ignore:Set OLD_ERROR_HANDLING to false:DeprecationWarning:spglib",
 ]
 
 [tool.importlinter]
@@ -183,10 +190,10 @@ layers = ["store", "table"]
 exhaustive = true
 
 [[tool.importlinter.contracts]]
-name = "CSP: frameworks build on arrangements"
+name = "CSP: jobs and files build on results, which build on searches in frameworks"
 type = "layers"
 containers = ["phasebo.csp"]
-layers = ["framework", "moves"]
+layers = ["job | store", "references", "result", "search", "framework | mlip", "moves"]
 exhaustive = true
 
 [[tool.importlinter.contracts]]

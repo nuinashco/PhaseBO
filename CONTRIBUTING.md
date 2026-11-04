@@ -35,9 +35,17 @@ flowchart TD
         points --> hull
     end
     subgraph csp["csp/: structures by MLIP"]
+        job["job.py<br/>one cell, framework, level"]:::pure
+        cspstore["store.py<br/>results, CIFs"]:::side
+        references["references.py<br/>known structures"]:::pure
+        result["result.py<br/>energies, drift, space group"]:::pure
+        search["search/<br/>relax, basin hopping"]:::pure
         framework["framework.py<br/>anion sites and holes"]:::pure
+        mlip["mlip/<br/>chgnet, mace, emt"]:::pure
         moves["moves.py<br/>ChemDASH swaps"]:::pure
-        framework --> moves
+        job --> result
+        cspstore --> references --> result --> search --> framework --> moves
+        result --> mlip
     end
     subgraph data["data/: processed data"]
         store["store.py<br/>tables, sha256 sidecar"]:::side
@@ -63,9 +71,13 @@ Every layer may import the ones below it and `nuikit`. `phasebo` holds this proj
   category after the coordinates (`Points.inputs`, `Points.categories`).
 - `bo/` is the method: two families decide how BO models the points (`surrogate`) and picks a batch
   (`acquisition`), and `proposal.py` drives them for `phasebo-suggest`.
-- `csp/` will compute energies where there is no DFT: crystal structure prediction ported from PolyBO, the
-  group's adaptation of ChemDASH. A composition is placed in a framework (`framework.py`: an anion packing with
-  three cation holes per anion site, as PolyBO builds it), and its atoms move between the sites (`moves.py`).
+- `csp/` computes energies where there is no DFT: crystal structure prediction ported from PolyBO, the group's
+  adaptation of ChemDASH. A composition is placed in a framework (`framework.py`: an anion packing with three
+  cation holes per anion site, as PolyBO builds it), and a search (the `search` family, one kind per fidelity
+  level) moves its atoms between the sites (`moves.py`), ranked by an MLIP (the `mlip` family, which hands back an
+  ASE calculator). `job.py` names one composition, framework and level, seeds it from its name and computes its
+  `Result` (`result.py`); `references.py` relaxes known structures for the hull; `store.py` writes each result as
+  it finishes. `csp/` does not import `data/`.
 - `benchmark/` scores the method: `replay.py` replays BO over the computed points from many starting sets (the
   `start` family), and the `metric` family measures the replays next to random picking's exact odds
   (`baseline.py`). A `cheap` source gives every repeat each point's cheap energy before BO picks, drawn from the
@@ -83,8 +95,8 @@ what an entry point sets up before it runs. Copier writes it; fixes go upstream 
 Dependencies point down: `cli` > `config` > `benchmark` > `bo` > `field` | `data` | `csp` > `paths`, and any layer
 may import `nuikit`; `csp` never imports `bo` or `benchmark`. Inside `benchmark`, metrics import the replays, which
 import the starting sets; inside `bo`, `proposal` imports the batch rules, which import the surrogate; inside
-`field`, `points` imports `hull`; inside `data`, `store` imports `table`; inside `csp`, the frameworks import the
-moves; the cheap sources import nothing else in `benchmark`. Scripts sit outside the package and may import any of
+`field`, `points` imports `hull`; inside `data`, `store` imports `table`; inside `csp`, jobs and the store import
+results and references, which import the searches, which import the frameworks and moves; the cheap sources import nothing else in `benchmark`. Scripts sit outside the package and may import any of
 it. The import-linter contracts in `pyproject.toml` enforce every one of these orders and keep
 `nuikit` from importing `phasebo`. The layers contracts are exhaustive, so a new module fails `make check` until it
 is placed.
@@ -126,6 +138,8 @@ configs/                  Hydra YAML; generated files say so in a leading commen
   benchmark/start/        random.yaml (generated)
   benchmark/metric/       one file per metric, selected together (generated)
   benchmark/cheap/        table.yaml, noisy.yaml (generated); none is selected by default
+  csp/mlip/               chgnet.yaml, mace.yaml, emt.yaml (generated)
+  csp/search/             relax.yaml, basin_hop.yaml, selected together (generated)
   system/                 phase fields: processed table, elements, candidate space; fake_*.yaml are written by
                           scripts/make_fake_fields.py
   hydra/default.yaml      Hydra writes nothing; the app writes runs/
@@ -158,6 +172,12 @@ src/phasebo/
   csp/                    crystal structure prediction, ported from PolyBO
     framework.py          the three prototypes, shared site counts, supercells, cells scaled to ionic volume
     moves.py              arrangements, random fills, ChemDASH swaps within one sublattice
+    mlip/                 family: an ASE calculator from an interatomic potential
+    search/               family: one kind per fidelity level; the free relax that ends each
+    result.py             one composition, framework and level: energies, drift, space group, cells
+    references.py         known structures relaxed with the cell free
+    job.py                a job's name, its seed and `compute`
+    store.py              a run's results and references, as each finishes
 src/nuikit/               copied from the conventions template: config, configgen, registry, errors, logging,
                           runs, seeding
 tests/                    mirrors src/; tests/nuikit/ comes with the template
@@ -187,6 +207,8 @@ of a kind (`bo/surrogate=paper`). A `multiple` family is selected as a list, eac
 | `bo/acquisition` | `qlogei`, `ts`, `random`, `screen`; `random` and `screen` have `needs_model = False`, so the replay does not fit the GP; `screen` has `needs_cheap = True` and picks the lowest cheap energies | `bo/acquisition=<kind>` |
 | `benchmark/start` | `random`: explored points off the hull, from the repeat's own stream | `benchmark/start=random` |
 | `benchmark/cheap` | `table`: another fidelity of the processed table; `noisy`: the modelled total energies with random and smooth errors, the hull rebuilt, per repeat | `benchmark/cheap=<kind>`; none by default, and a kind that `needs_cheap` then refuses to run |
+| `csp/mlip` | `chgnet` (default; weights `0.3.0`, `0.2.0` or `r2scan`), `mace` (MACE-MP, `medium` by default), `emt` (ASE's toy potential, for tests: Al, N and a few metals); `emt` has `uses_device = False`, so `csp.device` is ignored | `csp/mlip=<kind>` |
+| `csp/search` (multiple) | `relax`: one random arrangement relaxed; `basin_hop`: PolyBO's Metropolis search over swaps; each is a fidelity level, `relax` and `bh<epochs>` | `csp/search=[relax,basin_hop]`, both by default |
 | `benchmark/metric` (multiple) | `steps_to_hit`, `discovery`, `best_so_far`, `hazard_ratio`, `map`; `map` has `needs_beliefs = True`, so the replay records what each game believed after each batch | `benchmark/metric=[...]`, all five by default |
 
 ```text
