@@ -31,3 +31,12 @@ def test_table_source_refuses_a_fidelity_that_misses_explored_points(
 
     with pytest.raises(DataError, match=r"choose a benchmark\.cheap\.fidelity"):
         source.check(half, points, fidelity="dft")
+
+
+def test_table_source_names_its_setting_for_a_fidelity_the_table_lacks(rows, points):
+    source = CheapSourceFactory.from_config({"kind": "table", "fidelity": "foo"})
+
+    with pytest.raises(
+        DataError, match=r"set benchmark\.cheap\.fidelity to one of dft"
+    ):
+        source.check(rows, points, fidelity="dft")

@@ -25,6 +25,13 @@ class TableCheapSource(CheapSource[TableCheapConfig]):
     """Each point's lowest energy at the configured fidelity, the same in every game."""
 
     def check(self, rows: pd.DataFrame, points: Points, *, fidelity: str) -> None:
+        found = set(rows.loc[rows["point"].isin(points.names), "fidelity"])
+        if self.config.fidelity not in found:
+            raise DataError(
+                f"the table has no {self.config.fidelity!r} rows at this field's "
+                "points; set benchmark.cheap.fidelity to one of "
+                f"{', '.join(sorted(found))}"
+            )
         energies_mev = self._read_energies(rows, points)
         missing = [points.names[i] for i in points.pool if np.isnan(energies_mev[i])]
         if missing:
