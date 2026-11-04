@@ -288,6 +288,31 @@ energy and force call takes about 50 ms with CHGNet and 40 ms with MACE in float
 atoms. Lower precision does not help: float16 is no faster at these sizes and moves energies by 5-13 meV/atom,
 and bfloat16 crashes in both. More throughput comes from more processes, on more machines or CPUs.
 
+**PolyBO's reference.** Sr3Al3N5 in all three frameworks, 30 epochs, seed 42, CHGNet on a CPU, with the search
+seeded as PolyBO seeds it (`default_rng(42)` in each framework; `phasebo-csp` seeds each job by its name, so its own
+run draws other arrangements). The port and PolyBO's code give the same numbers to the last digit (eV/atom):
+
+| framework | on the framework | after the free relax | drift (Å) | volume change | space group |
+|---|---|---|---|---|---|
+| wurtzite | −5.9967 | **−6.4185** | 1.49 | +28 % | P1 |
+| hexagonal | −5.9497 | −6.3253 | 1.24 | +32 % | P2 |
+| cubic | **−6.0846** | −6.2868 | 1.48 | +27 % | Cm |
+
+Wurtzite and cubic match PolyBO's README as well. Its hexagonal row (−5.9093, −6.3802) came from chgnet 0.3.0;
+with chgnet 0.4.2 PolyBO's own code takes the row above, so a newer CHGNet changes one choice along that search.
+
+**How long it takes.** CHGNet on an Apple M-series CPU, one process, one wurtzite cell each, seconds per job:
+
+| atoms | cell | `relax` | `basin_hop`, 30 epochs |
+|---|---|---|---|
+| 8 | Sc1Al2B1N4 | 4 | 77 |
+| 12 | Sc1Al4B1N6 | 6 | 121 |
+| 16 | Sc2Al4B2N8 | 6 | 129 |
+| 24 | Sc3Al6B3N12 | 9 | 195 |
+
+A basin hop costs 15 to 25 relaxes, so the cheap level is the screen and the expensive one is spent where it
+matters.
+
 ## Usage
 
 1. Put the dataset in `data/raw/` as received.
