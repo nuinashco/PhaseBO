@@ -7,7 +7,7 @@ from pydantic import Field
 
 from nuikit.errors import DataError
 
-from phasebo.benchmark.cheap.base import Cheap, CheapConfig, CheapFactory
+from phasebo.benchmark.cheap.base import CheapConfig, CheapSource, CheapSourceFactory
 from phasebo.field.points import Points
 
 
@@ -19,9 +19,9 @@ class TableCheapConfig(CheapConfig):
     )
 
 
-@CheapFactory.register("table")
+@CheapSourceFactory.register("table")
 @define
-class TableCheap(Cheap[TableCheapConfig]):
+class TableCheapSource(CheapSource[TableCheapConfig]):
     """Each point's lowest energy at the configured fidelity, the same in every game."""
 
     def check(self, rows: pd.DataFrame, points: Points, *, fidelity: str) -> None:

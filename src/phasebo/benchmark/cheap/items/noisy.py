@@ -8,7 +8,7 @@ from pymatgen.core import Composition
 
 from nuikit.errors import DataError
 
-from phasebo.benchmark.cheap.base import Cheap, CheapConfig, CheapFactory
+from phasebo.benchmark.cheap.base import CheapConfig, CheapSource, CheapSourceFactory
 from phasebo.bo.surrogate.base import quiet_gpytorch
 from phasebo.field import hull
 from phasebo.field.points import Points
@@ -35,9 +35,9 @@ class NoisyCheapConfig(CheapConfig):
     )
 
 
-@CheapFactory.register("noisy")
+@CheapSourceFactory.register("noisy")
 @define
-class NoisyCheap(Cheap[NoisyCheapConfig]):
+class NoisyCheapSource(CheapSource[NoisyCheapConfig]):
     """Errors added to each cell's total energy, then the hull rebuilt; drawn per game.
 
     Both errors are drawn whatever their size, so settings of one seed share them.

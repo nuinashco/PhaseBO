@@ -5,12 +5,12 @@ import pytest
 
 from nuikit.errors import DataError
 
-from phasebo.benchmark.cheap.base import CheapFactory
+from phasebo.benchmark.cheap.base import CheapSourceFactory
 from phasebo.field.points import Points
 
 
 def noisy(**settings):
-    return CheapFactory.from_config({"kind": "noisy", **settings})
+    return CheapSourceFactory.from_config({"kind": "noisy", **settings})
 
 
 def test_noisy_source_without_errors_gives_the_energies_above_the_hull(rows, points):

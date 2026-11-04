@@ -36,7 +36,7 @@ from nuikit.errors import cli_boundary
 
 from phasebo import paths
 from phasebo.benchmark import replay
-from phasebo.benchmark.cheap.base import CheapFactory
+from phasebo.benchmark.cheap.base import CheapSourceFactory
 from phasebo.benchmark.metric.base import MetricFactory, Score, to_json, to_wandb
 from phasebo.benchmark.start.base import StartFactory
 from phasebo.bo.acquisition.base import AcquisitionFactory
@@ -69,7 +69,7 @@ def run(cfg: BenchmarkConfig, *, runs_dir: Path) -> Path:
             fix="set benchmark/cheap=table or benchmark/cheap=noisy",
         )
     else:
-        cheap = CheapFactory.from_config(protocol.cheap)
+        cheap = CheapSourceFactory.from_config(protocol.cheap)
         cheap.check(loaded.rows, points, fidelity=cfg.fidelity)
         draw_cheap = functools.partial(
             cheap.draw, loaded.rows, points, fidelity=cfg.fidelity

@@ -17,7 +17,7 @@ class CheapConfig(KindConfig):
 
 
 @define
-class Cheap[C: CheapConfig](Configurable[C], ABC):
+class CheapSource[C: CheapConfig](Configurable[C], ABC):
     """Source of each point's cheap energy, from the processed table's rows.
 
     `points` are the rows' points at the modelled `fidelity`; rows at other points,
@@ -40,7 +40,7 @@ class Cheap[C: CheapConfig](Configurable[C], ABC):
         """Return each point's cheap energy above the hull (meV/atom); NaN if none."""
 
 
-class CheapFactory(ConfigurableFactory[Cheap[Any]]):
+class CheapSourceFactory(ConfigurableFactory[CheapSource[Any]]):
     """Registry of cheap sources by `kind`."""
 
     config_group = "benchmark/cheap"
