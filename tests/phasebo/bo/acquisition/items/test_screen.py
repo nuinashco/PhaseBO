@@ -6,7 +6,13 @@ import pytest
 from phasebo.bo.acquisition.base import AcquisitionFactory
 
 
-def test_screen_picks_the_lowest_cheap_energies_without_a_model():
+def test_screen_needs_cheap_energies_but_no_model():
+    screen = AcquisitionFactory.from_config({"kind": "screen"})
+
+    assert (screen.needs_model, screen.needs_cheap) == (False, True)
+
+
+def test_screen_picks_the_lowest_cheap_energies():
     screen = AcquisitionFactory.from_config({"kind": "screen"})
     choices = np.arange(10.0).reshape(5, 2)
 
@@ -18,7 +24,7 @@ def test_screen_picks_the_lowest_cheap_energies_without_a_model():
         cheap_mev=np.array([30.0, 5.0, 20.0, 6.0, 1.0]),
     )
 
-    assert (screen.needs_model, screen.needs_cheap, picked) == (False, True, [4, 1])
+    assert picked == [4, 1]
 
 
 def test_screen_breaks_ties_with_its_generator():

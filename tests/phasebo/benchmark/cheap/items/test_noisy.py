@@ -41,6 +41,34 @@ def test_smooth_error_over_the_whole_field_leaves_the_hull_distances(rows, point
     assert energies == pytest.approx(points.energies_mev, abs=0.5)
 
 
+def test_smooth_error_within_the_field_moves_the_energies(rows, points):
+    source = noisy(random_mev=0.0, smooth_mev=50.0, lengthscale=0.2)
+
+    energies = source.draw(rows, points, fidelity="dft", rng=np.random.default_rng(0))
+
+    pool = points.pool
+    assert not np.allclose(energies[pool], points.energies_mev[pool], atol=1.0)
+
+
+def test_smooth_error_differs_less_between_nearby_points(rows, points):
+    source = noisy(random_mev=0.0, smooth_mev=50.0, lengthscale=0.2)
+    pool = points.pool
+    fractions = np.column_stack([1 - points.coords.sum(axis=1), points.coords])[pool]
+    pairs = np.triu_indices(len(pool), 1)
+    distances = np.linalg.norm(fractions[:, None] - fractions[None], axis=-1)[pairs]
+    errors = np.array(
+        [
+            source.draw(rows, points, fidelity="dft", rng=np.random.default_rng(seed))
+            - points.energies_mev
+            for seed in range(20)
+        ]
+    )[:, pool]
+
+    gaps = ((errors[:, :, None] - errors[:, None, :]) ** 2).mean(axis=0)[pairs]
+    by_distance = gaps[np.argsort(distances)]
+    assert by_distance[:5].mean() < by_distance[-5:].mean()
+
+
 def test_noisy_source_refuses_rows_without_total_energies(nn_rows, points):
     only_nn = nn_rows(range(len(points.formulas)), 0.0)
     nn_points = Points.from_rows(only_nn, fidelity="nn", elements=points.elements)

@@ -6,8 +6,6 @@ import pytest
 from phasebo.bo.surrogate.base import CheapEnergies, SurrogateFactory
 
 NEED_CHEAP = ["multitask", "multifidelity", "delta"]
-# Delta's own test asks more of it: removing a shared error.
-RANKED = ["multitask", "multifidelity"]
 
 
 def exact_cheap(points):
@@ -28,7 +26,7 @@ def test_a_surrogate_that_needs_cheap_energies_refuses_to_fit_without_them(
         surrogate.fit(points.coords[seen], points.energies_mev[seen])
 
 
-@pytest.mark.parametrize("kind", RANKED)
+@pytest.mark.parametrize("kind", NEED_CHEAP)
 def test_exact_cheap_energies_rank_the_unseen_points_for_every_surrogate(points, kind):
     surrogate = SurrogateFactory.from_config({"kind": kind})
     seen, unseen = points.pool[:3], points.pool[3:]

@@ -122,7 +122,7 @@ def test_replay_many_draws_cheap_energies_without_moving_other_draws(points):
     assert run_many(points).paths.equals(run_many(points, draw_cheap=draw).paths)
 
 
-def test_replay_many_draws_each_repeats_cheap_energies_from_its_own_stream(points):
+def first_draws(points):
     drawn = []
 
     def draw(*, rng):
@@ -130,10 +130,15 @@ def test_replay_many_draws_each_repeats_cheap_energies_from_its_own_stream(point
         return rng.random(len(points.formulas))
 
     run_many(points, draw_cheap=draw)
-    first = list(drawn)
-    run_many(points, draw_cheap=draw)
+    return drawn
 
-    assert (len(set(first)), drawn[4:]) == (4, first)
+
+def test_replay_many_draws_each_repeats_cheap_energies_from_its_own_stream(points):
+    assert len(set(first_draws(points))) == 4
+
+
+def test_replay_many_draws_the_same_cheap_energies_with_its_seed(points):
+    assert first_draws(points) == first_draws(points)
 
 
 def test_cheap_table_lists_each_repeats_energy_at_every_explored_point(points):
@@ -152,6 +157,53 @@ def test_cheap_table_lists_each_repeats_energy_at_every_explored_point(points):
 
 def test_replay_many_does_not_depend_on_the_workers(points):
     assert run_many(points, workers=1).paths.equals(run_many(points, workers=2).paths)
+
+
+def noisy_cheap_draw(points):
+    def draw(*, rng):
+        return points.energies_mev + rng.normal(scale=10.0, size=len(points.formulas))
+
+    return draw
+
+
+def fitted_runs(points, *, workers):
+    return run_many(
+        points,
+        acquisition=AcquisitionFactory.from_config({"kind": "qlogei"}),
+        surrogate=SurrogateFactory.from_config({"kind": "delta"}),
+        workers=workers,
+        draw_cheap=noisy_cheap_draw(points),
+    )
+
+
+def test_replay_many_picks_the_same_with_a_model_whatever_the_workers(points):
+    one, two = fitted_runs(points, workers=1), fitted_runs(points, workers=2)
+
+    assert one.paths.equals(two.paths)
+
+
+def test_replay_many_draws_the_same_cheap_energies_whatever_the_workers(points):
+    one, two = fitted_runs(points, workers=1), fitted_runs(points, workers=2)
+
+    assert one.cheap_table().equals(two.cheap_table())
+
+
+@pytest.mark.parametrize("acquisition", ["qlogei", "ts"])
+@pytest.mark.parametrize("surrogate", ["multitask", "multifidelity", "delta"])
+def test_replay_picks_a_batch_with_each_cheap_surrogate_and_model_based_rule(
+    points, surrogate, acquisition
+):
+    starting, batches = run_one(
+        points,
+        SurrogateFactory.from_config({"kind": surrogate}),
+        acquisition=AcquisitionFactory.from_config({"kind": acquisition}),
+        max_iter=1,
+        cheap_mev=points.energies_mev + 5.0,
+    )
+
+    (batch,) = batches
+    assert len(set(batch)) == 2
+    assert set(batch) <= set(points.pool.tolist()) - set(starting)
 
 
 def test_hit_batches_give_the_batch_that_picked_each_target(made):
