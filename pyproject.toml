@@ -13,6 +13,7 @@ authors = [
 urls = { Homepage = "https://github.com/nuinashco/PhaseBO" }
 requires-python = ">=3.14"
 dependencies = [
+    "ase>=3.29",
     "attrs>=26.1",
     "botorch>=0.18.1",
     "click>=8.5",
@@ -138,6 +139,10 @@ venv = ".venv"
 testpaths = ["tests"]
 addopts = ["--import-mode=importlib", "--strict-markers", "-m", "not integration"]
 markers = ["integration: end-to-end runs that need external services or data"]
+filterwarnings = [
+    # ASE 3.29 reshapes arrays the way NumPy 2.5 deprecates, on every Atoms it builds.
+    "ignore:Setting the shape on a NumPy array:DeprecationWarning:ase",
+]
 
 [tool.importlinter]
 root_packages = ["phasebo", "nuikit"]
@@ -146,7 +151,7 @@ root_packages = ["phasebo", "nuikit"]
 name = "Layers: cli on top, paths at the bottom, every module placed"
 type = "layers"
 containers = ["phasebo"]
-layers = ["cli", "config", "benchmark", "bo", "field | data", "paths"]
+layers = ["cli", "config", "benchmark", "bo", "field | data | csp", "paths"]
 exhaustive = true
 
 [[tool.importlinter.contracts]]
@@ -176,6 +181,19 @@ type = "layers"
 containers = ["phasebo.data"]
 layers = ["store", "table"]
 exhaustive = true
+
+[[tool.importlinter.contracts]]
+name = "CSP: frameworks build on arrangements"
+type = "layers"
+containers = ["phasebo.csp"]
+layers = ["framework", "moves"]
+exhaustive = true
+
+[[tool.importlinter.contracts]]
+name = "CSP computes energies without BO or the benchmark"
+type = "forbidden"
+source_modules = ["phasebo.csp"]
+forbidden_modules = ["phasebo.bo", "phasebo.benchmark"]
 
 [[tool.importlinter.contracts]]
 name = "nuikit never imports the project"

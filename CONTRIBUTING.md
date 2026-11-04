@@ -34,6 +34,11 @@ flowchart TD
         candidates["candidates.py<br/>new cells"]:::pure
         points --> hull
     end
+    subgraph csp["csp/: structures by MLIP"]
+        framework["framework.py<br/>anion sites and holes"]:::pure
+        moves["moves.py<br/>ChemDASH swaps"]:::pure
+        framework --> moves
+    end
     subgraph data["data/: processed data"]
         store["store.py<br/>tables, sha256 sidecar"]:::side
         table["table.py<br/>pandera schema"]:::pure
@@ -58,6 +63,9 @@ Every layer may import the ones below it and `nuikit`. `phasebo` holds this proj
   category after the coordinates (`Points.inputs`, `Points.categories`).
 - `bo/` is the method: two families decide how BO models the points (`surrogate`) and picks a batch
   (`acquisition`), and `proposal.py` drives them for `phasebo-suggest`.
+- `csp/` will compute energies where there is no DFT: crystal structure prediction ported from PolyBO, the
+  group's adaptation of ChemDASH. A composition is placed in a framework (`framework.py`: an anion packing with
+  three cation holes per anion site, as PolyBO builds it), and its atoms move between the sites (`moves.py`).
 - `benchmark/` scores the method: `replay.py` replays BO over the computed points from many starting sets (the
   `start` family), and the `metric` family measures the replays next to random picking's exact odds
   (`baseline.py`). A `cheap` source gives every repeat each point's cheap energy before BO picks, drawn from the
@@ -72,11 +80,12 @@ run directory (see Deviations).
 `nuikit` is the machinery every project built from the template shares: what schemas and families build on, and
 what an entry point sets up before it runs. Copier writes it; fixes go upstream and arrive with `copier update`.
 
-Dependencies point down: `cli` > `config` > `benchmark` > `bo` > `field` | `data` > `paths`, and any layer may import
-`nuikit`. Inside `benchmark`, metrics import the replays, which import the starting sets; inside `bo`, `proposal`
-imports the batch rules, which import the surrogate; inside `field`, `points` imports `hull`; inside `data`,
-`store` imports `table`; the cheap sources import nothing else in `benchmark`. Scripts sit outside the package and
-may import any of it. The import-linter contracts in `pyproject.toml` enforce every one of these orders and keep
+Dependencies point down: `cli` > `config` > `benchmark` > `bo` > `field` | `data` | `csp` > `paths`, and any layer
+may import `nuikit`; `csp` never imports `bo` or `benchmark`. Inside `benchmark`, metrics import the replays, which
+import the starting sets; inside `bo`, `proposal` imports the batch rules, which import the surrogate; inside
+`field`, `points` imports `hull`; inside `data`, `store` imports `table`; inside `csp`, the frameworks import the
+moves; the cheap sources import nothing else in `benchmark`. Scripts sit outside the package and may import any of
+it. The import-linter contracts in `pyproject.toml` enforce every one of these orders and keep
 `nuikit` from importing `phasebo`. The layers contracts are exhaustive, so a new module fails `make check` until it
 is placed.
 
@@ -146,6 +155,9 @@ src/phasebo/
     replay.py             one replay, and many in parallel (Replays)
     baseline.py           random picking's exact odds
     comparison.py         runs against a baseline: the pairing check, then each metric's contrast
+  csp/                    crystal structure prediction, ported from PolyBO
+    framework.py          the three prototypes, shared site counts, supercells, cells scaled to ionic volume
+    moves.py              arrangements, random fills, ChemDASH swaps within one sublattice
 src/nuikit/               copied from the conventions template: config, configgen, registry, errors, logging,
                           runs, seeding
 tests/                    mirrors src/; tests/nuikit/ comes with the template

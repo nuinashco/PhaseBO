@@ -31,6 +31,21 @@ wheels = [
 ]
 
 [[package]]
+name = "ase"
+version = "3.29.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "matplotlib" },
+    { name = "numpy" },
+    { name = "scipy" },
+    { name = "typing-extensions" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/aa/36/cfe17324ea701d2caa479f25b134c54aeb36998443fd88c13e4f1af06f52/ase-3.29.0.tar.gz", hash = "sha256:ef4e2caa38169e3fbbc4164764a060d1877a6692519a4bed82521328eeb0d9aa", size = 2466051, upload-time = "2026-06-21T16:03:06.499Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/66/a6/a3d29378618d3d9ba0962473f8bbf09a5ad15eb8b210c5153fb88d0b8aad/ase-3.29.0-py3-none-any.whl", hash = "sha256:7b9dd103f007810339c24acfee2f6b677c0c48443b21d3c98e52959246cf4ebf", size = 3014724, upload-time = "2026-06-21T16:03:03.794Z" },
+]
+
+[[package]]
 name = "attrs"
 version = "26.1.0"
 source = { registry = "https://pypi.org/simple" }
@@ -1484,6 +1499,7 @@ name = "phasebo"
 version = "0.1.4"
 source = { editable = "." }
 dependencies = [
+    { name = "ase" },
     { name = "attrs" },
     { name = "botorch" },
     { name = "click" },
@@ -1525,6 +1541,7 @@ wandb = [
 
 [package.metadata]
 requires-dist = [
+    { name = "ase", specifier = ">=3.29" },
     { name = "attrs", specifier = ">=26.1" },
     { name = "botorch", specifier = ">=0.18.1" },
     { name = "click", specifier = ">=8.5" },

@@ -37,6 +37,8 @@ make data           # check data/processed/ against data/raw/; scripts/process_*
   point's cheap energy, known before BO picks), replays in parallel (`replay.py`), the `metric` family (several
   per run), random's exact odds (`baseline.py`) and paired comparisons of runs (`comparison.py`). Figures are drawn
   by `scripts/plot_run.py`, not by commands.
+- `src/phasebo/csp/`: crystal structure prediction ported from PolyBO: `framework.py` and `moves.py` (pure). It
+  never imports `bo`, `benchmark` or `data`.
 - `scripts/`: exploratory or one-time runnables, never imported; they may import the package and compose
   `configs/`. Anything `make`, CI or a test depends on is a `cli/` command; a script that is rerun or shared becomes
   one. A one-time conversion whose committed output is pinned by the sha256 of its inputs and itself stays a script.
