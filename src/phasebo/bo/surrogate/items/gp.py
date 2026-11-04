@@ -23,7 +23,7 @@ class GPConfig(SurrogateConfig):
 
     kernel: KernelName = Field(
         default="matern52",
-        description="matern12|matern32|matern52: Matern nu 1/2, 3/2, 5/2 (the paper); "
+        description="matern12|matern32|matern52|rbf; matern52: the paper's; "
         "rbf: BoTorch's default kernel",
     )
     noise_mev: NonNegativeFloat | None = Field(
