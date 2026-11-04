@@ -44,7 +44,7 @@ class MultiTaskSurrogate(Surrogate[MultiTaskConfig]):
         *,
         cheap: CheapEnergies | None = None,
     ) -> Fit:
-        known = require_cheap(cheap, self.kind)
+        known = require_cheap(cheap, f"surrogate {self.kind!r}")
         x, g = stack_sources(coords, energies_mev, cheap=known)
         with quiet_gpytorch():
             from botorch.models import MultiTaskGP

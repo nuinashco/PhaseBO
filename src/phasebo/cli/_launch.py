@@ -82,7 +82,9 @@ def tag_families(**configs: KindConfig) -> list[str]:
     return tags
 
 
-def require_cheap(parts: Mapping[str, Surrogate | Acquisition], *, fix: str) -> None:
+def refuse_needing_cheap(
+    parts: Mapping[str, Surrogate | Acquisition], *, fix: str
+) -> None:
     """Raise `ConfigError` if a family choice needs cheap energies the run lacks."""
     for role, part in parts.items():
         if part.needs_cheap:

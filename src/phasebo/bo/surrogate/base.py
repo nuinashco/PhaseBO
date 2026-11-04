@@ -81,10 +81,10 @@ class SurrogateFactory(ConfigurableFactory[Surrogate[Any]]):
     config_group = "bo/surrogate"
 
 
-def require_cheap(cheap: CheapEnergies | None, kind: str) -> CheapEnergies:
-    """Return `cheap`; fail if a surrogate that needs them was given none."""
+def require_cheap[T](cheap: T | None, owner: str) -> T:
+    """Return `cheap`; fail if `owner`, which needs cheap energies, was given none."""
     if cheap is None:
-        msg = f"surrogate {kind!r} needs cheap energies"
+        msg = f"{owner} needs cheap energies"
         raise ValueError(msg)
     return cheap
 

@@ -64,7 +64,7 @@ def run(cfg: BenchmarkConfig, *, runs_dir: Path) -> Path:
     acquisition = AcquisitionFactory.from_config(cfg.bo.acquisition)
     draw_cheap = None
     if protocol.cheap is None:
-        _launch.require_cheap(
+        _launch.refuse_needing_cheap(
             {"bo.surrogate": surrogate, "bo.acquisition": acquisition},
             fix="set benchmark/cheap=table or benchmark/cheap=noisy",
         )

@@ -50,7 +50,7 @@ def run(cfg: SuggestConfig, *, runs_dir: Path) -> Path:
     )
     surrogate = SurrogateFactory.from_config(cfg.bo.surrogate)
     acquisition = AcquisitionFactory.from_config(cfg.bo.acquisition)
-    _launch.require_cheap(
+    _launch.refuse_needing_cheap(
         {"bo.surrogate": surrogate, "bo.acquisition": acquisition},
         fix="only phasebo-benchmark has them, so choose another kind",
     )

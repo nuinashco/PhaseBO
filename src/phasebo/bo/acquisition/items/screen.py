@@ -10,7 +10,7 @@ from phasebo.bo.acquisition.base import (
     AcquisitionConfig,
     AcquisitionFactory,
 )
-from phasebo.bo.surrogate.base import Fit
+from phasebo.bo.surrogate.base import Fit, require_cheap
 
 
 class ScreenConfig(AcquisitionConfig):
@@ -34,9 +34,7 @@ class ScreenAcquisition(Acquisition[ScreenConfig]):
         rng: np.random.Generator,
         cheap_mev: np.ndarray | None = None,
     ) -> list[int]:
-        if cheap_mev is None:
-            msg = f"acquisition {self.kind!r} needs cheap energies"
-            raise ValueError(msg)
+        known_mev = require_cheap(cheap_mev, f"acquisition {self.kind!r}")
         # Ties are common: every point on the cheap hull has exactly 0.
-        tiebreak = rng.random(len(cheap_mev))
-        return np.lexsort((tiebreak, cheap_mev))[:size].tolist()
+        tiebreak = rng.random(len(known_mev))
+        return np.lexsort((tiebreak, known_mev))[:size].tolist()

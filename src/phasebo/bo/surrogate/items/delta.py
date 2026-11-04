@@ -35,7 +35,7 @@ class DeltaSurrogate(Surrogate[DeltaConfig]):
     ) -> Fit:
         import torch
 
-        known = require_cheap(cheap, self.kind)
+        known = require_cheap(cheap, f"surrogate {self.kind!r}")
         settings = self.config.model_dump(exclude={"kind"})
         at = _find(torch.as_tensor(coords), torch.as_tensor(known.coords)).numpy()
         error = GPSurrogate(GPConfig(kind="gp", **settings)).fit(
