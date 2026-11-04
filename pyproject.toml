@@ -13,6 +13,7 @@ authors = [
 urls = { Homepage = "https://github.com/nuinashco/PhaseBO" }
 requires-python = ">=3.14"
 dependencies = [
+    "ase>=3.29",
     "attrs>=26.1",
     "botorch>=0.18.1",
     "click>=8.5",
@@ -40,6 +41,7 @@ phasebo-generate = "phasebo.cli.generate:main"
 phasebo-compare = "phasebo.cli.compare:main"
 phasebo-data = "phasebo.cli.data:main"
 phasebo-configs = "phasebo.cli.configs:main"
+phasebo-csp = "phasebo.cli.csp:main"
 
 [dependency-groups]
 dev = [
@@ -58,6 +60,11 @@ notebooks = [
     "marimo>=0.24.2,<0.25",
     "matplotlib>=3.11",
     "plotly>=7.1",
+]
+# MLIPs for phasebo-csp; its emt kind needs neither.
+csp = [
+    "chgnet>=0.4.2",
+    "mace-torch>=0.3.17",
 ]
 
 [tool.uv]
@@ -138,6 +145,12 @@ venv = ".venv"
 testpaths = ["tests"]
 addopts = ["--import-mode=importlib", "--strict-markers", "-m", "not integration"]
 markers = ["integration: end-to-end runs that need external services or data"]
+filterwarnings = [
+    # ASE 3.29 reshapes arrays the way NumPy 2.5 deprecates, on every Atoms it builds.
+    "ignore:Setting the shape on a NumPy array:DeprecationWarning:ase",
+    # `pymatgen` leaves spglib's old error handling on when it reads a space group.
+    "ignore:Set OLD_ERROR_HANDLING to false:DeprecationWarning:spglib",
+]
 
 [tool.importlinter]
 root_packages = ["phasebo", "nuikit"]
@@ -146,7 +159,7 @@ root_packages = ["phasebo", "nuikit"]
 name = "Layers: cli on top, paths at the bottom, every module placed"
 type = "layers"
 containers = ["phasebo"]
-layers = ["cli", "config", "benchmark", "bo", "field | data", "paths"]
+layers = ["cli", "config", "benchmark", "bo", "field | data | csp", "paths"]
 exhaustive = true
 
 [[tool.importlinter.contracts]]
@@ -176,6 +189,19 @@ type = "layers"
 containers = ["phasebo.data"]
 layers = ["store", "table"]
 exhaustive = true
+
+[[tool.importlinter.contracts]]
+name = "CSP: jobs and files build on results, which build on searches in frameworks"
+type = "layers"
+containers = ["phasebo.csp"]
+layers = ["job | store", "references", "result", "search", "framework | mlip", "moves"]
+exhaustive = true
+
+[[tool.importlinter.contracts]]
+name = "CSP computes energies without BO or the benchmark"
+type = "forbidden"
+source_modules = ["phasebo.csp"]
+forbidden_modules = ["phasebo.bo", "phasebo.benchmark"]
 
 [[tool.importlinter.contracts]]
 name = "nuikit never imports the project"

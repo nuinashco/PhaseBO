@@ -34,6 +34,19 @@ flowchart TD
         candidates["candidates.py<br/>new cells"]:::pure
         points --> hull
     end
+    subgraph csp["csp/: structures by MLIP"]
+        job["job.py<br/>one cell, framework, level"]:::pure
+        cspstore["store.py<br/>results, CIFs"]:::side
+        references["references.py<br/>known structures"]:::pure
+        result["result.py<br/>energies, drift, space group"]:::pure
+        search["search/<br/>relax, basin hopping"]:::pure
+        framework["framework.py<br/>anion sites and holes"]:::pure
+        mlip["mlip/<br/>chgnet, mace, emt"]:::pure
+        moves["moves.py<br/>ChemDASH swaps"]:::pure
+        job --> result
+        cspstore --> references --> result --> search --> framework --> moves
+        result --> mlip
+    end
     subgraph data["data/: processed data"]
         store["store.py<br/>tables, sha256 sidecar"]:::side
         table["table.py<br/>pandera schema"]:::pure
@@ -43,6 +56,7 @@ flowchart TD
     scripts --> config
     cli --> config --> benchmark --> bo --> field
     cli --> data --> paths
+    config --> csp
     classDef pure fill:#d9f2ec,stroke:#1b7f6b,color:#0b3d33
     classDef side fill:#f8e3d8,stroke:#b4532a,color:#4a1f0c
 ```
@@ -58,6 +72,13 @@ Every layer may import the ones below it and `nuikit`. `phasebo` holds this proj
   category after the coordinates (`Points.inputs`, `Points.categories`).
 - `bo/` is the method: two families decide how BO models the points (`surrogate`) and picks a batch
   (`acquisition`), and `proposal.py` drives them for `phasebo-suggest`.
+- `csp/` computes energies where there is no DFT: crystal structure prediction ported from PolyBO, the group's
+  adaptation of ChemDASH. A composition is placed in a framework (`framework.py`: an anion packing with three
+  cation holes per anion site, as PolyBO builds it), and a search (the `search` family, one kind per fidelity
+  level) moves its atoms between the sites (`moves.py`), ranked by an MLIP (the `mlip` family, which hands back an
+  ASE calculator). `job.py` names one composition, framework and level, seeds it from its name and computes its
+  `Result` (`result.py`); `references.py` relaxes known structures for the hull; `store.py` writes each result as
+  it finishes. `phasebo-csp` turns them into a processed table, since `csp/` does not import `data/`.
 - `benchmark/` scores the method: `replay.py` replays BO over the computed points from many starting sets (the
   `start` family), and the `metric` family measures the replays next to random picking's exact odds
   (`baseline.py`). A `cheap` source gives every repeat each point's cheap energy before BO picks, drawn from the
@@ -72,11 +93,12 @@ run directory (see Deviations).
 `nuikit` is the machinery every project built from the template shares: what schemas and families build on, and
 what an entry point sets up before it runs. Copier writes it; fixes go upstream and arrive with `copier update`.
 
-Dependencies point down: `cli` > `config` > `benchmark` > `bo` > `field` | `data` > `paths`, and any layer may import
-`nuikit`. Inside `benchmark`, metrics import the replays, which import the starting sets; inside `bo`, `proposal`
-imports the batch rules, which import the surrogate; inside `field`, `points` imports `hull`; inside `data`,
-`store` imports `table`; the cheap sources import nothing else in `benchmark`. Scripts sit outside the package and
-may import any of it. The import-linter contracts in `pyproject.toml` enforce every one of these orders and keep
+Dependencies point down: `cli` > `config` > `benchmark` > `bo` > `field` | `data` | `csp` > `paths`, and any layer
+may import `nuikit`; `csp` never imports `bo` or `benchmark`. Inside `benchmark`, metrics import the replays, which
+import the starting sets; inside `bo`, `proposal` imports the batch rules, which import the surrogate; inside
+`field`, `points` imports `hull`; inside `data`, `store` imports `table`; inside `csp`, jobs and the store import
+results and references, which import the searches, which import the frameworks and moves; the cheap sources import
+nothing else in `benchmark`. Scripts sit outside the package and may import any of it. The import-linter contracts in `pyproject.toml` enforce every one of these orders and keep
 `nuikit` from importing `phasebo`. The layers contracts are exhaustive, so a new module fails `make check` until it
 is placed.
 
@@ -117,13 +139,17 @@ configs/                  Hydra YAML; generated files say so in a leading commen
   benchmark/start/        random.yaml (generated)
   benchmark/metric/       one file per metric, selected together (generated)
   benchmark/cheap/        table.yaml, noisy.yaml (generated); none is selected by default
+  csp.yaml                entry config of phasebo-csp
+  csp/mlip/               chgnet.yaml, mace.yaml, emt.yaml (generated)
+  csp/search/             relax.yaml, basin_hop.yaml, selected together (generated)
   system/                 phase fields: processed table, elements, candidate space; fake_*.yaml are written by
                           scripts/make_fake_fields.py
   hydra/default.yaml      Hydra writes nothing; the app writes runs/
 data/                     tracked (see Deviations)
   raw/                    datasets as published, never edited
-  processed/              one table per phase field and the sidecar pinning it, written by scripts/process_*.py
-                          or, for the fake fields, scripts/make_fake_fields.py
+  processed/              one table per phase field and the sidecar pinning it, written by scripts/process_*.py,
+                          for the fake fields scripts/make_fake_fields.py, or phasebo-csp publish=<name>, with
+                          the files it pins in <name>/
 src/phasebo/
   cli/                    one module per console script, plus _launch.py, their shared start-up
   config.py               entry config schemas + GENERATED (files `make configs` writes)
@@ -146,6 +172,15 @@ src/phasebo/
     replay.py             one replay, and many in parallel (Replays)
     baseline.py           random picking's exact odds
     comparison.py         runs against a baseline: the pairing check, then each metric's contrast
+  csp/                    crystal structure prediction, ported from PolyBO
+    framework.py          the three prototypes, shared site counts, supercells, cells scaled to ionic volume
+    moves.py              arrangements, random fills, ChemDASH swaps within one sublattice
+    mlip/                 family: an ASE calculator from an interatomic potential
+    search/               family: one kind per fidelity level; the free relax that ends each
+    result.py             one composition, framework and level: energies, drift, space group, cells
+    references.py         known structures relaxed with the cell free
+    job.py                a job's name, its seed and `compute`
+    store.py              a run's results and references, as each finishes
 src/nuikit/               copied from the conventions template: config, configgen, registry, errors, logging,
                           runs, seeding
 tests/                    mirrors src/; tests/nuikit/ comes with the template
@@ -175,6 +210,8 @@ of a kind (`bo/surrogate=paper`). A `multiple` family is selected as a list, eac
 | `bo/acquisition` | `qlogei`, `ts`, `random`, `screen`; `random` and `screen` have `needs_model = False`, so the replay does not fit the GP; `screen` has `needs_cheap = True` and picks the lowest cheap energies | `bo/acquisition=<kind>` |
 | `benchmark/start` | `random`: explored points off the hull, from the repeat's own stream | `benchmark/start=random` |
 | `benchmark/cheap` | `table`: another fidelity of the processed table; `noisy`: the modelled total energies with random and smooth errors, the hull rebuilt, per repeat | `benchmark/cheap=<kind>`; none by default, and a kind that `needs_cheap` then refuses to run |
+| `csp/mlip` | `chgnet` (default; weights `0.3.0`, `0.2.0` or `r2scan`), `mace` (MACE-MP, `medium` by default), `emt` (ASE's toy potential, for tests: Al, N and a few metals); `emt` has `uses_device = False`, so `csp.device` is ignored | `csp/mlip=<kind>` |
+| `csp/search` (multiple) | `relax`: one random arrangement relaxed; `basin_hop`: PolyBO's Metropolis search over swaps; each is a fidelity level, `relax` and `bh<epochs>` | `csp/search=[relax,basin_hop]`, both by default |
 | `benchmark/metric` (multiple) | `steps_to_hit`, `discovery`, `best_so_far`, `hazard_ratio`, `map`; `map` has `needs_beliefs = True`, so the replay records what each game believed after each batch | `benchmark/metric=[...]`, all five by default |
 
 ```text
@@ -199,6 +236,7 @@ ratio from one joint fit, as the hazard ratio does.
 | to add | create | and |
 |---|---|---|
 | a phase field | its raw file in `data/raw/`, `configs/system/<name>.yaml` and `scripts/process_<source>.py` | run the script once, commit the table and sidecar; run commands with `system=<name>` |
+| a phase field of MLIP energies | `configs/system/<name>.yaml` naming `data/processed/<name>.csv` | `phasebo-csp ... csp.references.directory=<CIFs> publish=<name>`, commit the table, its sidecar and `data/processed/<name>/` |
 | a kind of a family | `src/phasebo/<domain>/<family>/items/<kind>.py` | `make configs`; choose it with `<domain>/<family>=<kind>` |
 | a metric | `src/phasebo/benchmark/metric/items/<kind>.py`, comparing with `baseline.py`, with its `reading` and `contrast` | `make configs`; add it to the list in `configs/benchmark.yaml`; rerun `scripts/wandb_workspace.py --url <view>` and `scripts/wandb_workspace.py --report --url <report>` |
 | a variant of a kind | a preset `configs/<domain>/<family>/<name>.yaml` whose defaults list names the kind; never a kind's name | choose it with `<domain>/<family>=<name>` |
@@ -212,7 +250,8 @@ ratio from one joint fit, as the hazard ratio does.
   number in the docs must trace back to the exact file; pre-commit's whitespace fixers leave them byte for byte.
   Processed tables and their sidecars are committed too, so a script's output shows in review row by row;
   `make data`, the invariant tests and the commands fail when a table was edited, or its script or a raw file
-  changed, since the table was written.
+  changed, since the table was written. A table `phasebo-csp` computed pins its run's config and results instead
+  of a script, copied beside it in `data/processed/<name>/`, since a rerun takes hours of MLIP time.
 - **Processed tables are CSV** (RUN-7 prefers parquet for derived tables): CSV diffs line by line in review.
 - **Notebooks are marimo files** (RUN-5 describes `.ipynb`), installed with the `notebooks` dependency group. They
   are plain Python with no stored outputs, so nbstripout has nothing to strip; `__marimo__/` caches are gitignored.

@@ -78,6 +78,13 @@ All notable changes to this project will be documented in this file.
 - The `map` metric, on by default: after every batch, the share of compositions whose winning framework a run
   names right, and the F1 of the compositions it believes stable against the true ones (within `tolerance_mev`,
   10 meV/atom); the run then writes `beliefs.parquet`, each game's believed energy of every explored point.
+- `phasebo-csp`: crystal structure prediction by MLIP, ported from PolyBO (the group's adaptation of ChemDASH).
+  Each cell is placed in cubic, wurtzite and hexagonal frameworks and searched at each level of `csp/search`:
+  `relax`, one random arrangement relaxed, and `basin_hop`, PolyBO's Metropolis search over swaps; both end with a
+  free-cell relax. `csp/mlip` is `chgnet` (default), `mace` or ASE's toy `emt`; CHGNet and MACE are the optional
+  `csp` dependency group. Each job is seeded by its name, written as it finishes and skipped on a rerun; with
+  reference CIFs the run writes a processed table whose fidelities are `<mlip>_<level>`, and `publish=<name>` puts
+  it in `data/processed/` for `phasebo-benchmark`. A sidecar may now pin a command's run instead of a script.
 - Tests on synthetic phase fields; the project follows the nuinashco/conventions `rnd` template (`make check`).
 - Optional `notebooks` dependency group (marimo, plotly; matplotlib and scipy for `scripts/plot_run.py`).
 

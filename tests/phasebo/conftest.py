@@ -1,10 +1,16 @@
-"""Synthetic Li-Sn-S-Cl field, processed as a script would and read as commands do."""
+"""Synthetic Li-Sn-S-Cl field, processed as a script would and read as commands do.
+
+Also ASE's EMT, the toy potential that needs no download, and Al-N references for it.
+"""
 
 from collections.abc import Callable, Mapping
 from pathlib import Path
 
 import pandas as pd
 import pytest
+from ase.build import bulk, molecule
+from ase.calculators.emt import EMT
+from ase.io import write
 from pandera.typing import DataFrame
 from pymatgen.core import Composition
 
@@ -175,3 +181,20 @@ def framework_system(
         elements={s: ElementConfig(charge=c, atoms=(0, 6)) for s, c in CHARGES.items()},
         candidates=CandidatesConfig(max_atoms=8),
     )
+
+
+@pytest.fixture
+def emt() -> EMT:
+    return EMT()
+
+
+@pytest.fixture
+def references_dir(tmp_path) -> Path:
+    """Return a directory of CIFs: fcc Al and an N2 molecule in a box."""
+    directory = tmp_path / "references"
+    directory.mkdir()
+    write(directory / "Al.cif", bulk("Al", "fcc", a=4.05))
+    nitrogen = molecule("N2", cell=[8, 8, 8], pbc=True)
+    nitrogen.center()
+    write(directory / "N2.cif", nitrogen)
+    return directory

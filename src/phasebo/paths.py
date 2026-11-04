@@ -8,4 +8,5 @@ ROOT: Path = rootutils.find_root(search_from=__file__, indicator=".project-root"
 
 CONFIGS_DIR = ROOT / "configs"
 DATA_DIR = ROOT / "data"
+PROCESSED_DIR = DATA_DIR / "processed"
 RUNS_DIR = ROOT / "runs"

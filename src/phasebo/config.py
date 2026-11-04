@@ -8,6 +8,7 @@ from pydantic import (
     BeforeValidator,
     Field,
     NonNegativeInt,
+    PositiveFloat,
     PositiveInt,
     SerializeAsAny,
     model_validator,
@@ -23,6 +24,9 @@ from phasebo.benchmark.metric.base import MetricConfig, MetricFactory
 from phasebo.benchmark.start.base import StartConfig, StartFactory
 from phasebo.bo.acquisition.base import AcquisitionConfig, AcquisitionFactory
 from phasebo.bo.surrogate.base import SurrogateConfig, SurrogateFactory
+from phasebo.csp.framework import NAMES, FrameworkName
+from phasebo.csp.mlip.base import Device, MLIPConfig, MLIPFactory
+from phasebo.csp.search.base import StructureSearchConfig, StructureSearchFactory
 
 
 def _by_kind(factory: type[ConfigurableFactory[Any]]) -> BeforeValidator:
@@ -64,6 +68,11 @@ type _StartField = Annotated[SerializeAsAny[StartConfig], _by_kind(StartFactory)
 type _CheapField = Annotated[SerializeAsAny[CheapConfig], _by_kind(CheapSourceFactory)]
 type _MetricsField = Annotated[
     dict[str, SerializeAsAny[MetricConfig]], _by_kinds(MetricFactory)
+]
+type _MLIPField = Annotated[SerializeAsAny[MLIPConfig], _by_kind(MLIPFactory)]
+type _SearchesField = Annotated[
+    dict[str, SerializeAsAny[StructureSearchConfig]],
+    _by_kinds(StructureSearchFactory),
 ]
 
 
@@ -192,6 +201,63 @@ class CompareConfig(RunConfig):
     )
 
 
+class ReferencesConfig(Schema):
+    """Known structures relaxed by the same MLIP, so the hull has its corners."""
+
+    directory: Path | None = Field(
+        default=None,
+        description="of CIFs, every element alone among them; null: no table",
+    )
+    fmax: PositiveFloat = Field(default=0.05, description="eV/A; cell free")
+    steps: PositiveInt = 500
+
+
+class PredictionConfig(Schema):
+    """How `phasebo-csp` searches each composition's structures."""
+
+    mlip: _MLIPField
+    search: _SearchesField = Field(default_factory=dict)
+    frameworks: list[FrameworkName] = Field(default_factory=lambda: list(NAMES))
+    phi: float = Field(
+        default=0.60,
+        gt=0,
+        le=1,
+        description="a cell's volume is its ions' Shannon volume over phi",
+    )
+    c_over_a: PositiveFloat | None = Field(
+        default=None, description="of wurtzite and hexagonal; null: 1.633 and 1.40"
+    )
+    symprec: PositiveFloat = Field(
+        default=0.3, description="A; of the released cell's space group"
+    )
+    device: Device = Field(
+        default="auto", description="auto|cpu|cuda; auto: cuda if torch sees a GPU"
+    )
+    workers: PositiveInt = Field(
+        default=1, description="processes, each loading the MLIP; above 1 on cpu only"
+    )
+    references: ReferencesConfig = Field(default_factory=ReferencesConfig)
+
+
+class CSPConfig(RunConfig):
+    """Entry config of `phasebo-csp` (configs/csp.yaml)."""
+
+    formulas: list[str] = Field(
+        default_factory=list,
+        description="whole cells, as Sc1Al3N4: AlN is one atom of each",
+    )
+    formulas_file: Path | None = Field(
+        default=None,
+        description="CSV with a header row, cells in column 1, added to formulas",
+    )
+    csp: PredictionConfig
+    publish: str | None = Field(
+        default=None,
+        description="a phase field's name: also write data/processed/<name>.csv and "
+        "<name>/; needs csp.references.directory",
+    )
+
+
 class DataConfig(Schema):
     """Entry config composed once per phase field (configs/data.yaml)."""
 
@@ -219,4 +285,5 @@ GENERATED = (
     ConfigFile("defaults/generate.yaml", GenerateConfig, groups=("system",)),
     ConfigFile("defaults/compare.yaml", CompareConfig),
     ConfigFile("defaults/data.yaml", DataConfig, groups=("system",)),
+    ConfigFile("defaults/csp.yaml", CSPConfig, groups=("csp/mlip", "csp/search")),
 )
