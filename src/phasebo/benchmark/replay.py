@@ -1,6 +1,5 @@
 """Benchmark replays: BO picks among the computed points, as if computing them."""
 
-import functools
 from collections.abc import Sequence
 from typing import Protocol, cast
 
@@ -256,22 +255,25 @@ def _replay_one(
     # A third stream leaves the first two as they were without cheap energies.
     start_stream, search_stream, cheap_stream = stream.spawn(3)
     starting = start.pick(points, rng=np.random.default_rng(start_stream))
-    cheap_mev = None
-    if draw_cheap is not None:
-        cheap_mev = draw_cheap(rng=np.random.default_rng(cheap_stream))
-    search = functools.partial(
-        replay,
-        points,
-        starting,
-        surrogate=surrogate,
-        acquisition=acquisition,
-        batch_size=batch_size,
-        max_iter=max_iter,
-        rng=np.random.default_rng(search_stream),
-        cheap_mev=cheap_mev,
-    )
+
+    def play() -> tuple[list[list[int]], np.ndarray | None]:
+        cheap_mev = None
+        if draw_cheap is not None:
+            cheap_mev = draw_cheap(rng=np.random.default_rng(cheap_stream))
+        batches = replay(
+            points,
+            starting,
+            surrogate=surrogate,
+            acquisition=acquisition,
+            batch_size=batch_size,
+            max_iter=max_iter,
+            rng=np.random.default_rng(search_stream),
+            cheap_mev=cheap_mev,
+        )
+        return [starting, *batches], cheap_mev
+
     if not acquisition.needs_model:
-        return [starting, *search()], cheap_mev
+        return play()
     import torch
 
     threads = torch.get_num_threads()
@@ -281,6 +283,6 @@ def _replay_one(
     torch.set_num_threads(1)
     try:
         torch.manual_seed(int(search_stream.generate_state(1)[0]))
-        return [starting, *search()], cheap_mev
+        return play()
     finally:
         torch.set_num_threads(threads)
