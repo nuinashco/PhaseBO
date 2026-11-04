@@ -16,7 +16,7 @@ from nuikit.registry import KindConfig
 from phasebo import paths
 from phasebo.benchmark.replay import Replays
 from phasebo.bo.acquisition.base import Acquisition
-from phasebo.bo.surrogate.base import Surrogate
+from phasebo.bo.surrogate.base import Surrogate, SurrogateFactory
 from phasebo.config import BenchmarkConfig, RunConfig, SearchConfig, SystemConfig
 from phasebo.data import store
 from phasebo.field import candidates
@@ -91,6 +91,20 @@ def refuse_needing_cheap(
             raise ConfigError(f"{role} {part.kind!r} needs cheap energies; {fix}")
 
 
+def require_categories(surrogate: Surrogate, points: field_points.Points) -> None:
+    """Raise `ConfigError` if the field has frameworks the surrogate cannot model."""
+    if points.categories and not surrogate.handles_categories:
+        able = [
+            kind
+            for kind in SurrogateFactory.list_registered()
+            if SurrogateFactory.get_class(kind).handles_categories
+        ]
+        raise ConfigError(
+            f"bo.surrogate {surrogate.kind!r} cannot model this field's frameworks; "
+            f"choose one that can: {', '.join(able)}"
+        )
+
+
 def load_table(system: SystemConfig) -> store.LoadedTable:
     """Return the phase field's processed table, checked against its raw files."""
     return store.load(paths.ROOT / system.processed)
@@ -136,11 +150,13 @@ def load_benchmark(
             f"{cfg.system.processed} changed since {run_dir.name} ran; check out its "
             "commit or rerun it"
         )
+    beliefs = run_dir / "beliefs.parquet"
     replays = Replays.from_table(
         points,
         pd.read_parquet(run_dir / "paths.parquet"),
         batch_size=cfg.bo.batch_size,
         max_iter=cfg.benchmark.max_iter,
+        beliefs=pd.read_parquet(beliefs) if beliefs.is_file() else None,
     )
     return cfg, loaded, replays
 

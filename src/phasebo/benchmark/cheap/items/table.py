@@ -52,12 +52,12 @@ class TableCheapSource(CheapSource[TableCheapConfig]):
         return self._read_energies(rows, points)
 
     def _read_energies(self, rows: pd.DataFrame, points: Points) -> np.ndarray:
-        index = {name: i for i, name in enumerate(points.names)}
         cheap = Points.from_rows(
-            rows.loc[rows["point"].isin(index)],
+            rows.loc[rows["point"].isin(points.names)],
             fidelity=self.config.fidelity,
             elements=points.elements,
         )
-        energies_mev = np.full(len(index), np.nan)
-        energies_mev[[index[name] for name in cheap.names]] = cheap.energies_mev
+        at = points.find(cheap.names, cheap.frameworks)
+        energies_mev = np.full(len(points.formulas), np.nan)
+        energies_mev[at[at >= 0]] = cheap.energies_mev[at >= 0]
         return energies_mev

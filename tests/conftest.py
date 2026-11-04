@@ -1,5 +1,7 @@
 """In-process fakes of the BO families, for the loops that drive them."""
 
+from collections.abc import Sequence
+
 import numpy as np
 import pytest
 from attrs import define, field
@@ -17,12 +19,13 @@ class RecordingSurrogate(Surrogate[SurrogateConfig]):
 
     def fit(
         self,
-        coords: np.ndarray,
+        inputs: np.ndarray,
         energies_mev: np.ndarray,
         *,
         cheap: CheapEnergies | None = None,
+        categories: Sequence[int] = (),
     ) -> Fit:
-        self.sizes.append(len(coords))
+        self.sizes.append(len(inputs))
         self.cheap_sizes.append(0 if cheap is None else len(cheap.energies_mev))
         return Fit(model=None, best_f=float(-energies_mev.min()))
 

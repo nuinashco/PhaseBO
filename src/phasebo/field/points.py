@@ -1,4 +1,4 @@
-"""Points of a phase field: one entry per reduced composition, with its coordinates."""
+"""Points of a phase field: one per composition and framework, with coordinates."""
 
 from collections.abc import Collection, Sequence
 from functools import cached_property
@@ -20,9 +20,10 @@ _ON_HULL_MEV = 1e-6
 class Points:
     """The points of a phase field: each one's cell, coordinates, energy and role.
 
-    A point is a reduced composition; it keeps its lowest-energy cell. Coordinates
-    are the atomic fractions of every element but the first, in `pymatgen` element
-    order, which makes them its phase diagram coordinates.
+    A point is a reduced composition, or with frameworks a composition in one
+    framework; it keeps its lowest-energy cell. Coordinates are the atomic fractions
+    of every element but the first, in `pymatgen` element order, which makes them its
+    phase diagram coordinates.
     """
 
     elements: tuple[str, ...]
@@ -30,11 +31,60 @@ class Points:
     coords: np.ndarray = field(eq=False)
     energies_mev: np.ndarray = field(eq=False)  # Above the hull, per atom.
     references: np.ndarray = field(eq=False)
+    # Each point's framework; None for a single structure, such as a reference's.
+    frameworks: tuple[str | None, ...]
 
     @cached_property
     def names(self) -> tuple[str, ...]:
         """Return each point's reduced formula, its name in a processed table."""
         return tuple(Composition(f).reduced_composition.formula for f in self.formulas)
+
+    @property
+    def labels(self) -> tuple[str, ...]:
+        """Return each point's name, with its framework in brackets when it has one."""
+        return tuple(
+            name if framework is None else f"{name} ({framework})"
+            for name, framework in zip(self.names, self.frameworks, strict=True)
+        )
+
+    @property
+    def framework_names(self) -> tuple[str, ...]:
+        """Return the field's frameworks, sorted; empty for a field without them."""
+        return tuple(sorted({f for f in self.frameworks if f is not None}))
+
+    @property
+    def inputs(self) -> np.ndarray:
+        """Return what a model sees: coordinates, then the framework as a category."""
+        names = self.framework_names
+        if not names:
+            return self.coords
+        category = [-1 if f is None else names.index(f) for f in self.frameworks]
+        return np.column_stack([self.coords, category])
+
+    @property
+    def categories(self) -> tuple[int, ...]:
+        """Return the columns of `inputs` that hold categories, not coordinates."""
+        return (self.coords.shape[1],) if self.framework_names else ()
+
+    @property
+    def winners(self) -> np.ndarray:
+        """Return each explored composition's lowest point, the framework that wins."""
+        pool = self.pool
+        frame = pd.DataFrame(
+            {"name": np.asarray(self.names)[pool], "energy": self.energies_mev[pool]}
+        )
+        return pool[frame.groupby("name", sort=False)["energy"].idxmin().to_numpy()]
+
+    def find(
+        self, names: Sequence[str], frameworks: Sequence[str | None]
+    ) -> np.ndarray:
+        """Return the index of each (name, framework); -1 for one not in this field."""
+        keys = zip(self.names, self.frameworks, strict=True)
+        index = {key: i for i, key in enumerate(keys)}
+        return np.array(
+            [index.get((n, f), -1) for n, f in zip(names, frameworks, strict=True)],
+            dtype=int,
+        )
 
     @property
     def pool(self) -> np.ndarray:
@@ -61,7 +111,8 @@ class Points:
     ) -> Points:
         """Return the points of one fidelity's rows of a processed table.
 
-        `excluded` formulas drop every row at their points before the hull is built.
+        `excluded` formulas drop every row at their points before the hull is built,
+        which takes every framework's cells.
         """
         found = sorted(set(rows["fidelity"]))
         rows = rows.loc[rows["fidelity"] == fidelity].reset_index(drop=True)
@@ -75,23 +126,30 @@ class Points:
         )
         rows = rows.loc[~rows["point"].isin(left_out)].reset_index(drop=True)
         energies_mev = _read_energies(rows)
+        # An empty name groups the cells without a framework; groupby drops nulls.
+        framework = pd.Series("", index=rows.index)
+        if "framework" in rows:
+            framework = rows["framework"].fillna("").astype(str)
         groups = pd.DataFrame(
             {
                 "point": rows["point"],
+                "framework": framework,
                 "energy": energies_mev,
                 "reference": rows["reference"],
             }
-        ).groupby("point", sort=False)
+        ).groupby(["point", "framework"], sort=False)
         # `idxmin` keeps the first of tied cells, in table order.
         lowest = groups["energy"].idxmin().to_numpy()
         order = tuple(str(el) for el in sorted(Element(symbol) for symbol in elements))
         formulas = tuple(rows["formula"].to_numpy()[lowest])
+        named = framework.to_numpy()[lowest]
         return cls(
             elements=order,
             formulas=formulas,
             coords=_project(formulas, order),
             energies_mev=energies_mev[lowest],
             references=groups["reference"].any().to_numpy(dtype=bool),
+            frameworks=tuple(f or None for f in named),
         )
 
 

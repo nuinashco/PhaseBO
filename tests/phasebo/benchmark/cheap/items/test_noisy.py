@@ -3,7 +3,7 @@
 import numpy as np
 import pytest
 
-from nuikit.errors import DataError
+from nuikit.errors import ConfigError, DataError
 
 from phasebo.benchmark.cheap.base import CheapSourceFactory
 from phasebo.field.points import Points
@@ -82,3 +82,26 @@ def test_noisy_source_refuses_points_without_rows(rows, points):
 
     with pytest.raises(ValueError, match="have no 'dft' rows"):
         noisy().check(rows.loc[rows["point"] != lost], points, fidelity="dft")
+
+
+def test_bias_moves_only_its_frameworks_points(framework_rows, framework_points):
+    plain = noisy(random_mev=0.0, smooth_mev=0.0)
+    biased = noisy(random_mev=0.0, smooth_mev=0.0, bias_mev={"wurtzite": 40.0})
+
+    def draw(source):
+        rng = np.random.default_rng(0)
+        return source.draw(framework_rows, framework_points, fidelity="dft", rng=rng)
+
+    moved = draw(biased) - draw(plain)
+    wurtzite = np.array([f == "wurtzite" for f in framework_points.frameworks])
+    assert moved[wurtzite].mean() > 20
+    assert moved[~wurtzite].mean() < moved[wurtzite].mean()
+
+
+def test_noisy_source_refuses_a_bias_for_a_framework_not_in_the_field(
+    framework_rows, framework_points
+):
+    with pytest.raises(ConfigError, match="name only those"):
+        noisy(bias_mev={"hexagonal": 10.0}).check(
+            framework_rows, framework_points, fidelity="dft"
+        )
