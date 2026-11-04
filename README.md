@@ -79,7 +79,7 @@ beside its DFT energy, so their agreement can be measured.
 | `benchmark/cheap=` | the cheap energy |
 |---|---|
 | `table` | another fidelity of the processed table (`benchmark.cheap.fidelity`, `nn` by default, which `system=LiSnSCl_multifidel` has), the same in every game |
-| `noisy` | the modelled total energies with a random error per cell (`random_mev`) and a smooth one shared by nearby compositions (`smooth_mev`, `lengthscale`), then the hull rebuilt; drawn anew in every game, the same for every setting of one seed; needs total energies (`system=LiSnSCl`) |
+| `noisy` | the modelled total energies with a random error per cell (`random_mev`) and a smooth one shared by nearby compositions (`smooth_mev`, `lengthscale`, `kernel`), then the hull rebuilt; drawn anew in every game, the same for every setting of one seed; needs total energies (`system=LiSnSCl`) |
 
 Three surrogates use the cheap energies and predict DFT's: `multitask` (BoTorch's multi-task GP, which learns
 how far DFT follows the cheap energies), `multifidelity` (its multi-fidelity GP, the source as an input) and

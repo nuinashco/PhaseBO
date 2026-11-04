@@ -13,7 +13,7 @@ from nuikit.registry import Configurable, ConfigurableFactory, KindConfig
 
 type KernelName = Literal["matern12", "matern32", "matern52", "rbf"]
 
-_MATERN_NU = {"matern12": 0.5, "matern32": 1.5, "matern52": 2.5}
+MATERN_NU = {"matern12": 0.5, "matern32": 1.5, "matern52": 2.5}
 
 
 class SurrogateConfig(KindConfig):
@@ -91,7 +91,7 @@ def require_cheap[T](cheap: T | None, owner: str) -> T:
 
 def build_kernel(name: KernelName, dims: int) -> Any:
     """Return the kernel `name` over `dims` inputs; None for BoTorch's default."""
-    nu = _MATERN_NU.get(name)
+    nu = MATERN_NU.get(name)
     if nu is None:
         return None
     from gpytorch.kernels import MaternKernel, ScaleKernel

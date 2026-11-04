@@ -1,5 +1,7 @@
 """Noisy source: fake cheap energies, the modelled ones with errors of a chosen size."""
 
+from typing import Literal
+
 import numpy as np
 import pandas as pd
 from attrs import define, field
@@ -9,7 +11,7 @@ from pymatgen.core import Composition
 from nuikit.errors import DataError
 
 from phasebo.benchmark.cheap.base import CheapConfig, CheapSource, CheapSourceFactory
-from phasebo.bo.surrogate.base import quiet_gpytorch
+from phasebo.bo.surrogate.base import MATERN_NU, quiet_gpytorch
 from phasebo.field import hull
 from phasebo.field.points import Points
 
@@ -30,8 +32,12 @@ class NoisyCheapConfig(CheapConfig):
     )
     lengthscale: PositiveFloat = Field(
         default=0.2,
-        description="of the smooth error's Matern 5/2, over all elements' atomic "
+        description="of the smooth error's Matern kernel, over all elements' atomic "
         "fractions: moving x between two elements is a distance x*sqrt(2)",
+    )
+    kernel: Literal["matern12", "matern32", "matern52"] = Field(
+        default="matern52",
+        description="matern12|matern32|matern52; of the smooth error",
     )
 
 
@@ -108,7 +114,7 @@ class NoisyCheapSource(CheapSource[NoisyCheapConfig]):
         # Coordinates leave out the first element; with its fraction back, moving
         # atoms between any two elements covers the same distance.
         fractions = np.column_stack([1 - coords.sum(axis=1), coords])
-        kernel = MaternKernel(nu=2.5).double()
+        kernel = MaternKernel(nu=MATERN_NU[self.config.kernel]).double()
         kernel.lengthscale = torch.tensor(self.config.lengthscale, dtype=torch.float64)
         with torch.no_grad():
             correlation = kernel(torch.as_tensor(fractions)).to_dense().numpy()
