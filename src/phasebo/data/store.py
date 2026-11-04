@@ -12,7 +12,7 @@ from typing import Self
 
 from attrs import field, frozen
 from pandera.typing import DataFrame
-from pydantic import ValidationError, model_validator
+from pydantic import ValidationError, field_serializer, model_validator
 
 from nuikit.config import Schema
 from nuikit.errors import DataError
@@ -27,6 +27,12 @@ class PinnedFile(Schema):
 
     path: Path
     sha256: str
+
+    @field_serializer("path")
+    def _posix(self, path: Path) -> str:
+        # Forward slashes on every platform, so a sidecar written on Windows reads
+        # the same on macOS and Linux.
+        return path.as_posix()
 
 
 class Sidecar(Schema):
@@ -80,7 +86,9 @@ def write(
     """
     text = table.render(rows)
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(text, encoding="utf-8")
+    # newline="\n": the bytes the sidecar hashes, also on Windows, which would write
+    # CRLF and leave the table stale as soon as it was written.
+    path.write_text(text, encoding="utf-8", newline="\n")
     sidecar = Sidecar(
         script=None if script is None else _pin(script),
         command=command,
@@ -89,7 +97,9 @@ def write(
     )
     # Without the unset source, a script's sidecar reads as it did before commands.
     _locate_sidecar(path).write_text(
-        sidecar.model_dump_json(indent=2, exclude_none=True) + "\n", encoding="utf-8"
+        sidecar.model_dump_json(indent=2, exclude_none=True) + "\n",
+        encoding="utf-8",
+        newline="\n",
     )
 
 

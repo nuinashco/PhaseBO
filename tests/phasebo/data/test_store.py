@@ -31,6 +31,22 @@ def test_a_computed_table_names_the_command_that_rebuilds_it(system):
     ]
 
 
+def test_a_table_and_its_sidecar_are_written_alike_on_every_platform(system, tmp_path):
+    rows = store.load(system.processed).rows
+    raw = tmp_path / "nested" / "raw.csv"
+    raw.parent.mkdir()
+    raw.write_text("Li1,-1.0\n")
+    path = tmp_path / "table.csv"
+    store.write(path, rows, raw=[raw], command="phasebo-csp run_name=r")
+
+    sidecar = path.with_suffix(".json").read_bytes()
+    assert (b"\r\n" in path.read_bytes(), b"\r\n" in sidecar, b"\\\\" in sidecar) == (
+        False,
+        False,
+        False,
+    )
+
+
 def test_find_problems_catches_a_malformed_sidecar(system):
     system.processed.with_suffix(".json").write_text("{}")
 

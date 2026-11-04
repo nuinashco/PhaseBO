@@ -106,6 +106,9 @@ All notable changes to this project will be documented in this file.
 - `BO_Path_in_<field>.txt`, the path of one replay: `paths.parquet` holds every repeat's.
 
 ### Fixed
+- Processed tables written on Windows were stale at once, and unreadable elsewhere. The table and its sidecar got
+  CRLF line ends, which the sidecar's sha256 does not cover, and the sidecar pinned paths with backslashes. Both
+  are now written with LF and forward slashes on every platform.
 - A benchmark's starting set is drawn by point and never holds a target. It was drawn by name and kept only points
   at exactly 0 meV/atom out, so a target stored at -4e-13 could start a run, and a stable point shared with a higher
   cell could be seeded with that cell's energy.
