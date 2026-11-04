@@ -2,7 +2,7 @@
 
 import numpy as np
 import pandas as pd
-from attrs import define
+from attrs import define, field
 from pydantic import Field, NonNegativeFloat, PositiveFloat
 from pymatgen.core import Composition
 
@@ -43,6 +43,10 @@ class NoisyCheapSource(CheapSource[NoisyCheapConfig]):
     Both errors are drawn whatever their size, so settings of one seed share them.
     """
 
+    _factors: dict[tuple[tuple[int, ...], bytes], np.ndarray] = field(
+        factory=dict, init=False, repr=False, eq=False
+    )
+
     def check(self, rows: pd.DataFrame, points: Points, *, fidelity: str) -> None:
         cells = _select_cells(rows, points, fidelity=fidelity)
         bare = sorted(set(points.names) - set(cells["point"]))
@@ -56,6 +60,9 @@ class NoisyCheapSource(CheapSource[NoisyCheapConfig]):
                 "benchmark/cheap=noisy needs total energies; choose a phase field "
                 "whose table has them, such as system=LiSnSCl"
             )
+        if self.config.smooth_mev > 0:
+            # Built here, in the command's process, so every worker gets it with `self`.
+            self._factor_correlation(points.coords)
 
     def draw(
         self,
@@ -69,21 +76,29 @@ class NoisyCheapSource(CheapSource[NoisyCheapConfig]):
         index = {name: i for i, name in enumerate(points.names)}
         at = np.array([index[name] for name in cells["point"]])
         formulas = cells["formula"].tolist()
-        random_mev = self.config.random_mev * rng.normal(size=len(cells))
-        shared = self._factor_correlation(points.coords) @ rng.normal(
-            size=len(points.formulas)
-        )
-        error_mev = random_mev + self.config.smooth_mev * shared[at]
+        random_error_mev = self.config.random_mev * rng.normal(size=len(cells))
+        normals = rng.normal(size=len(points.formulas))
+        error_mev = random_error_mev
+        if self.config.smooth_mev > 0:
+            shared = self._factor_correlation(points.coords) @ normals
+            error_mev = error_mev + self.config.smooth_mev * shared[at]
         atoms = np.array([Composition(f).num_atoms for f in formulas])
         totals_ev = cells["total_energy_ev"].to_numpy(dtype=float)
         above_mev = hull.measure(
             formulas, (totals_ev + error_mev / 1000 * atoms).tolist()
         )
-        energies_mev = np.full(len(points.formulas), np.inf)
-        np.minimum.at(energies_mev, at, above_mev)
+        energies_mev = np.full(len(points.formulas), np.nan)
+        np.fmin.at(energies_mev, at, above_mev)
         return energies_mev
 
     def _factor_correlation(self, coords: np.ndarray) -> np.ndarray:
+        """Return the smooth error's Cholesky factor over `coords`, built once."""
+        key = (coords.shape, coords.tobytes())
+        if key not in self._factors:
+            self._factors[key] = self._build_factor(coords)
+        return self._factors[key]
+
+    def _build_factor(self, coords: np.ndarray) -> np.ndarray:
         """Return a Cholesky factor of the smooth error's correlation over `coords`."""
         import torch
 
