@@ -142,7 +142,7 @@ def _log_to_wandb(
             "config.yaml",
             "data.json",
         ):
-            # cheap.parquet exists only with a cheap source.
+            # `cheap.parquet` exists only with a cheap source.
             if (run_dir / name).is_file():
                 outputs.add_file(str(run_dir / name))
         run.log_artifact(outputs)

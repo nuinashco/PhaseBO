@@ -78,7 +78,7 @@ beside its DFT energy, so their agreement can be measured.
 
 | `benchmark/cheap=` | the cheap energy |
 |---|---|
-| `table` | another fidelity of the processed table (`benchmark.cheap.fidelity`, `nn` by default, which `system=LiSnSCl_multifidel` has), the same in every game |
+| `table` | another fidelity of the processed table (`benchmark.cheap.fidelity`, `nn` by default, which `system=LiSnSCl_multifidel` has), the same in every game; energies above the hull are used as the table gives them, without rebuilding the hull |
 | `noisy` | the modelled total energies with a random error per cell (`random_mev`) and a smooth one shared by nearby compositions (`smooth_mev`, `lengthscale`, `kernel`), then the hull rebuilt; drawn anew in every game, the same for every setting of one seed; needs total energies (`system=LiSnSCl`) |
 
 Three surrogates use the cheap energies and predict DFT's: `multitask` (BoTorch's multi-task GP, which learns
@@ -88,11 +88,13 @@ the cheap model's output is as deterministic as DFT's. `bo/acquisition=screen` i
 order, never learning from DFT. Each refuses to run without a cheap source, and `phasebo-suggest` has none yet.
 
 ```bash
-uv run phasebo-benchmark benchmark/cheap=noisy benchmark.cheap.random_mev=50 bo/surrogate=multitask
-uv run phasebo-benchmark benchmark/cheap=noisy benchmark.cheap.random_mev=50 bo/acquisition=screen
+uv run phasebo-benchmark benchmark/cheap=noisy bo/surrogate=multitask
+uv run phasebo-benchmark benchmark/cheap=noisy bo/acquisition=screen
+uv run phasebo-benchmark benchmark/cheap=noisy benchmark.cheap.random_mev=0 benchmark.cheap.smooth_mev=100 bo/surrogate=multifidelity
 ```
 
-Evaluations until the first stable composition / until each, averaged (LiSnSCl, qLogEI, 300 games):
+Evaluations until the first stable composition / until each, averaged (LiSnSCl, seed 42, 300 games; qLogEI unless
+the setting is `bo/acquisition=screen`):
 
 | setting | `random_mev=25` | `random_mev=0 smooth_mev=100` |
 |---|---|---|
@@ -102,14 +104,18 @@ Evaluations until the first stable composition / until each, averaged (LiSnSCl, 
 | `bo/surrogate=multifidelity` | 6.9 / 14.9 | 5.6 / 11.2 |
 | `bo/surrogate=delta` | 6.0 / 13.9 | 8.4 / 14.7 |
 
-The screen is hard to beat when the cheap errors are random: nothing in them can be learned. Errors that nearby
-compositions share can be, so there the surrogates beat it.
+The screen is hard to beat when the cheap errors are random: nothing in them can be learned. Against it, game by game
+(`phasebo-compare` with the screen run first; evaluations to the first stable composition, 95% intervals),
+`multitask` ties it (+0.07, -0.04 to +0.17), and `delta` (+1.09, +0.77 to +1.43) and `multifidelity` (+1.96, +1.45
+to +2.55) need more. Errors that nearby compositions share can be learned, so there every surrogate beats it:
+`multitask` by 4.60 (3.80 to 5.45), `delta` by 6.27 (5.11 to 7.41) and `multifidelity` by 9.03 (7.81 to 10.27).
+All of this comes from a single field, LiSnSCl with 3 targets.
 
 ### Comparing settings
 
 `phasebo-compare` compares benchmark runs with the first one listed, the baseline, usually a
 `bo/acquisition=random` run. Runs of one seed, start and phase field play the same 300 games, so it compares
-game by game:
+game by game; with a cheap source, the games' cheap draws match only between runs with the same cheap settings:
 
 ```bash
 uv run phasebo-compare 'runs=[random-<time>,qlogei-<time>,ts-<time>]'    # under runs/

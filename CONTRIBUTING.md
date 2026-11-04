@@ -233,7 +233,9 @@ ratio from one joint fit, as the hazard ratio does.
 - **BoTorch draws from torch's global generator** (RUN-2 asks for an explicit one): fitting a GP, qLogEI's MC
   sampler and Thompson sampling take no generator. `seed_everything` seeds it once per run, and a benchmark seeds
   it again in each repeat from that repeat's stream, so runs repeat whatever `benchmark.workers` is; starting sets
-  and random acquisition take `np.random.Generator`s from the same streams.
+  and random acquisition take `np.random.Generator`s from the same streams. Each repeat's stream spawns a start, a
+  search and a cheap stream; cheap comes last, so results without a cheap source are unchanged. Screen's tie-break
+  and the cheap draw take Generators from them.
 
 ## Tests
 
