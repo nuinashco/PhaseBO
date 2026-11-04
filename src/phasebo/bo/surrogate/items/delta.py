@@ -33,10 +33,13 @@ class DeltaSurrogate(Surrogate[DeltaConfig]):
         *,
         cheap: CheapEnergies | None = None,
     ) -> Fit:
+        import torch
+
         known = require_cheap(cheap, self.kind)
         settings = self.config.model_dump(exclude={"kind"})
+        at = _find(torch.as_tensor(coords), torch.as_tensor(known.coords)).numpy()
         error = GPSurrogate(GPConfig(kind="gp", **settings)).fit(
-            coords, energies_mev - known.energies_mev[_find(coords, known.coords)]
+            coords, energies_mev - known.energies_mev[at]
         )
         return Fit(
             model=_shift(error.model, known),
@@ -44,13 +47,13 @@ class DeltaSurrogate(Surrogate[DeltaConfig]):
         )
 
 
-def _find(rows: np.ndarray, coords: np.ndarray) -> np.ndarray:
-    """Return the index in `coords` of each of `rows`; fail on a row not in it."""
-    matches = (rows[:, None, :] == coords[None, :, :]).all(axis=-1)
-    if not matches.any(axis=1).all():
+def _find(rows: Any, coords: Any) -> Any:
+    """Return each of `rows`' index in `coords` (tensors); fail on a row not in it."""
+    matches = (rows.unsqueeze(-2) == coords).all(dim=-1)
+    if not bool(matches.any(dim=-1).all()):
         msg = "delta predicts only at points with a cheap energy"
         raise ValueError(msg)
-    return matches.argmax(axis=1)
+    return matches.int().argmax(dim=-1)
 
 
 def _shift(error: Any, known: CheapEnergies) -> Any:
@@ -77,16 +80,18 @@ def _shift(error: Any, known: CheapEnergies) -> Any:
             observation_noise: bool | torch.Tensor = False,
             posterior_transform: Any = None,
         ) -> GPyTorchPosterior:
-            matches = (X.unsqueeze(-2) == coords).all(dim=-1)
-            if not bool(matches.any(dim=-1).all()):
-                msg = "delta predicts only at points with a cheap energy"
-                raise ValueError(msg)
+            if posterior_transform is not None:
+                msg = "delta's posterior takes no posterior_transform"
+                raise NotImplementedError(msg)
+            if output_indices not in (None, [0]):
+                msg = "delta has one output; output_indices can only be [0]"
+                raise NotImplementedError(msg)
+            at = _find(X, coords)
             base = error.posterior(X, observation_noise=observation_noise)
             normal = base.distribution
             return GPyTorchPosterior(
                 MultivariateNormal(
-                    normal.mean + offsets_mev[matches.int().argmax(dim=-1)],
-                    normal.lazy_covariance_matrix,
+                    normal.mean + offsets_mev[at], normal.lazy_covariance_matrix
                 )
             )
 
