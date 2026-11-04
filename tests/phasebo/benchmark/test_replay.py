@@ -188,8 +188,17 @@ def test_replay_many_draws_the_same_cheap_energies_whatever_the_workers(points):
     assert one.cheap_table().equals(two.cheap_table())
 
 
-@pytest.mark.parametrize("acquisition", ["qlogei", "ts"])
-@pytest.mark.parametrize("surrogate", ["multitask", "multifidelity", "delta"])
+@pytest.mark.parametrize(
+    ("surrogate", "acquisition"),
+    [
+        ("multitask", "qlogei"),
+        ("multitask", "ts"),
+        ("multifidelity", "qlogei"),
+        ("multifidelity", "ts"),
+        ("delta", "qlogei"),
+        ("delta", "ts"),
+    ],
+)
 def test_replay_picks_a_batch_with_each_cheap_surrogate_and_model_based_rule(
     points, surrogate, acquisition
 ):
