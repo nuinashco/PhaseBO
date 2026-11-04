@@ -21,6 +21,7 @@ phasebo-suggest     # next compositions to compute; results in runs/<run_name>/
 phasebo-benchmark   # BO replayed over the computed compositions, scored against random
 phasebo-generate    # candidate compositions of the phase field
 phasebo-compare     # benchmark runs compared with the first, game by game
+phasebo-csp         # structures and MLIP energies of compositions in frameworks (uv run --group csp)
 make data           # check data/processed/ against data/raw/; scripts/process_*.py rebuild it
 ```
 
@@ -40,7 +41,8 @@ make data           # check data/processed/ against data/raw/; scripts/process_*
 - `src/phasebo/csp/`: crystal structure prediction ported from PolyBO: `framework.py` and `moves.py` (pure), the
   `mlip` and `search` families (one kind per fidelity level), `result.py`, `references.py`, `job.py` (one
   composition, framework and level, seeded by its name) and `store.py` (each result as it finishes). It never
-  imports `bo`, `benchmark` or `data`. CHGNet and MACE are the `csp` dependency group; tests use `emt`.
+  imports `bo`, `benchmark` or `data`; `cli/csp.py` builds its table. CHGNet and MACE are the `csp` dependency
+  group; tests use `emt`.
 - `scripts/`: exploratory or one-time runnables, never imported; they may import the package and compose
   `configs/`. Anything `make`, CI or a test depends on is a `cli/` command; a script that is rerun or shared becomes
   one. A one-time conversion whose committed output is pinned by the sha256 of its inputs and itself stays a script.
@@ -52,8 +54,8 @@ make data           # check data/processed/ against data/raw/; scripts/process_*
   entry configs; `configs/system/` holds the phase fields; `configs/bo/` and `configs/benchmark/` hold the
   families' groups, with presets beside the kinds' mirrors.
 - `data/raw/`: published datasets, never edited. `data/processed/`: written by `scripts/process_<source>.py` (the
-  fake fields by `scripts/make_fake_fields.py`) with a sha256 sidecar, committed; never edit it by hand, rerun the
-  script.
+  fake fields by `scripts/make_fake_fields.py`, MLIP fields by `phasebo-csp publish=<name>`) with a sha256 sidecar,
+  committed; never edit it by hand, rerun what wrote it.
 - `tests/` mirrors `src/`; `tests/test_invariants.py` holds the repo-wide checks.
 
 ## Rules that tools do not check

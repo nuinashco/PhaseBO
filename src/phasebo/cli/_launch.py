@@ -42,15 +42,21 @@ def start(
     job_type: str,
     group: str | None = None,
     tags: Sequence[str] = (),
+    resume: bool = False,
 ) -> tuple[Path, np.random.Generator]:
     """Configure logging, seed, and create the run directory; mirror it to W&B.
 
     Return the directory and the run's random generator. `job_type`, `group` and
-    `tags` label the W&B run.
+    `tags` label the W&B run. With `resume`, an existing run directory is reused
+    as it is, its config and provenance included.
     """
     configure_logging(level=cfg.log_level, fmt=cfg.log_format)
     rng = seeding.seed_everything(cfg.seed, deterministic=cfg.deterministic)
-    run_dir = runs.start_run(cfg, name=cfg.run_name, runs_dir=runs_dir)
+    run_dir = runs_dir / cfg.run_name
+    if resume and (run_dir / "config.yaml").is_file():
+        _record_resume(run_dir)
+    else:
+        run_dir = runs.start_run(cfg, name=cfg.run_name, runs_dir=runs_dir)
     if cfg.tracker == "wandb":
         runs.mirror_to_wandb(
             cfg,
@@ -65,6 +71,35 @@ def start(
     structlog.contextvars.bind_contextvars(run=run_dir.name)
     log.info("run_started", run_dir=str(run_dir), seed=cfg.seed)
     return run_dir, rng
+
+
+def _record_resume(run_dir: Path) -> None:
+    """Append this invocation's git commit, command line and time to resumes.jsonl.
+
+    run.json keeps the first invocation's; this records what computed the rest.
+    """
+    import subprocess
+    import sys
+    from datetime import UTC, datetime
+
+    try:
+        found = subprocess.run(
+            ["git", "rev-parse", "HEAD"],
+            capture_output=True,
+            text=True,
+            check=False,
+            cwd=run_dir,
+        )
+        sha = found.stdout.strip() if found.returncode == 0 else None
+    except OSError:  # `git` is not installed.
+        sha = None
+    line = {
+        "git_sha": sha,
+        "argv": sys.argv,
+        "resumed_at": datetime.now(UTC).isoformat(timespec="seconds"),
+    }
+    with (run_dir / "resumes.jsonl").open("a", encoding="utf-8") as file:
+        file.write(json.dumps(line, ensure_ascii=False) + "\n")
 
 
 def name_field(system: SystemConfig) -> str:

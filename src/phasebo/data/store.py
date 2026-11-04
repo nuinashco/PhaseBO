@@ -1,12 +1,18 @@
-"""Processed tables on disk, each with a sidecar that pins its script and raw files."""
+"""Processed tables on disk, each with a sidecar that pins its source and raw files.
+
+A script's table pins the script; a table a command computed, such as phasebo-csp's,
+pins its run's config and results as raw files, and names the command that rebuilds
+it.
+"""
 
 import hashlib
 from collections.abc import Sequence
 from pathlib import Path
+from typing import Self
 
 from attrs import field, frozen
 from pandera.typing import DataFrame
-from pydantic import ValidationError
+from pydantic import ValidationError, model_validator
 
 from nuikit.config import Schema
 from nuikit.errors import DataError
@@ -26,9 +32,29 @@ class PinnedFile(Schema):
 class Sidecar(Schema):
     """What a processed table was built from, by sha256."""
 
-    script: PinnedFile
+    script: PinnedFile | None = None  # None for a table a command computed.
+    command: str | None = None  # What rebuilds a computed table; None for a script's.
     table_sha256: str
     raw: list[PinnedFile]
+
+    @model_validator(mode="after")
+    def _names_one_source(self) -> Self:
+        if (self.script is None) == (self.command is None):
+            msg = "a sidecar names its script or its command, not both or neither"
+            raise ValueError(msg)
+        return self
+
+    @property
+    def rerun(self) -> str:
+        """Return the remedy for a stale table: rerun what wrote it."""
+        if self.script is not None:
+            return f"rerun `uv run {self.script.path}`"
+        return f"rerun `{self.command}`"
+
+    @property
+    def pinned(self) -> list[PinnedFile]:
+        """Return every file the table depends on: its script, if any, and raw files."""
+        return [*([] if self.script is None else [self.script]), *self.raw]
 
 
 @frozen
@@ -41,19 +67,29 @@ class LoadedTable:
 
 
 def write(
-    path: Path, rows: DataFrame[ProcessedTable], *, raw: Sequence[Path], script: Path
+    path: Path,
+    rows: DataFrame[ProcessedTable],
+    *,
+    raw: Sequence[Path],
+    script: Path | None = None,
+    command: str | None = None,
 ) -> None:
-    """Write the table, and a sidecar pinning it, its script and raw files by sha256."""
+    """Write the table, and a sidecar pinning it, its source and raw files by sha256.
+
+    Give the `script` that wrote the table, or the `command` that rebuilds it.
+    """
     text = table.render(rows)
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(text, encoding="utf-8")
     sidecar = Sidecar(
-        script=_pin(script),
+        script=None if script is None else _pin(script),
+        command=command,
         table_sha256=_hash(text.encode()),
         raw=[_pin(p) for p in raw],
     )
+    # Without the unset source, a script's sidecar reads as it did before commands.
     _locate_sidecar(path).write_text(
-        sidecar.model_dump_json(indent=2) + "\n", encoding="utf-8"
+        sidecar.model_dump_json(indent=2, exclude_none=True) + "\n", encoding="utf-8"
     )
 
 
@@ -67,12 +103,15 @@ def find_problems(path: Path) -> list[str]:
     try:
         sidecar = _read_sidecar(path)
     except ValidationError:
-        return [f"sidecar {sidecar_path.name} is malformed; rerun its script"]
-    rerun = f"rerun `uv run {sidecar.script.path}`"
+        return [
+            f"sidecar {sidecar_path.name} is malformed; "
+            "restore it, or rerun what wrote it"
+        ]
+    rerun = sidecar.rerun
     found: list[str] = []
     if _hash(path.read_bytes()) != sidecar.table_sha256:
-        found.append(f"edited since its script wrote it; {rerun}")
-    for pinned in [sidecar.script, *sidecar.raw]:
+        found.append(f"edited since it was written; {rerun}")
+    for pinned in sidecar.pinned:
         source = paths.ROOT / pinned.path
         if not source.is_file():
             found.append(f"{pinned.path} is missing; restore it")

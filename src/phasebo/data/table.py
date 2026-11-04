@@ -113,7 +113,7 @@ def render(table: DataFrame[ProcessedTable]) -> str:
 def parse(text: str, *, source: str) -> DataFrame[ProcessedTable]:
     """Return the validated table that `render` wrote; `source` names it in errors."""
     frame = pd.read_csv(io.StringIO(text), float_precision="round_trip")
-    return validate(frame, source=source, remedy="rerun its script")
+    return validate(frame, source=source, remedy="rerun what wrote it")
 
 
 def validate(

@@ -1,0 +1,10 @@
+# Entry config of `phasebo-csp`: values set below change every run of this repo.
+# Every setting with its default: defaults/csp.yaml (generated).
+defaults:
+  - defaults/csp@_here_
+  - csp/mlip: chgnet
+  - csp/search: [relax, basin_hop]
+  - hydra: default
+  - _self_
+
+wandb_entity: rai-polybo

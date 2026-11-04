@@ -41,6 +41,7 @@ phasebo-generate = "phasebo.cli.generate:main"
 phasebo-compare = "phasebo.cli.compare:main"
 phasebo-data = "phasebo.cli.data:main"
 phasebo-configs = "phasebo.cli.configs:main"
+phasebo-csp = "phasebo.cli.csp:main"
 
 [dependency-groups]
 dev = [
