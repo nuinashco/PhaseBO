@@ -1,0 +1,6 @@
+# LiSnSCl with MLIP fidelities: a random-search CSP of every composition with FastCHGNet
+# (CHGNet 0.3.0 weights), its best after 10 to 40 trials, next to DFT.
+defaults:
+  - LiSnSCl
+  - _self_
+processed: data/processed/LiSnSCl_fastchgnet_csp.csv  # from scripts/process_LiSnSCl_fastchgnet_csp.py

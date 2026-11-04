@@ -85,6 +85,10 @@ All notable changes to this project will be documented in this file.
   `csp` dependency group. Each job is seeded by its name, written as it finishes and skipped on a rerun; with
   reference CIFs the run writes a processed table whose fidelities are `<mlip>_<level>`, and `publish=<name>` puts
   it in `data/processed/` for `phasebo-benchmark`. A sidecar may now pin a command's run instead of a script.
+- The `LiSnSCl_fastchgnet_csp` phase field, a real cheap source for LiSnSCl. Each of its 165 four-element
+  compositions has 40 trials of a random-search CSP with FastCHGNet (CHGNet 0.3.0 weights), on MLIP-relaxed
+  Materials Project references. Its fidelities are `dft` and `fastchgnet_random<n>`, the best of n trials for
+  n = 10 to 40. `scripts/mlip_csp/` holds the search that wrote its raw data, as its own project.
 - Tests on synthetic phase fields; the project follows the nuinashco/conventions `rnd` template (`make check`).
 - Optional `notebooks` dependency group (marimo, plotly; matplotlib and scipy for `scripts/plot_run.py`).
 

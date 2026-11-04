@@ -91,7 +91,10 @@ module-name = ["phasebo", "nuikit"]
 [tool.ruff]
 line-length = 88
 src = ["src", "tests"]
-extend-exclude = ["CONVENTIONS.md"]  # Vendored guide: fix it upstream, not here.
+extend-exclude = [
+    "CONVENTIONS.md",  # Vendored guide: fix it upstream, not here.
+    "scripts/mlip_csp",  # Its own project and environment (CONTRIBUTING, Deviations).
+]
 
 [tool.ruff.lint]
 select = [
@@ -136,6 +139,8 @@ ban-relative-imports = "all"
 
 [tool.pyright]
 include = ["src", "tests", "scripts"]
+# scripts/mlip_csp is its own project and environment (CONTRIBUTING, Deviations).
+exclude = ["scripts/mlip_csp", "**/.venv", "**/__pycache__", "**/node_modules"]
 strict = ["src/nuikit"]
 typeCheckingMode = "standard"
 venvPath = "."

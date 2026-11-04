@@ -30,3 +30,6 @@ multirun/
 # Run outputs; data/ is tracked (CONTRIBUTING, Deviations)
 runs/
 wandb/
+
+# MLIP-CSP working files; the exported raw data is in data/raw/LiSnSCl_fastchgnet_csp/
+scripts/mlip_csp/out/
