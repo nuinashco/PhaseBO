@@ -194,6 +194,8 @@ scripts/                  exploratory or one-time runnables, never imported; rer
   make_fake_fields.py     fake fields with three frameworks, calibrated to LiSnSCl: tables, sidecars, configs
   plot_run.py             a run's figures: hull map, each metric's curves
   wandb_workspace.py      saves the project's "Benchmarks" view in W&B, or with --report a shareable report
+  mlip_csp/               its own project (see Deviations): the random-search MLIP-CSP that wrote
+                          data/raw/LiSnSCl_fastchgnet_csp/
 notebooks/                exploration only, outputs stripped; reference/ for third-party notebooks
 runs/                     gitignored
 ```
@@ -253,6 +255,11 @@ ratio from one joint fit, as the hazard ratio does.
   changed, since the table was written. A table `phasebo-csp` computed pins its run's config and results instead
   of a script, copied beside it in `data/processed/<name>/`, since a rerun takes hours of MLIP time.
 - **Processed tables are CSV** (RUN-7 prefers parquet for derived tables): CSV diffs line by line in review.
+- **`scripts/mlip_csp/` is its own project**, outside ruff, pyright and the tests. It is the random-search CSP that
+  wrote `data/raw/LiSnSCl_fastchgnet_csp/`, kept as it ran: Python 3.12 with its own `pyproject.toml`, `uv.lock`
+  and dependencies (pyxtal, FastCHGNet from git), which this project's Python 3.14 environment does not install.
+  The repository uses only what it exported, through `scripts/process_LiSnSCl_fastchgnet_csp.py`. A port into
+  `phasebo.csp` would need a search that is not bound to a framework, as `Job` and `Result` are now.
 - **Notebooks are marimo files** (RUN-5 describes `.ipynb`), installed with the `notebooks` dependency group. They
   are plain Python with no stored outputs, so nbstripout has nothing to strip; `__marimo__/` caches are gitignored.
 - **`cli/_launch.py`** is a module in `cli/` that is not a console script (LAY-7). It holds what the commands share

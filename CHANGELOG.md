@@ -85,6 +85,10 @@ All notable changes to this project will be documented in this file.
   `csp` dependency group. Each job is seeded by its name, written as it finishes and skipped on a rerun; with
   reference CIFs the run writes a processed table whose fidelities are `<mlip>_<level>`, and `publish=<name>` puts
   it in `data/processed/` for `phasebo-benchmark`. A sidecar may now pin a command's run instead of a script.
+- The `LiSnSCl_fastchgnet_csp` phase field, a real cheap source for LiSnSCl. Each of its 165 four-element
+  compositions has 40 trials of a random-search CSP with FastCHGNet (CHGNet 0.3.0 weights), on MLIP-relaxed
+  Materials Project references. Its fidelities are `dft` and `fastchgnet_random<n>`, the best of n trials for
+  n = 10 to 40. `scripts/mlip_csp/` holds the search that wrote its raw data, as its own project.
 - Tests on synthetic phase fields; the project follows the nuinashco/conventions `rnd` template (`make check`).
 - Optional `notebooks` dependency group (marimo, plotly; matplotlib and scipy for `scripts/plot_run.py`).
 
@@ -106,6 +110,9 @@ All notable changes to this project will be documented in this file.
 - `BO_Path_in_<field>.txt`, the path of one replay: `paths.parquet` holds every repeat's.
 
 ### Fixed
+- Processed tables written on Windows were stale at once, and unreadable elsewhere. The table and its sidecar got
+  CRLF line ends, which the sidecar's sha256 does not cover, and the sidecar pinned paths with backslashes. Both
+  are now written with LF and forward slashes on every platform.
 - A benchmark's starting set is drawn by point and never holds a target. It was drawn by name and kept only points
   at exactly 0 meV/atom out, so a target stored at -4e-13 could start a run, and a stable point shared with a higher
   cell could be seeded with that cell's energy.

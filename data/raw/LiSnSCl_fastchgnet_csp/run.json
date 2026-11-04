@@ -1,0 +1,20 @@
+{
+ "model": "fastchgnet-0.3.0",
+ "label": "fastchgnet",
+ "seed": 0,
+ "trials": 40,
+ "fmax_ev_per_angstrom": 0.05,
+ "max_steps": 400,
+ "min_bond_ratio": 0.85,
+ "collapse_ratio": 0.5,
+ "max_volume_per_atom": 80.0,
+ "versions": {
+  "ase": "3.29.0",
+  "fastchgnet": "0.1.0",
+  "chgnet": "0.4.2",
+  "pyxtal": "1.1.5",
+  "pymatgen": "2026.9.24",
+  "torch": "2.14.1",
+  "numpy": "2.5.4"
+ }
+}

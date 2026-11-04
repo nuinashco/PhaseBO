@@ -1,0 +1,29 @@
+{
+  "script": {
+    "path": "scripts/process_LiSnSCl_fastchgnet_csp.py",
+    "sha256": "ce4a902ae9be7aed7c4e3b268fa5872aeb1de37b6b5bcdfff40d442e01b9b072"
+  },
+  "table_sha256": "47f999374691d5fd48cf53dae542708db7013e74ef043e3571c16d31fbf38a0c",
+  "raw": [
+    {
+      "path": "data/raw/LiSnSCl_700eV.csv",
+      "sha256": "465d83e8b964beaca3c3b11248c614e21a44435b84c6b2a7e06b4fad480b1303"
+    },
+    {
+      "path": "data/raw/LiSnSCl_fastchgnet_csp/trials.jsonl",
+      "sha256": "244c625c7236fe2d74d090604aadb8886878222d594e7a3a08ccb30cf2b5bb84"
+    },
+    {
+      "path": "data/raw/LiSnSCl_fastchgnet_csp/compositions.csv",
+      "sha256": "926a4f82c3258ff31a6b046a4ca2db68eca2a208c447ccf129fc791f07758212"
+    },
+    {
+      "path": "data/raw/LiSnSCl_fastchgnet_csp/missing_references.csv",
+      "sha256": "12443c3435b503e82c405110d08289f6308be9862fbe21911e2d92ac67241a53"
+    },
+    {
+      "path": "data/raw/LiSnSCl_fastchgnet_csp/references.csv",
+      "sha256": "fd9ee1423028d2852042a5a11df28b8e8c96ca32ab7846d1042e9f8df861d537"
+    }
+  ]
+}

@@ -48,6 +48,7 @@ file changed since the table was written, naming the script to rerun.
 |---|---|---|---|
 | `LiSnSCl` | `LiSnSCl_700eV.csv`: 286 compositions, 91 references | `process_LiSnSCl_700eV.py` | total, DFT at 700 eV |
 | `LiSnSCl_multifidel` | `LiSnSCl_multifidel.csv`: the same compositions, plus 46 oxygen phases its script drops | `process_LiSnSCl_multifidel.py` | above the hull: `dft`, and `nn` from a neural network |
+| `LiSnSCl_fastchgnet_csp` | `LiSnSCl_fastchgnet_csp/`: 40 CSP trials of each of the 165 four-element compositions, and MLIP-relaxed Materials Project references (`scripts/mlip_csp/`) | `process_LiSnSCl_fastchgnet_csp.py` | total: `dft` at 700 eV, and `fastchgnet_random<n>` (n = 10, 15, 20, 25, 30, 40), the best of n random-search trials with FastCHGNet |
 | `fake_LiSnSCl_<size>_<seed>` | none: the real `LiSnSCl` table sets their trend | `make_fake_fields.py` | total, fake; three frameworks per four-element composition |
 
 BO models one fidelity (`fidelity=dft` by default; `fidelity=nn` models the neural network instead). Each point
@@ -128,6 +129,17 @@ The screen is hard to beat when the cheap errors are random: nothing in them can
 to +2.55) need more. Errors that nearby compositions share can be learned, so there every surrogate beats it:
 `multitask` by 4.60 (3.80 to 5.45), `delta` by 6.27 (5.11 to 7.41) and `multifidelity` by 9.03 (7.81 to 10.27).
 All of this comes from a single field, LiSnSCl with 3 targets.
+
+`LiSnSCl_fastchgnet_csp` gives a real cheap source of the same field. Each composition's energy comes from a
+random-search CSP with an MLIP: FastCHGNet with the CHGNet 0.3.0 weights, the best of n trials (`scripts/mlip_csp/`
+tells how it was made). Its references are rebuilt on the MLIP's own hull, so the table gives total energies at
+every fidelity. Its rank correlation with DFT's energies above the hull is 0.38 at 10 trials, 0.53 at 20 and
+0.56 from 25 on.
+
+```bash
+uv run phasebo-benchmark system=LiSnSCl_fastchgnet_csp benchmark/cheap=table \
+  benchmark.cheap.fidelity=fastchgnet_random30 bo/acquisition=screen
+```
 
 ### Frameworks
 
