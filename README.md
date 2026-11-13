@@ -130,11 +130,13 @@ All of this comes from a single field, LiSnSCl with 3 targets.
 ### Frameworks
 
 On a fake field with frameworks, the question becomes the whole map: which framework wins at each composition, and
-which compositions are stable. After 32 evaluations (`system=fake_LiSnSCl_20_0`: 115 compositions in 3
-frameworks, 7 stable; qLogEI, 100 games). Hexagonal wins 57% of the compositions, so always naming it would score
-57% right:
+which compositions are stable. After 32 evaluations (`system=fake_LiSnSCl_20_0`: 115 compositions, each in 3
+frameworks; qLogEI, 100 games). "Stable" means two things here: the first two columns follow the 7 compositions on
+the hull (the second averages the evaluations until each is found, a miss counting as 32), and the F1 scores the
+10 within `tolerance_mev`, 10 meV/atom, of it. Hexagonal wins 57% of the compositions, so always naming it would
+score 57% right:
 
-| setting | stable found (of 7) | evaluations per stable | right framework (always hexagonal: 57%) | stable-set F1 |
+| setting | stable found (of 7) | evaluations until each is found | right framework (always hexagonal: 57%) | stable-set F1 |
 |---|---|---|---|---|
 | random picking (`bo/acquisition=random`) | 0.7 | 30.7 | | |
 | no cheap source (`bo/surrogate=gp`) | 3.5 | 24.8 | 58% | 0.65 |
@@ -148,7 +150,22 @@ frameworks, 7 stable; qLogEI, 100 games). Hexagonal wins 57% of the compositions
 With a cheap source, every rule finds nearly every stable composition. The difference is the map: when the cheap
 model ranks the frameworks wrongly by a fixed amount, `delta` and `joint` learn that from a few DFT points and name
 the right winner for 92-99% of compositions; the screen keeps the cheap model's mistakes (78%). With random errors
-there is nothing to learn. `joint` takes about 15 times as long as `delta` here (9 minutes against 40 s).
+there is nothing to learn. `joint` took 5 to 11 times as long as `delta` in our runs on a shared machine; `delta`
+plays these 100 games in under a minute on 12 cores.
+
+Three limits on these numbers:
+
+- "Right framework" judges the model or the cheap source, not the search. With 40 points picked at random, as many
+  as a game's start and its 32 picks, the same models score about the same (20 games, patterned errors: `gp` 58%,
+  `delta` 99.6%, the cheap energies 77.5%). Random picking itself fits no model and has no map.
+- The patterned errors are `delta`'s easy case. With `random_mev=0`, a composition's frameworks share their smooth
+  error, so the cheap errors differ between frameworks only by the fixed `bias_mev`, which a kernel of coordinates
+  plus a category fits exactly. Its 99% is an upper bound for that case, not evidence about real cheap models.
+- The fake fields are richer in stable compositions than the real one: 6-8% of the four-element compositions of the
+  20-atom fields lie on the hull, against 1.8% (3 of 165) in LiSnSCl. Each fake composition takes the lowest of
+  three framework offsets, which the references do not get; that explains the extra compositions near the hull
+  (`fake_LiSnSCl_20_0` has 10 of 115 within 10 meV/atom, and 4 without the offsets, about LiSnSCl's share of 6
+  in 165), not all of the extra ones on it.
 
 ```bash
 uv run phasebo-benchmark system=fake_LiSnSCl_20_0 benchmark/cheap=noisy benchmark.cheap.random_mev=0 \

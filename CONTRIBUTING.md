@@ -232,10 +232,12 @@ ratio from one joint fit, as the hazard ratio does.
 - **GP priors are fixed** (CFG-7): every Matern kernel keeps BoTorch's pre-0.12 Matern 5/2 priors, Gamma(3, 6)
   on each lengthscale and Gamma(2, 0.15) on the outputscale, so `kernel` changes only nu. For `matern52` they
   reproduce the paper's GP; for `matern12` and `matern32` they are a choice, made to change one thing at a time.
-  `multitask`, `delta` and `joint` build their kernels the same way; with categories, BoTorch's MixedSingleTaskGP
-  scales them with its own outputscale priors. `multifidelity` keeps BoTorch's fidelity kernel and its priors,
-  since that kernel couples the coordinates with the source. It ties the cheap error's prior size to the signal's,
-  so `multifidelity` stays unsure even of an exact cheap source.
+  `multitask`, `delta` and `joint` build their kernels the same way. With categories, BoTorch's MixedSingleTaskGP
+  (0.18) scales them with no outputscale prior, only a positivity constraint, and puts no prior on the category
+  kernel's lengthscales; so `gp` on a field with frameworks keeps the Gamma(3, 6) lengthscale prior but not the
+  Gamma(2, 0.15) outputscale prior it has without frameworks. `multifidelity` keeps BoTorch's fidelity kernel and its
+  priors, since that kernel couples the coordinates with the source. It ties the cheap error's prior size to the
+  signal's, so `multifidelity` stays unsure even of an exact cheap source.
 - **`scripts/make_fake_fields.py` keeps its recipe as constants** (CFG-7): its sizes, seeds, frameworks and
   offsets are module constants, not a config. Each fake table's sidecar pins the script's sha256, so the recipe is
   pinned with the tables it wrote; a config would need a pin of its own. It also writes its

@@ -150,7 +150,8 @@ def _build_matern_factory(name: KernelName) -> Any:
         from gpytorch.priors import GammaPrior
 
         # BoTorch's pre-0.12 Matern 5/2 lengthscale prior, as in `build_kernel`;
-        # MixedSingleTaskGP scales the kernel itself, with its own outputscale priors.
+        # MixedSingleTaskGP scales the kernel itself, with no outputscale prior
+        # (BoTorch 0.18), and its category kernel's lengthscales have none either.
         return MaternKernel(
             nu=nu,
             ard_num_dims=ard_num_dims,
