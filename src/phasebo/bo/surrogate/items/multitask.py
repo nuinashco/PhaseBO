@@ -1,5 +1,6 @@
 """Multi-task Gaussian process from BoTorch: cheap and DFT energies as two tasks."""
 
+from collections.abc import Sequence
 from typing import ClassVar
 
 import numpy as np
@@ -39,13 +40,17 @@ class MultiTaskSurrogate(Surrogate[MultiTaskConfig]):
 
     def fit(
         self,
-        coords: np.ndarray,
+        inputs: np.ndarray,
         energies_mev: np.ndarray,
         *,
         cheap: CheapEnergies | None = None,
+        categories: Sequence[int] = (),
     ) -> Fit:
         known = require_cheap(cheap, f"surrogate {self.kind!r}")
-        x, g = stack_sources(coords, energies_mev, cheap=known)
+        if categories:
+            msg = f"surrogate {self.kind!r} cannot model categories"
+            raise ValueError(msg)
+        x, g = stack_sources(inputs, energies_mev, cheap=known)
         with quiet_gpytorch():
             from botorch.models import MultiTaskGP
 

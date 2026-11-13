@@ -19,7 +19,7 @@ import pandas as pd
 import rootutils
 from omegaconf import DictConfig
 
-from nuikit.errors import cli_boundary
+from nuikit.errors import ConfigError, cli_boundary
 
 from phasebo import paths
 from phasebo.bo import proposal
@@ -41,6 +41,11 @@ def main(dict_cfg: DictConfig) -> None:
 def run(cfg: SuggestConfig, *, runs_dir: Path) -> Path:
     """Fit the surrogate to the explored points and pick the next batch."""
     loaded, points, excluded = _launch.load_points(cfg)
+    if points.framework_names:
+        raise ConfigError(
+            f"{cfg.system.processed} has frameworks, which phasebo-suggest does not "
+            "handle yet; use a phase field without them, or phasebo-benchmark"
+        )
     listed = _launch.read_formulas(
         cfg.system.candidates.file, key="system.candidates.file"
     )

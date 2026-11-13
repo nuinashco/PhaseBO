@@ -72,3 +72,25 @@ def test_parse_names_every_broken_rule():
 def test_parse_rejects_text_that_is_not_a_processed_table():
     with pytest.raises(DataError, match=r"t\.csv is not a processed table"):
         table.parse("formula,energy\nLi2 S1,-11.9\n", source="t.csv")
+
+
+def test_parse_keeps_each_rows_framework(framework_rows):
+    back = table.parse(table.render(framework_rows), source="t.csv")
+
+    assert (
+        back["framework"].isna().tolist() == framework_rows["framework"].isna().tolist()
+    )
+    assert set(back["framework"].dropna()) == {"cubic", "wurtzite"}
+
+
+def test_rows_without_frameworks_have_no_framework_column():
+    rows = table.make_rows(
+        ["Li2 S1", "Li1"],
+        fidelity="dft",
+        reference=[False, True],
+        total_energy_ev=[1.0, 2.0],
+    )
+
+    cleaned, _ = table.clean(rows, elements=["Li", "S"], source="t.csv")
+
+    assert "framework" not in cleaned

@@ -90,14 +90,18 @@ def _save_hull_map(
     """Save the energy above the hull over the square of a 4-element field.
 
     The square's axes are the fractions of the first element among the first two,
-    and of the third among the last two, in config order.
+    and of the third among the last two, in config order. With frameworks, each
+    explored composition shows its winning framework's energy.
     """
     import matplotlib.pyplot as plt
     from scipy import interpolate
 
-    square = _place_on_square(points.formulas, elements)
+    shown = np.arange(len(points.formulas))
+    if points.framework_names:
+        shown = np.concatenate([np.flatnonzero(points.references), points.winners])
+    square = _place_on_square([points.formulas[i] for i in shown], elements)
     grid = np.arange(0, 1, 0.005)
-    surface_mev = interpolate.LinearNDInterpolator(square, points.energies_mev)
+    surface_mev = interpolate.LinearNDInterpolator(square, points.energies_mev[shown])
     figure, axes = plt.subplots()
     filled = axes.contourf(
         grid, grid, surface_mev(*np.meshgrid(grid, grid)), 50, cmap="gist_heat"
