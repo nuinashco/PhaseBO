@@ -75,9 +75,10 @@ All notable changes to this project will be documented in this file.
   to 32 atoms per cell: 21 to 502 four-element compositions, 3 seeds each), every four-element composition in
   cubic, hexagonal and wurtzite frameworks. Their energies follow the real field's trend and roughness, and each
   framework adds a smooth offset, so different frameworks win in different regions.
-- The `map` metric, on by default: after every batch, the share of compositions whose winning framework a run
-  names right, and the F1 of the compositions it believes stable against the true ones (within `tolerance_mev`,
-  10 meV/atom); the run then writes `beliefs.parquet`, each game's believed energy of every explored point.
+- The `map` metric, on by default: after every batch, the share of compositions in two or more frameworks whose
+  winning framework a run names right, next to always naming the most common winner, and the F1 of the
+  compositions it believes stable against the true ones (within `tolerance_mev`, 10 meV/atom); the run then writes
+  `beliefs.parquet`, each game's believed energy of every explored point.
 - Tests on synthetic phase fields; the project follows the nuinashco/conventions `rnd` template (`make check`).
 - Optional `notebooks` dependency group (marimo, plotly; matplotlib and scipy for `scripts/plot_run.py`).
 

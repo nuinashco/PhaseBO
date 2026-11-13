@@ -33,11 +33,13 @@ class MapMetric(Metric[MapConfig]):
     """Share of compositions whose winning framework is believed right; stable F1."""
 
     reading = (
-        "After each number of picks: the share of compositions whose winning framework "
-        "the run names right (`winner`), and how well the compositions it believes "
-        "stable match the true ones (`stable_f1`, 1 is perfect). Higher is better. A "
-        "rule that fits no model believes the cheap energies; without either it has no "
-        "map."
+        "After each number of picks: the share of compositions in two or more "
+        "frameworks whose winning framework the run names right (`winner`), next to "
+        "always naming the most common winner, and how well the compositions it "
+        "believes stable match the true ones (`stable_f1`, 1 is perfect), next to the "
+        "share truly stable, the score of guessing stable at that rate. Higher is "
+        "better. A rule that fits no model believes the cheap energies; without either "
+        "it has no map."
     )
     needs_beliefs: ClassVar[bool] = True
 
@@ -49,7 +51,6 @@ class MapMetric(Metric[MapConfig]):
             )
         winner, f1 = self._score(replays)
         groups = _group(replays)
-        has_frameworks = groups.shape[1] > 1
         stable_share = float(self._find_true_stable(replays, groups).mean())
         curves: dict[str, list[float | None]] = {
             "stable_f1": f1.mean(axis=0).tolist(),
@@ -59,21 +60,20 @@ class MapMetric(Metric[MapConfig]):
             "stable_f1/mean": float(f1[:, -1].mean()),
             "stable_f1/random": stable_share,
         }
-        headline = f"stable-set F1 {f1[:, -1].mean():.2f}"
-        if has_frameworks:
-            guess = 1 / groups.shape[1]
+        headline = f"stable-set F1 {f1[:, -1].mean():.2f} (random {stable_share:.2f})"
+        if winner is not None:
+            # Random picking fits no model, so the bar is always naming one framework.
+            common, share = _find_common_winner(replays, groups)
             curves["winner"] = winner.mean(axis=0).tolist()
-            curves["winner/random"] = [guess] * winner.shape[1]
+            curves["winner/random"] = [share] * winner.shape[1]
             values |= {
                 "winner/mean": float(winner[:, -1].mean()),
-                "winner/random": guess,
+                "winner/random": share,
             }
             headline = (
-                f"right framework for {winner[:, -1].mean():.0%} of compositions, "
-                f"{headline} (random {guess:.0%}, {stable_share:.2f})"
+                f"right framework for {winner[:, -1].mean():.0%} of compositions in "
+                f"several frameworks (always {common} {share:.0%}), {headline}"
             )
-        else:
-            headline = f"{headline} (random {stable_share:.2f})"
         headline += f" after {replays.budget} evaluations"
         return Score(headline=headline, values=values, curves=curves)
 
@@ -102,7 +102,7 @@ class MapMetric(Metric[MapConfig]):
                 rng=rng,
             )
         }
-        if _group(base).shape[1] > 1:
+        if base_winner is not None and run_winner is not None:
             contrasts["winner"] = pair(
                 base_winner[:, -1],
                 run_winner[:, -1],
@@ -113,8 +113,8 @@ class MapMetric(Metric[MapConfig]):
             )
         return contrasts
 
-    def _score(self, replays: Replays) -> tuple[np.ndarray, np.ndarray]:
-        """Return winner accuracy and stable F1 per repeat and step."""
+    def _score(self, replays: Replays) -> tuple[np.ndarray | None, np.ndarray]:
+        """Return winner accuracy on contested compositions (or None) and stable F1."""
         from scipy.stats import norm
 
         beliefs = replays.beliefs
@@ -125,7 +125,9 @@ class MapMetric(Metric[MapConfig]):
         mean_mev = np.where(groups >= 0, beliefs[..., groups, 0], np.inf)
         std_mev = np.where(groups >= 0, beliefs[..., groups, 1], 0.0)
         true_winner = _find_true_winners(replays, groups)
-        winner = (np.argmin(mean_mev, axis=-1) == true_winner).mean(axis=-1)
+        contested = _find_contested(groups)
+        right = np.argmin(mean_mev, axis=-1) == true_winner
+        winner = right[..., contested].mean(axis=-1) if contested.any() else None
         tolerance_mev = self.config.tolerance_mev
         with np.errstate(divide="ignore", invalid="ignore"):
             below = np.where(
@@ -167,3 +169,19 @@ def _find_true_winners(replays: Replays, groups: np.ndarray) -> np.ndarray:
     """Return the column of each composition's lowest point in `groups`."""
     energies_mev = replays.points.energies_mev[replays.points.pool]
     return np.argmin(np.where(groups >= 0, energies_mev[groups], np.inf), axis=-1)
+
+
+def _find_contested(groups: np.ndarray) -> np.ndarray:
+    """Return whether each composition has two or more points."""
+    return (groups >= 0).sum(axis=-1) >= 2
+
+
+def _find_common_winner(replays: Replays, groups: np.ndarray) -> tuple[str, float]:
+    """Return the framework that wins most contested compositions, and its share."""
+    pool = replays.points.pool
+    frameworks = np.asarray(replays.points.frameworks, dtype=object)[pool]
+    contested = _find_contested(groups)
+    winners = groups[contested, _find_true_winners(replays, groups)[contested]]
+    names, counts = np.unique(frameworks[winners].astype(str), return_counts=True)
+    top = int(counts.argmax())
+    return str(names[top]), float(counts[top] / counts.sum())

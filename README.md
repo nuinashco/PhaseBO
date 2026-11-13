@@ -79,7 +79,7 @@ simulation), and, with `tracker=wandb`, logged as curves over evaluations:
 | `discovery` | the share of runs that found each target after every batch | 0.89 of 3 found within 32 (random 0.61) |
 | `best_so_far` | the lowest energy above the hull known after every batch | 2.8 meV/atom after 32 (random 4.9) |
 | `hazard_ratio` | BO's chance per batch of picking a target, as a multiple of random's, with a 95% interval; and batch by batch | 1.50 (1.33 to 1.68); 0.5 in the first batch, 2.2 in the eighth |
-| `map` | after every batch, the share of compositions whose winning framework the run names right, and the F1 of the compositions it believes stable against the true ones (1 is perfect; stable means within `tolerance_mev`, 10 meV/atom, of the hull); writes `beliefs.parquet` | stable-set F1 0.46 after 32 (random 0.04) |
+| `map` | after every batch, the share of compositions in two or more frameworks whose winning framework the run names right, next to always naming the most common winner (random picking fits no model), and the F1 of the compositions it believes stable against the true ones (1 is perfect; stable means within `tolerance_mev`, 10 meV/atom, of the hull), next to the share truly stable, the score of guessing stable at that rate rather than random picking's; writes `beliefs.parquet` | stable-set F1 0.46 after 32 (random 0.04) |
 
 `bo/acquisition=random` checks the setup: its scores match random's values within their error.
 
@@ -131,9 +131,10 @@ All of this comes from a single field, LiSnSCl with 3 targets.
 
 On a fake field with frameworks, the question becomes the whole map: which framework wins at each composition, and
 which compositions are stable. After 32 evaluations (`system=fake_LiSnSCl_20_0`: 115 compositions in 3
-frameworks, 7 stable; qLogEI, 100 games):
+frameworks, 7 stable; qLogEI, 100 games). Hexagonal wins 57% of the compositions, so always naming it would score
+57% right:
 
-| setting | stable found (of 7) | evaluations per stable | right framework | stable-set F1 |
+| setting | stable found (of 7) | evaluations per stable | right framework (always hexagonal: 57%) | stable-set F1 |
 |---|---|---|---|---|
 | random picking (`bo/acquisition=random`) | 0.7 | 30.7 | | |
 | no cheap source (`bo/surrogate=gp`) | 3.5 | 24.8 | 58% | 0.65 |

@@ -21,7 +21,8 @@ class Score:
     """What a metric measured: a line to print, named values, and curves.
 
     Each curve has one value per entry of `Replays.evaluations`, None where it is
-    undefined, and a curve `x` comes with `x/random`, random picking's exact value.
+    undefined, and a curve `x` comes with `x/random`, random picking's exact value,
+    or where random picking has none the bar the metric's `reading` names.
     """
 
     headline: str
