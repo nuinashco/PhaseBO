@@ -21,7 +21,7 @@ cp .env.example .env   # only to mirror runs to Weights & Biases
 | command | does | writes |
 |---|---|---|
 | `phasebo-suggest` | picks the next compositions to compute from the computed ones | `next.csv`, `posterior.csv` |
-| `phasebo-benchmark` | replays BO over the computed compositions, as if computing them, from 300 random starting sets, and scores it against random picking | `paths.parquet`, `metrics.json`; `cheap.parquet` with a cheap source |
+| `phasebo-benchmark` | replays BO over the computed compositions, as if computing them, from 300 random starting sets, and scores it against random picking | `paths.parquet`, `metrics.json`; `cheap.parquet` with a cheap source; `beliefs.parquet` with the `map` metric |
 | `phasebo-generate` | lists the smallest charge-balanced cell of each point not computed yet | `candidates_list.csv` |
 | `phasebo-compare` | compares benchmark runs with the first, game by game | `comparison.json` |
 | `phasebo-data` (`make data`) | checks that every processed table still matches its raw files and its script | |

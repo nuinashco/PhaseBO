@@ -4,7 +4,7 @@
 
 Writes into the run directory: convex_hull.png, the energy above the hull over a
 4-element field's square, and for a benchmark run one <metric>.png per metric with
-curves in metrics.json: a panel per curve, random picking's dashed.
+curves in metrics.json: a panel per curve, its bar dashed.
 """
 
 import json
