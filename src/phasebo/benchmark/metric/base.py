@@ -16,13 +16,17 @@ class MetricConfig(KindConfig):
     """Settings of a benchmark metric."""
 
 
+# Each bar's suffix, and the label a plot gives it.
+BARS = {"random": "random", "most_common": "always the most common"}
+
+
 @frozen
 class Score:
     """What a metric measured: a line to print, named values, and curves.
 
     Each curve has one value per entry of `Replays.evaluations`, None where it is
-    undefined, and a curve `x` comes with `x/random`, random picking's exact value,
-    or where random picking has none the bar the metric's `reading` names.
+    undefined, and a curve `x` comes with a bar `x/<bar>`, a key of `BARS`: random
+    picking's exact value, or where random picking has none the one `reading` names.
     """
 
     headline: str
@@ -123,6 +127,11 @@ def pair(
     )
 
 
+def is_bar(name: str) -> bool:
+    """Return whether the curve or value `name` is another's bar."""
+    return "/" in name and name.rsplit("/", 1)[1] in BARS
+
+
 def to_json(scores: Mapping[str, Score], evaluations: list[int]) -> dict[str, Any]:
     """Return metrics.json: the evaluation counts curves follow, then each score."""
     return {
@@ -142,20 +151,20 @@ def to_wandb(
     scores: Mapping[str, Score], evaluations: list[int]
 ) -> tuple[dict[str, float], list[dict[str, float]]]:
     """Return W&B's summary values and one row of curve points per evaluation count."""
-    # Random picking's exact values stay in metrics.json; in W&B a run of the random
-    # batch rule is the comparison.
+    # Bars stay in metrics.json; in W&B a run of the random batch rule is the
+    # comparison.
     summary = {
         f"{kind}/{name}": value
         for kind, score in scores.items()
         for name, value in score.values.items()
-        if not name.endswith("/random")
+        if not is_bar(name)
     }
     rows = [
         {
             f"{kind}/{name}": value
             for kind, score in scores.items()
             for name, curve in score.curves.items()
-            if not name.endswith("/random") and (value := curve[step]) is not None
+            if not is_bar(name) and (value := curve[step]) is not None
         }
         for step in range(len(evaluations))
     ]

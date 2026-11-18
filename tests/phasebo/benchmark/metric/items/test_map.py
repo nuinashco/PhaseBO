@@ -119,7 +119,7 @@ def test_winner_bar_is_the_most_common_winners_share(framework_rows, framework_p
     score = measure(believing(points, truth))
 
     # Ten compositions keep both frameworks; wurtzite wins seven of them.
-    assert score.values["winner/random"] == pytest.approx(7 / 10)
+    assert score.values["winner/most_common"] == pytest.approx(7 / 10)
     assert "always wurtzite 70%" in score.headline
 
 

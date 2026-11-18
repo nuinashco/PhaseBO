@@ -22,6 +22,7 @@ from pymatgen.core import Composition
 from nuikit.errors import ConfigError, DataError, cli_boundary
 
 from phasebo import paths
+from phasebo.benchmark.metric.base import BARS, is_bar
 from phasebo.config import SystemConfig
 from phasebo.data import store
 from phasebo.field.points import Points
@@ -129,11 +130,11 @@ def _save_curves(
 ) -> None:
     """Save one panel per curve of a metric, over the evaluations after the start.
 
-    Each panel draws the curve and, dashed, its `/random` partner.
+    Each panel draws the curve and, dashed, its bar.
     """
     import matplotlib.pyplot as plt
 
-    names = [name for name in curves if not name.endswith("/random")]
+    names = [name for name in curves if not is_bar(name)]
     figure, panels = plt.subplots(
         1, len(names), figsize=(4 * len(names), 3.5), squeeze=False
     )
@@ -141,9 +142,10 @@ def _save_curves(
         # None marks a point where the curve is undefined; matplotlib skips NaN.
         values = np.array(curves[name], dtype=float)
         axes.plot(evaluations, values, "-", marker="o", ms=3, label="BO")
-        if f"{name}/random" in curves:
-            random = np.array(curves[f"{name}/random"], dtype=float)
-            axes.plot(evaluations, random, "--", label="random")
+        for bar, label in BARS.items():
+            if f"{name}/{bar}" in curves:
+                bar_values = np.array(curves[f"{name}/{bar}"], dtype=float)
+                axes.plot(evaluations, bar_values, "--", label=label)
         axes.set_title(name, fontsize=10)
         axes.set_xlabel("Evaluations after the start")
         axes.legend(fontsize=8)

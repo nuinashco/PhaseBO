@@ -65,10 +65,10 @@ class MapMetric(Metric[MapConfig]):
             # Random picking fits no model, so the bar is always naming one framework.
             common, share = _find_common_winner(replays, groups)
             curves["winner"] = winner.mean(axis=0).tolist()
-            curves["winner/random"] = [share] * winner.shape[1]
+            curves["winner/most_common"] = [share] * winner.shape[1]
             values |= {
                 "winner/mean": float(winner[:, -1].mean()),
-                "winner/random": share,
+                "winner/most_common": share,
             }
             headline = (
                 f"right framework for {winner[:, -1].mean():.0%} of compositions in "
