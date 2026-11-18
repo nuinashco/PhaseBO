@@ -69,15 +69,7 @@ class Replays:
         )
         believed = None
         if beliefs is not None:
-            steps = max_iter + 1
-            pool = len(points.pool)
-            believed = (
-                beliefs.sort_values(["repeat", "batch", "position"])[
-                    ["mean_mev", "std_mev"]
-                ]
-                .to_numpy(dtype=np.float32)
-                .reshape(-1, steps, pool, 2)
-            )
+            believed = _read_beliefs(points, beliefs, steps=max_iter + 1)
         return cls(
             points=points,
             batch_size=batch_size,
@@ -196,6 +188,24 @@ class Replays:
             frameworks = np.asarray(self.points.frameworks, dtype=object)[pool]
             table.insert(2, "framework", np.tile(frameworks, repeats))
         return table
+
+
+def _read_beliefs(points: Points, table: pd.DataFrame, *, steps: int) -> np.ndarray:
+    """Return the beliefs `Replays.beliefs_table()` wrote, checked against `points`."""
+    table = table.sort_values(["repeat", "batch", "position"])
+    frameworks = [None] * len(table)
+    if "framework" in table:
+        frameworks = [None if pd.isna(f) else f for f in table["framework"]]
+    found = list(zip(table["formula"], frameworks, strict=True))
+    cells = [(points.formulas[i], points.frameworks[i]) for i in points.pool]
+    per_repeat = steps * len(cells)
+    if len(found) % per_repeat or found != cells * (len(found) // len(cells)):
+        raise DataError(
+            "beliefs.parquet does not hold this field's explored points, step by step, "
+            "in its order; compare runs on the table and exclusions they ran on"
+        )
+    values = table[["mean_mev", "std_mev"]].to_numpy(dtype=np.float32)
+    return values.reshape(-1, steps, len(cells), 2)
 
 
 def replay_many(

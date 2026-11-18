@@ -287,25 +287,23 @@ def test_replay_records_a_belief_per_step_when_asked(points, first_choices):
 
 
 def test_a_rule_without_a_model_or_cheap_energies_records_no_beliefs(points):
-    _, game = (
-        None,
-        replay.replay(
-            points,
-            StartFactory.from_config(START).pick(points, rng=np.random.default_rng(0)),
-            surrogate=SurrogateFactory.from_config({"kind": "gp"}),
-            acquisition=AcquisitionFactory.from_config({"kind": "random"}),
-            batch_size=2,
-            max_iter=3,
-            rng=np.random.default_rng(0),
-            record_beliefs=True,
-        ),
+    game = replay.replay(
+        points,
+        StartFactory.from_config(START).pick(points, rng=np.random.default_rng(0)),
+        surrogate=SurrogateFactory.from_config({"kind": "gp"}),
+        acquisition=AcquisitionFactory.from_config({"kind": "random"}),
+        batch_size=2,
+        max_iter=3,
+        rng=np.random.default_rng(0),
+        record_beliefs=True,
     )
 
     assert game.beliefs is None
 
 
-def test_a_beliefs_table_rebuilds_the_same_beliefs(points):
-    replays = replay.replay_many(
+def believing_replays(points):
+    """Return two screened repeats of 3 batches that recorded their beliefs."""
+    return replay.replay_many(
         points,
         start=StartFactory.from_config(START),
         surrogate=SurrogateFactory.from_config({"kind": "gp"}),
@@ -319,6 +317,10 @@ def test_a_beliefs_table_rebuilds_the_same_beliefs(points):
         record_beliefs=True,
     )
 
+
+def test_a_beliefs_table_rebuilds_the_same_beliefs(points):
+    replays = believing_replays(points)
+
     rebuilt = replay.Replays.from_table(
         points,
         replays.table(),
@@ -330,3 +332,14 @@ def test_a_beliefs_table_rebuilds_the_same_beliefs(points):
     assert replays.beliefs is not None
     assert rebuilt.beliefs is not None
     assert np.array_equal(rebuilt.beliefs, replays.beliefs)
+
+
+def test_from_table_refuses_beliefs_held_in_another_points_order(points):
+    replays = believing_replays(points)
+    beliefs = replays.beliefs_table()
+    beliefs["position"] = (beliefs["position"] + 1) % len(points.pool)
+
+    with pytest.raises(DataError, match="beliefs"):
+        replay.Replays.from_table(
+            points, replays.table(), batch_size=2, max_iter=3, beliefs=beliefs
+        )
