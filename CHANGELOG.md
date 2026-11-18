@@ -66,6 +66,19 @@ All notable changes to this project will be documented in this file.
   (BoTorch's multi-task GP), `multifidelity` (its multi-fidelity GP) and `delta` (the cheap energy plus a GP of
   its error), all with zero noise by default;
   `bo/acquisition=screen` is their baseline, DFT in cheap order. `phasebo-suggest` stays single-fidelity.
+- Frameworks: a processed table may give each cell a `framework`, and a point is then a composition in one
+  framework; the targets are the stable compositions in their winning framework. `gp`, `delta` and the new
+  `bo/surrogate=joint` (one GP over both sources, the source a category) see the framework as a category through
+  BoTorch's MixedSingleTaskGP; `multitask` and `multifidelity` refuse such fields, and so does `phasebo-suggest`.
+  `benchmark.cheap.bias_mev` adds a fixed error per framework, so the fake cheap source can rank frameworks wrongly.
+- Fake fields: `scripts/make_fake_fields.py` writes 15 Li-Sn-S-Cl fields (`system=fake_LiSnSCl_<size>_<seed>`, 12
+  to 32 atoms per cell: 21 to 502 four-element compositions, 3 seeds each), every four-element composition in
+  cubic, hexagonal and wurtzite frameworks. Their energies follow the real field's trend and roughness, and each
+  framework adds a smooth offset, so different frameworks win in different regions.
+- The `map` metric, on by default: after every batch, the share of compositions in two or more frameworks whose
+  winning framework a run names right, next to always naming the most common winner, and the F1 of the
+  compositions it believes stable against the true ones (within `tolerance_mev`, 10 meV/atom); the run then writes
+  `beliefs.parquet`, each game's believed energy of every explored point.
 - Tests on synthetic phase fields; the project follows the nuinashco/conventions `rnd` template (`make check`).
 - Optional `notebooks` dependency group (marimo, plotly; matplotlib and scipy for `scripts/plot_run.py`).
 

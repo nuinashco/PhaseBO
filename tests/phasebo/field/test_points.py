@@ -88,3 +88,41 @@ def test_locate_gives_pymatgen_phase_diagram_coordinates(points, totals):
 
     assert points.elements == tuple(str(el) for el in diagram.elements)
     assert np.array_equal(ours, [diagram.pd_coords(Composition(f)) for f in totals])
+
+
+def test_a_field_with_frameworks_has_a_point_per_composition_and_framework(
+    framework_points,
+):
+    labels = framework_points.labels
+
+    assert {"Li3 S1 Cl1 (cubic)", "Li3 S1 Cl1 (wurtzite)", "Li1"} <= set(labels)
+    assert framework_points.framework_names == ("cubic", "wurtzite")
+
+
+def test_winners_are_each_compositions_lowest_framework(framework_points):
+    labels = framework_points.labels
+    winners = {labels[i] for i in framework_points.winners}
+
+    # Li3SCl is in the first half, where cubic is lower; Li7SCl5 in the second.
+    assert {"Li3 S1 Cl1 (cubic)", "Li7 S1 Cl5 (wurtzite)"} <= winners
+    names = {framework_points.names[i] for i in framework_points.pool}
+    assert len(winners) == len(names)
+
+
+def test_inputs_add_the_framework_as_a_category_after_the_coordinates(
+    framework_points,
+):
+    inputs = framework_points.inputs
+    column = framework_points.categories[0]
+
+    assert column == framework_points.coords.shape[1]
+    assert set(inputs[framework_points.pool, column]) == {0.0, 1.0}
+
+
+def test_find_gives_minus_one_for_a_point_not_in_the_field(framework_points):
+    found = framework_points.find(
+        ["Li3 S1 Cl1", "Li3 S1 Cl1"], ["wurtzite", "hexagonal"]
+    )
+
+    assert found[0] >= 0
+    assert found[1] == -1

@@ -47,8 +47,9 @@ make data           # check data/processed/ against data/raw/; scripts/process_*
   `<group>/<kind>.yaml`) mirror schemas: never edit them by hand. `configs/<command>.yaml` are the hand-written
   entry configs; `configs/system/` holds the phase fields; `configs/bo/` and `configs/benchmark/` hold the
   families' groups, with presets beside the kinds' mirrors.
-- `data/raw/`: published datasets, never edited. `data/processed/`: written by `scripts/process_<source>.py` with a
-  sha256 sidecar, committed; never edit it by hand, rerun the script.
+- `data/raw/`: published datasets, never edited. `data/processed/`: written by `scripts/process_<source>.py` (the
+  fake fields by `scripts/make_fake_fields.py`) with a sha256 sidecar, committed; never edit it by hand, rerun the
+  script.
 - `tests/` mirrors `src/`; `tests/test_invariants.py` holds the repo-wide checks.
 
 ## Rules that tools do not check

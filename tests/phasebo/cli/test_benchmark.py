@@ -9,6 +9,7 @@ from nuikit.errors import ConfigError
 
 from phasebo.benchmark.cheap.items.noisy import NoisyCheapConfig
 from phasebo.benchmark.metric.items.hazard_ratio import HazardRatioConfig
+from phasebo.benchmark.metric.items.map import MapConfig
 from phasebo.benchmark.metric.items.steps_to_hit import StepsToHitConfig
 from phasebo.benchmark.start.items.random import RandomStartConfig
 from phasebo.bo.acquisition.items.qlogei import QLogEIConfig
@@ -91,3 +92,36 @@ def test_benchmark_refuses_a_multi_fidelity_model_without_a_cheap_source(
     with pytest.raises(ConfigError, match="set benchmark/cheap=table"):
         benchmark.run(config(system, bo=bo), runs_dir=tmp_path / "runs")
     assert not (tmp_path / "runs").exists()
+
+
+def test_benchmark_writes_each_evaluations_framework(framework_system, tmp_path):
+    run_dir = benchmark.run(config(framework_system), runs_dir=tmp_path / "runs")
+
+    paths = pd.read_parquet(run_dir / "paths.parquet")
+    assert set(paths["framework"]) == {"cubic", "wurtzite"}
+
+
+def test_benchmark_refuses_a_surrogate_that_cannot_model_frameworks(
+    framework_system, tmp_path
+):
+    bo = BO.model_copy(update={"surrogate": MultiTaskConfig(kind="multitask")})
+    cheap = NoisyCheapConfig(kind="noisy")
+
+    with pytest.raises(ConfigError, match="cannot model this field's frameworks"):
+        benchmark.run(
+            config(framework_system, bo=bo, cheap=cheap), runs_dir=tmp_path / "runs"
+        )
+
+
+def test_benchmark_writes_beliefs_for_the_map(framework_system, tmp_path, capsys):
+    cfg = config(framework_system)
+    protocol = cfg.benchmark.model_copy(
+        update={"metric": {"map": MapConfig(kind="map")}}
+    )
+
+    run_dir = benchmark.run(
+        cfg.model_copy(update={"benchmark": protocol}), runs_dir=tmp_path / "runs"
+    )
+
+    assert (run_dir / "beliefs.parquet").is_file()
+    assert "right framework for" in capsys.readouterr().out

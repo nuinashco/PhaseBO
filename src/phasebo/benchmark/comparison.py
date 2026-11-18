@@ -51,7 +51,10 @@ def check_paired(base: Replays, run: Replays, *, name: str) -> None:
 
 
 def _name_starts(replays: Replays) -> list[list[str]]:
-    """Return each repeat's starting formulas, so runs on other fields differ."""
-    return [
-        [replays.points.formulas[i] for i in start] for start in replays.list_starts()
+    """Return each repeat's starting cells, so runs on other fields differ."""
+    points = replays.points
+    cells = [
+        f"{formula} {framework or ''}"
+        for formula, framework in zip(points.formulas, points.frameworks, strict=True)
     ]
+    return [[cells[i] for i in start] for start in replays.list_starts()]

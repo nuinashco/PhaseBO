@@ -13,7 +13,7 @@ from nuikit.errors import DataError
 
 
 class ProcessedTable(pa.DataFrameModel):
-    """One row per composition and fidelity, carrying exactly one energy."""
+    """One row per cell, fidelity and framework, carrying exactly one energy."""
 
     formula: Series[str]
     point: Series[str]  # The reduced composition: cells of one formula share it.
@@ -21,6 +21,8 @@ class ProcessedTable(pa.DataFrameModel):
     reference: Series[bool]
     total_energy_ev: Series[float] = pa.Field(nullable=True)  # Per cell.
     e_above_hull_mev: Series[float] = pa.Field(nullable=True)  # Per atom.
+    # The structure framework a cell was placed in; tables without frameworks omit it.
+    framework: Series[str] | None = pa.Field(nullable=True)
 
     class Config(pa.DataFrameModel.Config):
         strict = True
@@ -43,16 +45,18 @@ def make_rows(
     reference: Sequence[bool],
     total_energy_ev: Sequence[float] | None = None,
     e_above_hull_mev: Sequence[float] | None = None,
+    framework: Sequence[str | None] | None = None,
 ) -> pd.DataFrame:
     """Return one source's rows in the shape `clean` takes.
 
-    Give exactly one energy: total (eV per cell) or above the hull (meV/atom).
+    Give exactly one energy: total (eV per cell) or above the hull (meV/atom). A row
+    whose `framework` is None has a single structure, such as a reference.
     """
     if (total_energy_ev is None) == (e_above_hull_mev is None):
         msg = "give total_energy_ev or e_above_hull_mev, not both or neither"
         raise ValueError(msg)
     nan = [float("nan")] * len(formulas)
-    return pd.DataFrame(
+    rows = pd.DataFrame(
         {
             "formula": [f.strip() for f in formulas],
             "fidelity": fidelity,
@@ -61,6 +65,9 @@ def make_rows(
             "e_above_hull_mev": nan if e_above_hull_mev is None else e_above_hull_mev,
         }
     )
+    if framework is not None:
+        rows["framework"] = list(framework)
+    return rows
 
 
 def flag_references(formulas: Iterable[str], references: Iterable[str]) -> list[bool]:

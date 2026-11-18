@@ -4,7 +4,7 @@
 
 Writes into the run directory: convex_hull.png, the energy above the hull over a
 4-element field's square, and for a benchmark run one <metric>.png per metric with
-curves in metrics.json: a panel per curve, random picking's dashed.
+curves in metrics.json: a panel per curve, its bar dashed.
 """
 
 import json
@@ -22,6 +22,7 @@ from pymatgen.core import Composition
 from nuikit.errors import ConfigError, DataError, cli_boundary
 
 from phasebo import paths
+from phasebo.benchmark.metric.base import Bar, is_bar
 from phasebo.config import SystemConfig
 from phasebo.data import store
 from phasebo.field.points import Points
@@ -90,14 +91,18 @@ def _save_hull_map(
     """Save the energy above the hull over the square of a 4-element field.
 
     The square's axes are the fractions of the first element among the first two,
-    and of the third among the last two, in config order.
+    and of the third among the last two, in config order. With frameworks, each
+    explored composition shows its winning framework's energy.
     """
     import matplotlib.pyplot as plt
     from scipy import interpolate
 
-    square = _place_on_square(points.formulas, elements)
+    shown = np.arange(len(points.formulas))
+    if points.framework_names:
+        shown = np.concatenate([np.flatnonzero(points.references), points.winners])
+    square = _place_on_square([points.formulas[i] for i in shown], elements)
     grid = np.arange(0, 1, 0.005)
-    surface_mev = interpolate.LinearNDInterpolator(square, points.energies_mev)
+    surface_mev = interpolate.LinearNDInterpolator(square, points.energies_mev[shown])
     figure, axes = plt.subplots()
     filled = axes.contourf(
         grid, grid, surface_mev(*np.meshgrid(grid, grid)), 50, cmap="gist_heat"
@@ -125,11 +130,11 @@ def _save_curves(
 ) -> None:
     """Save one panel per curve of a metric, over the evaluations after the start.
 
-    Each panel draws the curve and, dashed, its `/random` partner.
+    Each panel draws the curve and, dashed, its bar.
     """
     import matplotlib.pyplot as plt
 
-    names = [name for name in curves if not name.endswith("/random")]
+    names = [name for name in curves if not is_bar(name)]
     figure, panels = plt.subplots(
         1, len(names), figsize=(4 * len(names), 3.5), squeeze=False
     )
@@ -137,9 +142,10 @@ def _save_curves(
         # None marks a point where the curve is undefined; matplotlib skips NaN.
         values = np.array(curves[name], dtype=float)
         axes.plot(evaluations, values, "-", marker="o", ms=3, label="BO")
-        if f"{name}/random" in curves:
-            random = np.array(curves[f"{name}/random"], dtype=float)
-            axes.plot(evaluations, random, "--", label="random")
+        for bar in Bar:
+            if f"{name}/{bar}" in curves:
+                bar_values = np.array(curves[f"{name}/{bar}"], dtype=float)
+                axes.plot(evaluations, bar_values, "--", label=bar.label)
         axes.set_title(name, fontsize=10)
         axes.set_xlabel("Evaluations after the start")
         axes.legend(fontsize=8)

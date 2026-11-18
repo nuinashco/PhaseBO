@@ -1,0 +1,414 @@
+formula,point,fidelity,reference,total_energy_ev,e_above_hull_mev,framework
+Li,Li1,dft,True,0.0,,
+Sn,Sn1,dft,True,0.0,,
+S,S1,dft,True,0.0,,
+Cl,Cl2,dft,True,0.0,,
+Li1 Cl1,Li1 Cl1,dft,True,-3.58759072798676,,
+Li1 Sn1 Cl5,Li1 Sn1 Cl5,dft,True,-8.018516683891399,,
+Li1 Sn2 Cl9,Li1 Sn2 Cl9,dft,True,-12.547509530719177,,
+Li1 Sn3 Cl13,Li1 Sn3 Cl13,dft,True,-17.08628441220111,,
+Li10 S1 Cl8,Li10 S1 Cl8,dft,True,-32.72136381168922,,
+Li10 S3 Cl4,Li10 S3 Cl4,dft,True,-25.922131111561296,,
+Li10 Sn1 S7,Li10 Sn1 S7,dft,True,-19.942852388810145,,
+Li11 S2 Cl7,Li11 S2 Cl7,dft,True,-34.71192142680867,,
+Li11 S3 Cl5,Li11 S3 Cl5,dft,True,-30.145844220679912,,
+Li11 S4 Cl3,Li11 S4 Cl3,dft,True,-25.931187425763266,,
+Li11 S5 Cl1,Li11 S5 Cl1,dft,True,-22.677603304511404,,
+Li12 S5 Cl2,Li12 S5 Cl2,dft,True,-27.048168120054566,,
+Li13 S6 Cl1,Li13 S6 Cl1,dft,True,-27.615087383916062,,
+Li2 S1,Li2 S1,dft,True,-4.011734894324305,,
+Li2 Sn1 Cl6,Li2 Sn1 Cl6,dft,True,-11.821517211463076,,
+Li2 Sn1 S3,Li2 Sn1 S3,dft,True,-5.221620411301152,,
+Li2 Sn2 S5,Li2 Sn2 S5,dft,True,-5.851987180287034,,
+Li2 Sn3 Cl14,Li2 Sn3 Cl14,dft,True,-20.520595980118784,,
+Li2 Sn3 S7,Li2 Sn3 S7,dft,True,-7.342718923953801,,
+Li2 Sn4 S9,Li2 Sn4 S9,dft,True,-7.257519534248201,,
+Li2 Sn5 S11,Li2 Sn5 S11,dft,True,-7.8667231006092635,,
+Li3 S1 Cl1,Li3 S1 Cl1,dft,True,-7.669820668726826,,
+Li3 Sn1 Cl7,Li3 Sn1 Cl7,dft,True,-15.561447552601615,,
+Li3 Sn2 Cl11,Li3 Sn2 Cl11,dft,True,-19.861026938845505,,
+Li4 S1 Cl2,Li4 S1 Cl2,dft,True,-11.094060694084861,,
+Li4 Sn1 Cl8,Li4 Sn1 Cl8,dft,True,-19.55241510108511,,
+Li4 Sn1 S4,Li4 Sn1 S4,dft,True,-9.084035655551178,,
+Li4 Sn3 S8,Li4 Sn3 S8,dft,True,-10.590484681047421,,
+Li5 S1 Cl3,Li5 S1 Cl3,dft,True,-14.608152105602365,,
+Li5 S2 Cl1,Li5 S2 Cl1,dft,True,-11.484975185086522,,
+Li5 Sn1 Cl9,Li5 Sn1 Cl9,dft,True,-23.373304640166516,,
+Li5 Sn2 Cl13,Li5 Sn2 Cl13,dft,True,-27.590311511271107,,
+Li6 S1 Cl4,Li6 S1 Cl4,dft,True,-18.4146181904466,,
+Li6 Sn1 Cl10,Li6 Sn1 Cl10,dft,True,-26.52904783908838,,
+Li6 Sn1 S5,Li6 Sn1 S5,dft,True,-12.80190296398475,,
+Li6 Sn2 S7,Li6 Sn2 S7,dft,True,-14.462256607798388,,
+Li7 S1 Cl5,Li7 S1 Cl5,dft,True,-22.028899980242016,,
+Li7 S2 Cl3,Li7 S2 Cl3,dft,True,-18.654452133771343,,
+Li7 S3 Cl1,Li7 S3 Cl1,dft,True,-14.817731453960388,,
+Li7 Sn1 Cl11,Li7 Sn1 Cl11,dft,True,-29.963997030924347,,
+Li8 S1 Cl6,Li8 S1 Cl6,dft,True,-25.963901236997582,,
+Li8 S3 Cl2,Li8 S3 Cl2,dft,True,-18.5461809480732,,
+Li8 Sn1 S6,Li8 Sn1 S6,dft,True,-17.472519016148617,,
+Li9 S1 Cl7,Li9 S1 Cl7,dft,True,-29.68574482902613,,
+Li9 S2 Cl5,Li9 S2 Cl5,dft,True,-25.429747937231735,,
+Li9 S4 Cl1,Li9 S4 Cl1,dft,True,-18.99052199180432,,
+Sn1 Cl4,Sn1 Cl4,dft,True,-4.819905214860559,,
+Sn1 S1 Cl2,Sn1 S1 Cl2,dft,True,-2.9576740324563215,,
+Sn1 S2,Sn1 S2,dft,True,-1.015373247530793,,
+Sn2 S1 Cl6,Sn2 S1 Cl6,dft,True,-7.48027216153807,,
+Sn2 S3 Cl2,Sn2 S3 Cl2,dft,True,-3.8372880078072162,,
+Sn3 S1 Cl10,Sn3 S1 Cl10,dft,True,-11.885908147675043,,
+Sn3 S2 Cl8,Sn3 S2 Cl8,dft,True,-10.98656856648362,,
+Sn3 S4 Cl4,Sn3 S4 Cl4,dft,True,-7.275033644903811,,
+Sn3 S5 Cl2,Sn3 S5 Cl2,dft,True,-4.200646040278095,,
+Sn4 S1 Cl14,Sn4 S1 Cl14,dft,True,-17.14117912242487,,
+Sn4 S3 Cl10,Sn4 S3 Cl10,dft,True,-14.447832160578898,,
+Sn4 S5 Cl6,Sn4 S5 Cl6,dft,True,-9.334219858198233,,
+Sn4 S7 Cl2,Sn4 S7 Cl2,dft,True,-5.311567198867561,,
+Sn5 S6 Cl8,Sn5 S6 Cl8,dft,True,-12.234740552495614,,
+Sn5 S7 Cl6,Sn5 S7 Cl6,dft,True,-9.680046005856108,,
+Sn5 S8 Cl4,Sn5 S8 Cl4,dft,True,-7.995569551417376,,
+Sn5 S9 Cl2,Sn5 S9 Cl2,dft,True,-6.237255630593578,,
+Sn6 S11 Cl2,Sn6 S11 Cl2,dft,True,-7.37989659633783,,
+Li1 Sn1 S1 Cl3,Li1 Sn1 S1 Cl3,dft,False,-6.490131489010794,,cubic
+Li1 Sn1 S1 Cl3,Li1 Sn1 S1 Cl3,dft,False,-6.806589480216013,,hexagonal
+Li1 Sn1 S1 Cl3,Li1 Sn1 S1 Cl3,dft,False,-6.7376384024048654,,wurtzite
+Li1 Sn1 S2 Cl1,Li1 Sn1 S2 Cl1,dft,False,-3.881604087093313,,cubic
+Li1 Sn1 S2 Cl1,Li1 Sn1 S2 Cl1,dft,False,-4.0837518266928114,,hexagonal
+Li1 Sn1 S2 Cl1,Li1 Sn1 S2 Cl1,dft,False,-4.341357577829489,,wurtzite
+Li1 Sn2 S1 Cl7,Li1 Sn2 S1 Cl7,dft,False,-10.29937032287455,,cubic
+Li1 Sn2 S1 Cl7,Li1 Sn2 S1 Cl7,dft,False,-11.43627382660736,,hexagonal
+Li1 Sn2 S1 Cl7,Li1 Sn2 S1 Cl7,dft,False,-11.120966256826517,,wurtzite
+Li1 Sn2 S2 Cl5,Li1 Sn2 S2 Cl5,dft,False,-9.475029087771459,,cubic
+Li1 Sn2 S2 Cl5,Li1 Sn2 S2 Cl5,dft,False,-10.09282991202911,,hexagonal
+Li1 Sn2 S2 Cl5,Li1 Sn2 S2 Cl5,dft,False,-10.592167686762846,,wurtzite
+Li1 Sn2 S3 Cl3,Li1 Sn2 S3 Cl3,dft,False,-7.276356336872151,,cubic
+Li1 Sn2 S3 Cl3,Li1 Sn2 S3 Cl3,dft,False,-7.772026287030887,,hexagonal
+Li1 Sn2 S3 Cl3,Li1 Sn2 S3 Cl3,dft,False,-8.218326181439064,,wurtzite
+Li1 Sn2 S4 Cl1,Li1 Sn2 S4 Cl1,dft,False,-3.950976133299714,,cubic
+Li1 Sn2 S4 Cl1,Li1 Sn2 S4 Cl1,dft,False,-4.65998323261278,,hexagonal
+Li1 Sn2 S4 Cl1,Li1 Sn2 S4 Cl1,dft,False,-4.43476051944599,,wurtzite
+Li1 Sn3 S1 Cl11,Li1 Sn3 S1 Cl11,dft,False,-14.551469833944985,,cubic
+Li1 Sn3 S1 Cl11,Li1 Sn3 S1 Cl11,dft,False,-15.563378742626831,,hexagonal
+Li1 Sn3 S1 Cl11,Li1 Sn3 S1 Cl11,dft,False,-15.739585312424733,,wurtzite
+Li1 Sn3 S2 Cl9,Li1 Sn3 S2 Cl9,dft,False,-12.501605349230527,,cubic
+Li1 Sn3 S2 Cl9,Li1 Sn3 S2 Cl9,dft,False,-14.37420356452675,,hexagonal
+Li1 Sn3 S2 Cl9,Li1 Sn3 S2 Cl9,dft,False,-14.537277611431811,,wurtzite
+Li1 Sn3 S3 Cl7,Li1 Sn3 S3 Cl7,dft,False,-12.240539443677807,,cubic
+Li1 Sn3 S3 Cl7,Li1 Sn3 S3 Cl7,dft,False,-12.58935409793588,,hexagonal
+Li1 Sn3 S3 Cl7,Li1 Sn3 S3 Cl7,dft,False,-13.514708455531096,,wurtzite
+Li1 Sn3 S4 Cl5,Li1 Sn3 S4 Cl5,dft,False,-10.667279349894894,,cubic
+Li1 Sn3 S4 Cl5,Li1 Sn3 S4 Cl5,dft,False,-11.20481559509435,,hexagonal
+Li1 Sn3 S4 Cl5,Li1 Sn3 S4 Cl5,dft,False,-11.692633938569402,,wurtzite
+Li1 Sn3 S5 Cl3,Li1 Sn3 S5 Cl3,dft,False,-6.674323251542704,,cubic
+Li1 Sn3 S5 Cl3,Li1 Sn3 S5 Cl3,dft,False,-8.029372172958126,,hexagonal
+Li1 Sn3 S5 Cl3,Li1 Sn3 S5 Cl3,dft,False,-8.000621962939078,,wurtzite
+Li1 Sn3 S6 Cl1,Li1 Sn3 S6 Cl1,dft,False,-5.01192499937379,,cubic
+Li1 Sn3 S6 Cl1,Li1 Sn3 S6 Cl1,dft,False,-5.993650216343657,,hexagonal
+Li1 Sn3 S6 Cl1,Li1 Sn3 S6 Cl1,dft,False,-5.247148869948126,,wurtzite
+Li1 Sn4 S2 Cl13,Li1 Sn4 S2 Cl13,dft,False,-16.65443079720765,,cubic
+Li1 Sn4 S2 Cl13,Li1 Sn4 S2 Cl13,dft,False,-18.875758643123042,,hexagonal
+Li1 Sn4 S2 Cl13,Li1 Sn4 S2 Cl13,dft,False,-19.187409867669214,,wurtzite
+Li1 Sn4 S3 Cl11,Li1 Sn4 S3 Cl11,dft,False,-13.960064234694208,,cubic
+Li1 Sn4 S3 Cl11,Li1 Sn4 S3 Cl11,dft,False,-15.887268978343581,,hexagonal
+Li1 Sn4 S3 Cl11,Li1 Sn4 S3 Cl11,dft,False,-16.624463687105198,,wurtzite
+Li1 Sn4 S4 Cl9,Li1 Sn4 S4 Cl9,dft,False,-15.660843579144995,,cubic
+Li1 Sn4 S4 Cl9,Li1 Sn4 S4 Cl9,dft,False,-15.733956350470658,,hexagonal
+Li1 Sn4 S4 Cl9,Li1 Sn4 S4 Cl9,dft,False,-16.81906322970406,,wurtzite
+Li1 Sn4 S5 Cl7,Li1 Sn4 S5 Cl7,dft,False,-13.903468451459588,,cubic
+Li1 Sn4 S5 Cl7,Li1 Sn4 S5 Cl7,dft,False,-14.192642830302148,,hexagonal
+Li1 Sn4 S5 Cl7,Li1 Sn4 S5 Cl7,dft,False,-14.636112002714023,,wurtzite
+Li1 Sn4 S6 Cl5,Li1 Sn4 S6 Cl5,dft,False,-9.872057796219295,,cubic
+Li1 Sn4 S6 Cl5,Li1 Sn4 S6 Cl5,dft,False,-11.255547275325977,,hexagonal
+Li1 Sn4 S6 Cl5,Li1 Sn4 S6 Cl5,dft,False,-11.279692501007467,,wurtzite
+Li1 Sn4 S7 Cl3,Li1 Sn4 S7 Cl3,dft,False,-7.023690027432307,,cubic
+Li1 Sn4 S7 Cl3,Li1 Sn4 S7 Cl3,dft,False,-8.298960211956032,,hexagonal
+Li1 Sn4 S7 Cl3,Li1 Sn4 S7 Cl3,dft,False,-7.98865520607791,,wurtzite
+Li1 Sn4 S8 Cl1,Li1 Sn4 S8 Cl1,dft,False,-6.37091851755891,,cubic
+Li1 Sn4 S8 Cl1,Li1 Sn4 S8 Cl1,dft,False,-7.671035934670531,,hexagonal
+Li1 Sn4 S8 Cl1,Li1 Sn4 S8 Cl1,dft,False,-6.481096640542937,,wurtzite
+Li1 Sn5 S10 Cl1,Li1 Sn5 S10 Cl1,dft,False,-6.405030574137742,,cubic
+Li1 Sn5 S10 Cl1,Li1 Sn5 S10 Cl1,dft,False,-7.824046212837612,,hexagonal
+Li1 Sn5 S10 Cl1,Li1 Sn5 S10 Cl1,dft,False,-6.530029945589675,,wurtzite
+Li1 Sn5 S7 Cl7,Li1 Sn5 S7 Cl7,dft,False,-14.099571591177533,,cubic
+Li1 Sn5 S7 Cl7,Li1 Sn5 S7 Cl7,dft,False,-15.39280931020159,,hexagonal
+Li1 Sn5 S7 Cl7,Li1 Sn5 S7 Cl7,dft,False,-15.670717181673188,,wurtzite
+Li1 Sn5 S8 Cl5,Li1 Sn5 S8 Cl5,dft,False,-9.235066967612141,,cubic
+Li1 Sn5 S8 Cl5,Li1 Sn5 S8 Cl5,dft,False,-11.227976362668116,,hexagonal
+Li1 Sn5 S8 Cl5,Li1 Sn5 S8 Cl5,dft,False,-10.955965539736042,,wurtzite
+Li1 Sn5 S9 Cl3,Li1 Sn5 S9 Cl3,dft,False,-8.689613066594404,,cubic
+Li1 Sn5 S9 Cl3,Li1 Sn5 S9 Cl3,dft,False,-9.948838130345528,,hexagonal
+Li1 Sn5 S9 Cl3,Li1 Sn5 S9 Cl3,dft,False,-8.953367030989446,,wurtzite
+Li1 Sn6 S12 Cl1,Li1 Sn6 S12 Cl1,dft,False,-7.79002211392367,,cubic
+Li1 Sn6 S12 Cl1,Li1 Sn6 S12 Cl1,dft,False,-9.320666618240198,,hexagonal
+Li1 Sn6 S12 Cl1,Li1 Sn6 S12 Cl1,dft,False,-8.139972662695445,,wurtzite
+Li10 Sn1 S5 Cl4,Li10 Sn1 S5 Cl4,dft,False,-27.720765158294345,,cubic
+Li10 Sn1 S5 Cl4,Li10 Sn1 S5 Cl4,dft,False,-27.481826759848623,,hexagonal
+Li10 Sn1 S5 Cl4,Li10 Sn1 S5 Cl4,dft,False,-28.539889631106902,,wurtzite
+Li10 Sn1 S6 Cl2,Li10 Sn1 S6 Cl2,dft,False,-22.615481566245453,,cubic
+Li10 Sn1 S6 Cl2,Li10 Sn1 S6 Cl2,dft,False,-22.17976363601737,,hexagonal
+Li10 Sn1 S6 Cl2,Li10 Sn1 S6 Cl2,dft,False,-23.38176546790894,,wurtzite
+Li11 Sn1 S7 Cl1,Li11 Sn1 S7 Cl1,dft,False,-24.061997662301227,,cubic
+Li11 Sn1 S7 Cl1,Li11 Sn1 S7 Cl1,dft,False,-23.78821995470051,,hexagonal
+Li11 Sn1 S7 Cl1,Li11 Sn1 S7 Cl1,dft,False,-24.535252889988474,,wurtzite
+Li2 Sn1 S1 Cl4,Li2 Sn1 S1 Cl4,dft,False,-10.020337790732183,,cubic
+Li2 Sn1 S1 Cl4,Li2 Sn1 S1 Cl4,dft,False,-9.974521013541366,,hexagonal
+Li2 Sn1 S1 Cl4,Li2 Sn1 S1 Cl4,dft,False,-9.689027954917792,,wurtzite
+Li2 Sn1 S2 Cl2,Li2 Sn1 S2 Cl2,dft,False,-7.7032741629652595,,cubic
+Li2 Sn1 S2 Cl2,Li2 Sn1 S2 Cl2,dft,False,-7.9972084518154185,,hexagonal
+Li2 Sn1 S2 Cl2,Li2 Sn1 S2 Cl2,dft,False,-8.12953181231369,,wurtzite
+Li2 Sn2 S1 Cl8,Li2 Sn2 S1 Cl8,dft,False,-14.324646085997014,,cubic
+Li2 Sn2 S1 Cl8,Li2 Sn2 S1 Cl8,dft,False,-14.606328187960125,,hexagonal
+Li2 Sn2 S1 Cl8,Li2 Sn2 S1 Cl8,dft,False,-13.35526304386572,,wurtzite
+Li2 Sn2 S3 Cl4,Li2 Sn2 S3 Cl4,dft,False,-10.691635292274665,,cubic
+Li2 Sn2 S3 Cl4,Li2 Sn2 S3 Cl4,dft,False,-11.384331105575136,,hexagonal
+Li2 Sn2 S3 Cl4,Li2 Sn2 S3 Cl4,dft,False,-11.677782848136626,,wurtzite
+Li2 Sn3 S1 Cl12,Li2 Sn3 S1 Cl12,dft,False,-18.550213056401706,,cubic
+Li2 Sn3 S1 Cl12,Li2 Sn3 S1 Cl12,dft,False,-19.278540334775787,,hexagonal
+Li2 Sn3 S1 Cl12,Li2 Sn3 S1 Cl12,dft,False,-18.840284064762272,,wurtzite
+Li2 Sn3 S2 Cl10,Li2 Sn3 S2 Cl10,dft,False,-17.259397597081914,,cubic
+Li2 Sn3 S2 Cl10,Li2 Sn3 S2 Cl10,dft,False,-19.023072664126303,,hexagonal
+Li2 Sn3 S2 Cl10,Li2 Sn3 S2 Cl10,dft,False,-18.067984725711973,,wurtzite
+Li2 Sn3 S3 Cl8,Li2 Sn3 S3 Cl8,dft,False,-15.535646883597806,,cubic
+Li2 Sn3 S3 Cl8,Li2 Sn3 S3 Cl8,dft,False,-16.861039094639455,,hexagonal
+Li2 Sn3 S3 Cl8,Li2 Sn3 S3 Cl8,dft,False,-17.035074606621222,,wurtzite
+Li2 Sn3 S4 Cl6,Li2 Sn3 S4 Cl6,dft,False,-12.80751468628691,,cubic
+Li2 Sn3 S4 Cl6,Li2 Sn3 S4 Cl6,dft,False,-14.047531052744624,,hexagonal
+Li2 Sn3 S4 Cl6,Li2 Sn3 S4 Cl6,dft,False,-14.562111709802885,,wurtzite
+Li2 Sn3 S5 Cl4,Li2 Sn3 S5 Cl4,dft,False,-11.081240224886448,,cubic
+Li2 Sn3 S5 Cl4,Li2 Sn3 S5 Cl4,dft,False,-11.92530390095045,,hexagonal
+Li2 Sn3 S5 Cl4,Li2 Sn3 S5 Cl4,dft,False,-12.86158030065248,,wurtzite
+Li2 Sn3 S6 Cl2,Li2 Sn3 S6 Cl2,dft,False,-7.230365622491897,,cubic
+Li2 Sn3 S6 Cl2,Li2 Sn3 S6 Cl2,dft,False,-8.643142967667531,,hexagonal
+Li2 Sn3 S6 Cl2,Li2 Sn3 S6 Cl2,dft,False,-8.622581520054565,,wurtzite
+Li2 Sn4 S5 Cl8,Li2 Sn4 S5 Cl8,dft,False,-16.955584417676363,,cubic
+Li2 Sn4 S5 Cl8,Li2 Sn4 S5 Cl8,dft,False,-18.159001163189934,,hexagonal
+Li2 Sn4 S5 Cl8,Li2 Sn4 S5 Cl8,dft,False,-18.841929302898258,,wurtzite
+Li2 Sn4 S7 Cl4,Li2 Sn4 S7 Cl4,dft,False,-10.549373648359186,,cubic
+Li2 Sn4 S7 Cl4,Li2 Sn4 S7 Cl4,dft,False,-12.25315337882641,,hexagonal
+Li2 Sn4 S7 Cl4,Li2 Sn4 S7 Cl4,dft,False,-12.741661096703108,,wurtzite
+Li2 Sn5 S10 Cl2,Li2 Sn5 S10 Cl2,dft,False,-8.924975554872534,,cubic
+Li2 Sn5 S10 Cl2,Li2 Sn5 S10 Cl2,dft,False,-10.506182180331718,,hexagonal
+Li2 Sn5 S10 Cl2,Li2 Sn5 S10 Cl2,dft,False,-9.539683719799715,,wurtzite
+Li2 Sn5 S9 Cl4,Li2 Sn5 S9 Cl4,dft,False,-10.897514575018022,,cubic
+Li2 Sn5 S9 Cl4,Li2 Sn5 S9 Cl4,dft,False,-12.90711501004661,,hexagonal
+Li2 Sn5 S9 Cl4,Li2 Sn5 S9 Cl4,dft,False,-12.833424362408662,,wurtzite
+Li3 Sn1 S1 Cl5,Li3 Sn1 S1 Cl5,dft,False,-14.00737050027143,,cubic
+Li3 Sn1 S1 Cl5,Li3 Sn1 S1 Cl5,dft,False,-13.747082781401213,,hexagonal
+Li3 Sn1 S1 Cl5,Li3 Sn1 S1 Cl5,dft,False,-13.615040642998723,,wurtzite
+Li3 Sn1 S2 Cl3,Li3 Sn1 S2 Cl3,dft,False,-10.848453775653832,,cubic
+Li3 Sn1 S2 Cl3,Li3 Sn1 S2 Cl3,dft,False,-11.603371795558353,,hexagonal
+Li3 Sn1 S2 Cl3,Li3 Sn1 S2 Cl3,dft,False,-11.506533076910763,,wurtzite
+Li3 Sn1 S3 Cl1,Li3 Sn1 S3 Cl1,dft,False,-8.950965893703781,,cubic
+Li3 Sn1 S3 Cl1,Li3 Sn1 S3 Cl1,dft,False,-8.04500465116016,,hexagonal
+Li3 Sn1 S3 Cl1,Li3 Sn1 S3 Cl1,dft,False,-9.518140542340287,,wurtzite
+Li3 Sn2 S1 Cl9,Li3 Sn2 S1 Cl9,dft,False,-19.040949257302778,,cubic
+Li3 Sn2 S1 Cl9,Li3 Sn2 S1 Cl9,dft,False,-18.771747482454597,,hexagonal
+Li3 Sn2 S1 Cl9,Li3 Sn2 S1 Cl9,dft,False,-17.45300491523053,,wurtzite
+Li3 Sn2 S2 Cl7,Li3 Sn2 S2 Cl7,dft,False,-16.27845060752844,,cubic
+Li3 Sn2 S2 Cl7,Li3 Sn2 S2 Cl7,dft,False,-16.603106768981625,,hexagonal
+Li3 Sn2 S2 Cl7,Li3 Sn2 S2 Cl7,dft,False,-16.014164559511332,,wurtzite
+Li3 Sn2 S3 Cl5,Li3 Sn2 S3 Cl5,dft,False,-14.704187547878039,,cubic
+Li3 Sn2 S3 Cl5,Li3 Sn2 S3 Cl5,dft,False,-15.532140167741971,,hexagonal
+Li3 Sn2 S3 Cl5,Li3 Sn2 S3 Cl5,dft,False,-15.2524568856597,,wurtzite
+Li3 Sn2 S4 Cl3,Li3 Sn2 S4 Cl3,dft,False,-12.045363768151082,,cubic
+Li3 Sn2 S4 Cl3,Li3 Sn2 S4 Cl3,dft,False,-11.914022727649577,,hexagonal
+Li3 Sn2 S4 Cl3,Li3 Sn2 S4 Cl3,dft,False,-12.64921748290051,,wurtzite
+Li3 Sn2 S5 Cl1,Li3 Sn2 S5 Cl1,dft,False,-9.071830290634255,,cubic
+Li3 Sn2 S5 Cl1,Li3 Sn2 S5 Cl1,dft,False,-9.382084405057634,,hexagonal
+Li3 Sn2 S5 Cl1,Li3 Sn2 S5 Cl1,dft,False,-10.331131087912947,,wurtzite
+Li3 Sn3 S1 Cl13,Li3 Sn3 S1 Cl13,dft,False,-22.730195281666244,,cubic
+Li3 Sn3 S1 Cl13,Li3 Sn3 S1 Cl13,dft,False,-22.371706689601385,,hexagonal
+Li3 Sn3 S1 Cl13,Li3 Sn3 S1 Cl13,dft,False,-21.297192672405178,,wurtzite
+Li3 Sn3 S2 Cl11,Li3 Sn3 S2 Cl11,dft,False,-20.492642077254015,,cubic
+Li3 Sn3 S2 Cl11,Li3 Sn3 S2 Cl11,dft,False,-21.66085536868165,,hexagonal
+Li3 Sn3 S2 Cl11,Li3 Sn3 S2 Cl11,dft,False,-19.835550401163424,,wurtzite
+Li3 Sn3 S4 Cl7,Li3 Sn3 S4 Cl7,dft,False,-16.411818176176737,,cubic
+Li3 Sn3 S4 Cl7,Li3 Sn3 S4 Cl7,dft,False,-17.475321877165882,,hexagonal
+Li3 Sn3 S4 Cl7,Li3 Sn3 S4 Cl7,dft,False,-17.705599473358667,,wurtzite
+Li3 Sn3 S5 Cl5,Li3 Sn3 S5 Cl5,dft,False,-14.704606831889013,,cubic
+Li3 Sn3 S5 Cl5,Li3 Sn3 S5 Cl5,dft,False,-15.180856915970361,,hexagonal
+Li3 Sn3 S5 Cl5,Li3 Sn3 S5 Cl5,dft,False,-16.330407081339686,,wurtzite
+Li3 Sn3 S7 Cl1,Li3 Sn3 S7 Cl1,dft,False,-8.486251495171437,,cubic
+Li3 Sn3 S7 Cl1,Li3 Sn3 S7 Cl1,dft,False,-10.238456927937484,,hexagonal
+Li3 Sn3 S7 Cl1,Li3 Sn3 S7 Cl1,dft,False,-10.419133606680264,,wurtzite
+Li3 Sn4 S6 Cl7,Li3 Sn4 S6 Cl7,dft,False,-18.362373033105516,,cubic
+Li3 Sn4 S6 Cl7,Li3 Sn4 S6 Cl7,dft,False,-19.377089951589674,,hexagonal
+Li3 Sn4 S6 Cl7,Li3 Sn4 S6 Cl7,dft,False,-20.520359437728587,,wurtzite
+Li3 Sn4 S7 Cl5,Li3 Sn4 S7 Cl5,dft,False,-14.586130142779334,,cubic
+Li3 Sn4 S7 Cl5,Li3 Sn4 S7 Cl5,dft,False,-15.5683987081122,,hexagonal
+Li3 Sn4 S7 Cl5,Li3 Sn4 S7 Cl5,dft,False,-17.02982383643072,,wurtzite
+Li3 Sn4 S8 Cl3,Li3 Sn4 S8 Cl3,dft,False,-11.576682713845395,,cubic
+Li3 Sn4 S8 Cl3,Li3 Sn4 S8 Cl3,dft,False,-13.358255829377999,,hexagonal
+Li3 Sn4 S8 Cl3,Li3 Sn4 S8 Cl3,dft,False,-13.582273873257146,,wurtzite
+Li3 Sn4 S9 Cl1,Li3 Sn4 S9 Cl1,dft,False,-8.721488767147564,,cubic
+Li3 Sn4 S9 Cl1,Li3 Sn4 S9 Cl1,dft,False,-10.703975151021355,,hexagonal
+Li3 Sn4 S9 Cl1,Li3 Sn4 S9 Cl1,dft,False,-10.870455037330814,,wurtzite
+Li3 Sn5 S11 Cl1,Li3 Sn5 S11 Cl1,dft,False,-10.549880815952164,,cubic
+Li3 Sn5 S11 Cl1,Li3 Sn5 S11 Cl1,dft,False,-12.498396758060151,,hexagonal
+Li3 Sn5 S11 Cl1,Li3 Sn5 S11 Cl1,dft,False,-12.203171098202574,,wurtzite
+Li4 Sn1 S1 Cl6,Li4 Sn1 S1 Cl6,dft,False,-17.733123236257146,,cubic
+Li4 Sn1 S1 Cl6,Li4 Sn1 S1 Cl6,dft,False,-17.54137367106705,,hexagonal
+Li4 Sn1 S1 Cl6,Li4 Sn1 S1 Cl6,dft,False,-17.33911976970797,,wurtzite
+Li4 Sn1 S2 Cl4,Li4 Sn1 S2 Cl4,dft,False,-14.46902894308394,,cubic
+Li4 Sn1 S2 Cl4,Li4 Sn1 S2 Cl4,dft,False,-15.481713835124314,,hexagonal
+Li4 Sn1 S2 Cl4,Li4 Sn1 S2 Cl4,dft,False,-14.927466893338707,,wurtzite
+Li4 Sn1 S3 Cl2,Li4 Sn1 S3 Cl2,dft,False,-12.601961424902136,,cubic
+Li4 Sn1 S3 Cl2,Li4 Sn1 S3 Cl2,dft,False,-12.193038800296907,,hexagonal
+Li4 Sn1 S3 Cl2,Li4 Sn1 S3 Cl2,dft,False,-13.011638061852132,,wurtzite
+Li4 Sn2 S1 Cl10,Li4 Sn2 S1 Cl10,dft,False,-22.38866243528137,,cubic
+Li4 Sn2 S1 Cl10,Li4 Sn2 S1 Cl10,dft,False,-21.775447972698988,,hexagonal
+Li4 Sn2 S1 Cl10,Li4 Sn2 S1 Cl10,dft,False,-20.999102412171048,,wurtzite
+Li4 Sn2 S3 Cl6,Li4 Sn2 S3 Cl6,dft,False,-18.176142812874115,,cubic
+Li4 Sn2 S3 Cl6,Li4 Sn2 S3 Cl6,dft,False,-18.837164542753484,,hexagonal
+Li4 Sn2 S3 Cl6,Li4 Sn2 S3 Cl6,dft,False,-17.9137599766852,,wurtzite
+Li4 Sn2 S5 Cl2,Li4 Sn2 S5 Cl2,dft,False,-13.027899953435941,,cubic
+Li4 Sn2 S5 Cl2,Li4 Sn2 S5 Cl2,dft,False,-12.105612688553663,,hexagonal
+Li4 Sn2 S5 Cl2,Li4 Sn2 S5 Cl2,dft,False,-13.918090742342633,,wurtzite
+Li4 Sn3 S3 Cl10,Li4 Sn3 S3 Cl10,dft,False,-22.112214537219124,,cubic
+Li4 Sn3 S3 Cl10,Li4 Sn3 S3 Cl10,dft,False,-22.725913675451906,,hexagonal
+Li4 Sn3 S3 Cl10,Li4 Sn3 S3 Cl10,dft,False,-22.041830448690895,,wurtzite
+Li4 Sn3 S4 Cl8,Li4 Sn3 S4 Cl8,dft,False,-21.205555420915772,,cubic
+Li4 Sn3 S4 Cl8,Li4 Sn3 S4 Cl8,dft,False,-21.828056255512053,,hexagonal
+Li4 Sn3 S4 Cl8,Li4 Sn3 S4 Cl8,dft,False,-21.89310931045131,,wurtzite
+Li4 Sn3 S5 Cl6,Li4 Sn3 S5 Cl6,dft,False,-18.245306142378496,,cubic
+Li4 Sn3 S5 Cl6,Li4 Sn3 S5 Cl6,dft,False,-19.528063398655963,,hexagonal
+Li4 Sn3 S5 Cl6,Li4 Sn3 S5 Cl6,dft,False,-19.637466716201498,,wurtzite
+Li4 Sn3 S6 Cl4,Li4 Sn3 S6 Cl4,dft,False,-16.52519051658619,,cubic
+Li4 Sn3 S6 Cl4,Li4 Sn3 S6 Cl4,dft,False,-16.31356199505753,,hexagonal
+Li4 Sn3 S6 Cl4,Li4 Sn3 S6 Cl4,dft,False,-17.44338912905874,,wurtzite
+Li4 Sn3 S7 Cl2,Li4 Sn3 S7 Cl2,dft,False,-12.740822566493879,,cubic
+Li4 Sn3 S7 Cl2,Li4 Sn3 S7 Cl2,dft,False,-13.226549293741021,,hexagonal
+Li4 Sn3 S7 Cl2,Li4 Sn3 S7 Cl2,dft,False,-14.319381712522269,,wurtzite
+Li4 Sn4 S9 Cl2,Li4 Sn4 S9 Cl2,dft,False,-12.550731557161027,,cubic
+Li4 Sn4 S9 Cl2,Li4 Sn4 S9 Cl2,dft,False,-14.592908489345849,,hexagonal
+Li4 Sn4 S9 Cl2,Li4 Sn4 S9 Cl2,dft,False,-14.84386214335321,,wurtzite
+Li5 Sn1 S1 Cl7,Li5 Sn1 S1 Cl7,dft,False,-21.02610240672159,,cubic
+Li5 Sn1 S1 Cl7,Li5 Sn1 S1 Cl7,dft,False,-20.940368452430775,,hexagonal
+Li5 Sn1 S1 Cl7,Li5 Sn1 S1 Cl7,dft,False,-20.603032495081717,,wurtzite
+Li5 Sn1 S2 Cl5,Li5 Sn1 S2 Cl5,dft,False,-17.86284069354042,,cubic
+Li5 Sn1 S2 Cl5,Li5 Sn1 S2 Cl5,dft,False,-18.935129534124293,,hexagonal
+Li5 Sn1 S2 Cl5,Li5 Sn1 S2 Cl5,dft,False,-18.030400633604895,,wurtzite
+Li5 Sn1 S3 Cl3,Li5 Sn1 S3 Cl3,dft,False,-15.553483284478757,,cubic
+Li5 Sn1 S3 Cl3,Li5 Sn1 S3 Cl3,dft,False,-15.855747831082216,,hexagonal
+Li5 Sn1 S3 Cl3,Li5 Sn1 S3 Cl3,dft,False,-16.114452848949167,,wurtzite
+Li5 Sn1 S4 Cl1,Li5 Sn1 S4 Cl1,dft,False,-12.340310446593309,,cubic
+Li5 Sn1 S4 Cl1,Li5 Sn1 S4 Cl1,dft,False,-11.690777114445474,,hexagonal
+Li5 Sn1 S4 Cl1,Li5 Sn1 S4 Cl1,dft,False,-13.292724717787294,,wurtzite
+Li5 Sn2 S1 Cl11,Li5 Sn2 S1 Cl11,dft,False,-26.659833969108213,,cubic
+Li5 Sn2 S1 Cl11,Li5 Sn2 S1 Cl11,dft,False,-25.85647553354964,,hexagonal
+Li5 Sn2 S1 Cl11,Li5 Sn2 S1 Cl11,dft,False,-25.507976687266115,,wurtzite
+Li5 Sn2 S2 Cl9,Li5 Sn2 S2 Cl9,dft,False,-24.688116665629355,,cubic
+Li5 Sn2 S2 Cl9,Li5 Sn2 S2 Cl9,dft,False,-24.285588020044734,,hexagonal
+Li5 Sn2 S2 Cl9,Li5 Sn2 S2 Cl9,dft,False,-23.810947984282453,,wurtzite
+Li5 Sn2 S3 Cl7,Li5 Sn2 S3 Cl7,dft,False,-21.64433149584535,,cubic
+Li5 Sn2 S3 Cl7,Li5 Sn2 S3 Cl7,dft,False,-22.057160633916034,,hexagonal
+Li5 Sn2 S3 Cl7,Li5 Sn2 S3 Cl7,dft,False,-20.640158458134653,,wurtzite
+Li5 Sn2 S4 Cl5,Li5 Sn2 S4 Cl5,dft,False,-18.829282861251464,,cubic
+Li5 Sn2 S4 Cl5,Li5 Sn2 S4 Cl5,dft,False,-20.05054102059924,,hexagonal
+Li5 Sn2 S4 Cl5,Li5 Sn2 S4 Cl5,dft,False,-19.889542746532655,,wurtzite
+Li5 Sn2 S5 Cl3,Li5 Sn2 S5 Cl3,dft,False,-17.369464508942674,,cubic
+Li5 Sn2 S5 Cl3,Li5 Sn2 S5 Cl3,dft,False,-16.14805910352555,,hexagonal
+Li5 Sn2 S5 Cl3,Li5 Sn2 S5 Cl3,dft,False,-17.511422395848196,,wurtzite
+Li5 Sn2 S6 Cl1,Li5 Sn2 S6 Cl1,dft,False,-13.637299928707412,,cubic
+Li5 Sn2 S6 Cl1,Li5 Sn2 S6 Cl1,dft,False,-13.440123083218499,,hexagonal
+Li5 Sn2 S6 Cl1,Li5 Sn2 S6 Cl1,dft,False,-15.3810972823637,,wurtzite
+Li5 Sn3 S5 Cl7,Li5 Sn3 S5 Cl7,dft,False,-22.00731727350114,,cubic
+Li5 Sn3 S5 Cl7,Li5 Sn3 S5 Cl7,dft,False,-23.685418667203283,,hexagonal
+Li5 Sn3 S5 Cl7,Li5 Sn3 S5 Cl7,dft,False,-23.025406688294023,,wurtzite
+Li5 Sn3 S6 Cl5,Li5 Sn3 S6 Cl5,dft,False,-19.509573894185575,,cubic
+Li5 Sn3 S6 Cl5,Li5 Sn3 S6 Cl5,dft,False,-19.52871348981043,,hexagonal
+Li5 Sn3 S6 Cl5,Li5 Sn3 S6 Cl5,dft,False,-20.432446012595225,,wurtzite
+Li5 Sn3 S7 Cl3,Li5 Sn3 S7 Cl3,dft,False,-17.312498521832932,,cubic
+Li5 Sn3 S7 Cl3,Li5 Sn3 S7 Cl3,dft,False,-16.754991907650137,,hexagonal
+Li5 Sn3 S7 Cl3,Li5 Sn3 S7 Cl3,dft,False,-18.45430624875566,,wurtzite
+Li5 Sn3 S8 Cl1,Li5 Sn3 S8 Cl1,dft,False,-13.762445904649827,,cubic
+Li5 Sn3 S8 Cl1,Li5 Sn3 S8 Cl1,dft,False,-14.645541841704485,,hexagonal
+Li5 Sn3 S8 Cl1,Li5 Sn3 S8 Cl1,dft,False,-15.996711031963596,,wurtzite
+Li5 Sn4 S10 Cl1,Li5 Sn4 S10 Cl1,dft,False,-13.2417853937188,,cubic
+Li5 Sn4 S10 Cl1,Li5 Sn4 S10 Cl1,dft,False,-15.235403967757613,,hexagonal
+Li5 Sn4 S10 Cl1,Li5 Sn4 S10 Cl1,dft,False,-16.011694189789125,,wurtzite
+Li6 Sn1 S1 Cl8,Li6 Sn1 S1 Cl8,dft,False,-24.325746713369423,,cubic
+Li6 Sn1 S1 Cl8,Li6 Sn1 S1 Cl8,dft,False,-24.289922276308406,,hexagonal
+Li6 Sn1 S1 Cl8,Li6 Sn1 S1 Cl8,dft,False,-23.945504023601647,,wurtzite
+Li6 Sn1 S2 Cl6,Li6 Sn1 S2 Cl6,dft,False,-21.695079562435943,,cubic
+Li6 Sn1 S2 Cl6,Li6 Sn1 S2 Cl6,dft,False,-22.76559254066269,,hexagonal
+Li6 Sn1 S2 Cl6,Li6 Sn1 S2 Cl6,dft,False,-21.81561534994477,,wurtzite
+Li6 Sn1 S3 Cl4,Li6 Sn1 S3 Cl4,dft,False,-18.76827035399425,,cubic
+Li6 Sn1 S3 Cl4,Li6 Sn1 S3 Cl4,dft,False,-19.54972221669956,,hexagonal
+Li6 Sn1 S3 Cl4,Li6 Sn1 S3 Cl4,dft,False,-19.539906379480872,,wurtzite
+Li6 Sn1 S4 Cl2,Li6 Sn1 S4 Cl2,dft,False,-15.760265517234846,,cubic
+Li6 Sn1 S4 Cl2,Li6 Sn1 S4 Cl2,dft,False,-15.258721854255832,,hexagonal
+Li6 Sn1 S4 Cl2,Li6 Sn1 S4 Cl2,dft,False,-16.73975904074195,,wurtzite
+Li6 Sn2 S3 Cl8,Li6 Sn2 S3 Cl8,dft,False,-25.619013053658268,,cubic
+Li6 Sn2 S3 Cl8,Li6 Sn2 S3 Cl8,dft,False,-26.073442416586825,,hexagonal
+Li6 Sn2 S3 Cl8,Li6 Sn2 S3 Cl8,dft,False,-24.314134013012808,,wurtzite
+Li6 Sn2 S5 Cl4,Li6 Sn2 S5 Cl4,dft,False,-20.424877819679903,,cubic
+Li6 Sn2 S5 Cl4,Li6 Sn2 S5 Cl4,dft,False,-20.341843960616536,,hexagonal
+Li6 Sn2 S5 Cl4,Li6 Sn2 S5 Cl4,dft,False,-20.750496142186577,,wurtzite
+Li6 Sn3 S7 Cl4,Li6 Sn3 S7 Cl4,dft,False,-20.97156616254292,,cubic
+Li6 Sn3 S7 Cl4,Li6 Sn3 S7 Cl4,dft,False,-19.562591187150858,,hexagonal
+Li6 Sn3 S7 Cl4,Li6 Sn3 S7 Cl4,dft,False,-21.300129037030754,,wurtzite
+Li6 Sn3 S8 Cl2,Li6 Sn3 S8 Cl2,dft,False,-17.44697438104521,,cubic
+Li6 Sn3 S8 Cl2,Li6 Sn3 S8 Cl2,dft,False,-16.5634384320018,,hexagonal
+Li6 Sn3 S8 Cl2,Li6 Sn3 S8 Cl2,dft,False,-19.37916096469947,,wurtzite
+Li7 Sn1 S1 Cl9,Li7 Sn1 S1 Cl9,dft,False,-28.518617277887195,,cubic
+Li7 Sn1 S1 Cl9,Li7 Sn1 S1 Cl9,dft,False,-28.48693803154018,,hexagonal
+Li7 Sn1 S1 Cl9,Li7 Sn1 S1 Cl9,dft,False,-28.115210896102447,,wurtzite
+Li7 Sn1 S2 Cl7,Li7 Sn1 S2 Cl7,dft,False,-24.251854055669085,,cubic
+Li7 Sn1 S2 Cl7,Li7 Sn1 S2 Cl7,dft,False,-25.212493907895567,,hexagonal
+Li7 Sn1 S2 Cl7,Li7 Sn1 S2 Cl7,dft,False,-24.43969608079206,,wurtzite
+Li7 Sn1 S3 Cl5,Li7 Sn1 S3 Cl5,dft,False,-22.473356719952353,,cubic
+Li7 Sn1 S3 Cl5,Li7 Sn1 S3 Cl5,dft,False,-23.765431934096753,,hexagonal
+Li7 Sn1 S3 Cl5,Li7 Sn1 S3 Cl5,dft,False,-23.451321286156418,,wurtzite
+Li7 Sn1 S4 Cl3,Li7 Sn1 S4 Cl3,dft,False,-20.210418881308506,,cubic
+Li7 Sn1 S4 Cl3,Li7 Sn1 S4 Cl3,dft,False,-20.068928999124516,,hexagonal
+Li7 Sn1 S4 Cl3,Li7 Sn1 S4 Cl3,dft,False,-21.09254403457674,,wurtzite
+Li7 Sn1 S5 Cl1,Li7 Sn1 S5 Cl1,dft,False,-16.17783784570411,,cubic
+Li7 Sn1 S5 Cl1,Li7 Sn1 S5 Cl1,dft,False,-15.605138425785649,,hexagonal
+Li7 Sn1 S5 Cl1,Li7 Sn1 S5 Cl1,dft,False,-17.10567508154724,,wurtzite
+Li7 Sn2 S4 Cl7,Li7 Sn2 S4 Cl7,dft,False,-25.578573937392644,,cubic
+Li7 Sn2 S4 Cl7,Li7 Sn2 S4 Cl7,dft,False,-27.337134034336028,,hexagonal
+Li7 Sn2 S4 Cl7,Li7 Sn2 S4 Cl7,dft,False,-26.780733936084253,,wurtzite
+Li7 Sn2 S5 Cl5,Li7 Sn2 S5 Cl5,dft,False,-23.177598265958157,,cubic
+Li7 Sn2 S5 Cl5,Li7 Sn2 S5 Cl5,dft,False,-23.866485267175268,,hexagonal
+Li7 Sn2 S5 Cl5,Li7 Sn2 S5 Cl5,dft,False,-23.986892446529634,,wurtzite
+Li7 Sn2 S6 Cl3,Li7 Sn2 S6 Cl3,dft,False,-21.374550939261507,,cubic
+Li7 Sn2 S6 Cl3,Li7 Sn2 S6 Cl3,dft,False,-19.68397371126886,,hexagonal
+Li7 Sn2 S6 Cl3,Li7 Sn2 S6 Cl3,dft,False,-21.959455294301016,,wurtzite
+Li7 Sn2 S7 Cl1,Li7 Sn2 S7 Cl1,dft,False,-18.21406931814349,,cubic
+Li7 Sn2 S7 Cl1,Li7 Sn2 S7 Cl1,dft,False,-17.847189396000168,,hexagonal
+Li7 Sn2 S7 Cl1,Li7 Sn2 S7 Cl1,dft,False,-20.2902720139379,,wurtzite
+Li7 Sn3 S9 Cl1,Li7 Sn3 S9 Cl1,dft,False,-17.84291244323508,,cubic
+Li7 Sn3 S9 Cl1,Li7 Sn3 S9 Cl1,dft,False,-18.500507872912276,,hexagonal
+Li7 Sn3 S9 Cl1,Li7 Sn3 S9 Cl1,dft,False,-20.701111043651494,,wurtzite
+Li8 Sn1 S1 Cl10,Li8 Sn1 S1 Cl10,dft,False,-32.336356268793175,,cubic
+Li8 Sn1 S1 Cl10,Li8 Sn1 S1 Cl10,dft,False,-32.331419228652784,,hexagonal
+Li8 Sn1 S1 Cl10,Li8 Sn1 S1 Cl10,dft,False,-31.823457322630063,,wurtzite
+Li8 Sn1 S2 Cl8,Li8 Sn1 S2 Cl8,dft,False,-28.952432810345762,,cubic
+Li8 Sn1 S2 Cl8,Li8 Sn1 S2 Cl8,dft,False,-29.73221654563822,,hexagonal
+Li8 Sn1 S2 Cl8,Li8 Sn1 S2 Cl8,dft,False,-29.122423770146913,,wurtzite
+Li8 Sn1 S3 Cl6,Li8 Sn1 S3 Cl6,dft,False,-25.73115008607303,,cubic
+Li8 Sn1 S3 Cl6,Li8 Sn1 S3 Cl6,dft,False,-27.4182552152439,,hexagonal
+Li8 Sn1 S3 Cl6,Li8 Sn1 S3 Cl6,dft,False,-26.759949626197805,,wurtzite
+Li8 Sn1 S4 Cl4,Li8 Sn1 S4 Cl4,dft,False,-24.040160828435006,,cubic
+Li8 Sn1 S4 Cl4,Li8 Sn1 S4 Cl4,dft,False,-24.023973527963914,,hexagonal
+Li8 Sn1 S4 Cl4,Li8 Sn1 S4 Cl4,dft,False,-24.501808808985405,,wurtzite
+Li8 Sn1 S5 Cl2,Li8 Sn1 S5 Cl2,dft,False,-20.480202860705617,,cubic
+Li8 Sn1 S5 Cl2,Li8 Sn1 S5 Cl2,dft,False,-20.086237036796298,,hexagonal
+Li8 Sn1 S5 Cl2,Li8 Sn1 S5 Cl2,dft,False,-21.606509236867623,,wurtzite
+Li8 Sn2 S7 Cl2,Li8 Sn2 S7 Cl2,dft,False,-21.662362994442304,,cubic
+Li8 Sn2 S7 Cl2,Li8 Sn2 S7 Cl2,dft,False,-20.140417693966526,,hexagonal
+Li8 Sn2 S7 Cl2,Li8 Sn2 S7 Cl2,dft,False,-23.279827098190427,,wurtzite
+Li9 Sn1 S3 Cl7,Li9 Sn1 S3 Cl7,dft,False,-28.62182616682793,,cubic
+Li9 Sn1 S3 Cl7,Li9 Sn1 S3 Cl7,dft,False,-30.435817495230385,,hexagonal
+Li9 Sn1 S3 Cl7,Li9 Sn1 S3 Cl7,dft,False,-29.740141002428683,,wurtzite
+Li9 Sn1 S4 Cl5,Li9 Sn1 S4 Cl5,dft,False,-26.86212866196706,,cubic
+Li9 Sn1 S4 Cl5,Li9 Sn1 S4 Cl5,dft,False,-27.384214756596354,,hexagonal
+Li9 Sn1 S4 Cl5,Li9 Sn1 S4 Cl5,dft,False,-27.23775747106468,,wurtzite
+Li9 Sn1 S5 Cl3,Li9 Sn1 S5 Cl3,dft,False,-24.67113225421733,,cubic
+Li9 Sn1 S5 Cl3,Li9 Sn1 S5 Cl3,dft,False,-24.572095552512366,,hexagonal
+Li9 Sn1 S5 Cl3,Li9 Sn1 S5 Cl3,dft,False,-25.91896394245258,,wurtzite
+Li9 Sn1 S6 Cl1,Li9 Sn1 S6 Cl1,dft,False,-20.344683370607633,,cubic
+Li9 Sn1 S6 Cl1,Li9 Sn1 S6 Cl1,dft,False,-19.990271488906068,,hexagonal
+Li9 Sn1 S6 Cl1,Li9 Sn1 S6 Cl1,dft,False,-21.065149300493502,,wurtzite
+Li9 Sn2 S8 Cl1,Li9 Sn2 S8 Cl1,dft,False,-21.194772245700896,,cubic
+Li9 Sn2 S8 Cl1,Li9 Sn2 S8 Cl1,dft,False,-21.152384370154646,,hexagonal
+Li9 Sn2 S8 Cl1,Li9 Sn2 S8 Cl1,dft,False,-23.539007531630727,,wurtzite

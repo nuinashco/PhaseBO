@@ -9,4 +9,5 @@ CONVENTIONS.md linguist-vendored protected=vendored
 .claude/agents/descriptions-judge.md linguist-vendored protected=vendored
 notebooks/reference/** linguist-vendored protected=published
 data/processed/** -text linguist-generated protected=generated
+configs/system/fake_LiSnSCl_*.yaml linguist-generated protected=generated
 data/raw/** -text linguist-vendored protected=published

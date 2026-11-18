@@ -1,5 +1,6 @@
 """Multi-fidelity Gaussian process from BoTorch: the source is a fidelity input."""
 
+from collections.abc import Sequence
 from typing import ClassVar
 
 import numpy as np
@@ -35,17 +36,18 @@ class MultiFidelitySurrogate(Surrogate[MultiFidelityConfig]):
 
     needs_cheap: ClassVar[bool] = True
 
-    def fit(
+    def _fit(
         self,
-        coords: np.ndarray,
+        inputs: np.ndarray,
         energies_mev: np.ndarray,
         *,
-        cheap: CheapEnergies | None = None,
+        cheap: CheapEnergies | None,
+        categories: Sequence[int],
     ) -> Fit:
         import torch
 
         known = require_cheap(cheap, f"surrogate {self.kind!r}")
-        x, g = stack_sources(coords, energies_mev, cheap=known)
+        x, g = stack_sources(inputs, energies_mev, cheap=known)
         with quiet_gpytorch():
             from botorch.models import SingleTaskMultiFidelityGP
             from botorch.models.transforms.input import AppendFeatures

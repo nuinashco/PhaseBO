@@ -8,7 +8,7 @@ from phasebo.bo.surrogate.base import CheapEnergies, SurrogateFactory
 def shifted_cheap(points, shift_mev):
     pool = points.pool
     return CheapEnergies(
-        coords=points.coords[pool], energies_mev=points.energies_mev[pool] + shift_mev
+        inputs=points.coords[pool], energies_mev=points.energies_mev[pool] + shift_mev
     )
 
 

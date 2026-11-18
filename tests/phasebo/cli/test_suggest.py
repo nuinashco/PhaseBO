@@ -44,3 +44,14 @@ def test_suggest_refuses_a_rule_that_needs_cheap_energies(system, tmp_path):
 
     with pytest.raises(ConfigError, match="only phasebo-benchmark has them"):
         suggest.run(cfg, runs_dir=tmp_path / "runs")
+
+
+def test_suggest_refuses_a_field_with_frameworks(framework_system, tmp_path):
+    cfg = SuggestConfig(
+        run_name="r",
+        system=framework_system,
+        bo=BOConfig(surrogate=GPConfig(kind="gp"), acquisition=TSConfig(kind="ts")),
+    )
+
+    with pytest.raises(ConfigError, match="has frameworks"):
+        suggest.run(cfg, runs_dir=tmp_path / "runs")

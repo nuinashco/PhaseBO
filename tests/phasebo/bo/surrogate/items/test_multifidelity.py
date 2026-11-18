@@ -8,7 +8,7 @@ from phasebo.bo.surrogate.base import CheapEnergies, SurrogateFactory
 def test_multifidelity_reproduces_the_dft_energies_it_was_fitted_to(points):
     pool, seen = points.pool, points.pool[:3]
     shifted = CheapEnergies(
-        coords=points.coords[pool], energies_mev=points.energies_mev[pool] + 40.0
+        inputs=points.coords[pool], energies_mev=points.energies_mev[pool] + 40.0
     )
     surrogate = SurrogateFactory.from_config({"kind": "multifidelity"})
 

@@ -5,6 +5,7 @@ from pathlib import Path
 
 import pandas as pd
 import pytest
+from pandera.typing import DataFrame
 from pymatgen.core import Composition
 
 from phasebo.config import CandidatesConfig, ElementConfig, SystemConfig
@@ -116,4 +117,61 @@ def points(system: SystemConfig) -> field_points.Points:
     rows = store.load(system.processed).rows
     return field_points.Points.from_rows(
         rows, fidelity="dft", elements=list(system.elements)
+    )
+
+
+@pytest.fixture
+def framework_rows() -> DataFrame[table.ProcessedTable]:
+    """Return the field's rows with each explored cell in two frameworks.
+
+    Wurtzite is 20 meV/atom higher than cubic for the first half of the explored
+    cells and 20 lower for the rest, so each framework wins somewhere.
+    """
+    explored = list(EXPLORED)
+    shift = {
+        f: 0.02 if i < len(explored) // 2 else -0.02 for i, f in enumerate(explored)
+    }
+    formulas, totals, frameworks = [], [], []
+    for f in explored:
+        for framework, offset in (("cubic", 0.0), ("wurtzite", shift[f])):
+            formulas.append(f)
+            totals.append(total_energy(f, EXPLORED[f] + offset))
+            frameworks.append(framework)
+    for f, formation_ev in REFERENCES.items():
+        formulas.append(f)
+        totals.append(total_energy(f, formation_ev))
+        frameworks.append(None)
+    rows = table.make_rows(
+        formulas,
+        fidelity="dft",
+        reference=[f in REFERENCES for f in formulas],
+        total_energy_ev=totals,
+        framework=frameworks,
+    )
+    cleaned, _ = table.clean(rows, elements=CHARGES, source="frameworks.csv")
+    return cleaned
+
+
+@pytest.fixture
+def framework_points(framework_rows: pd.DataFrame) -> field_points.Points:
+    """Return the points of the field with frameworks."""
+    return field_points.Points.from_rows(
+        framework_rows, fidelity="dft", elements=list(CHARGES)
+    )
+
+
+@pytest.fixture
+def framework_system(
+    tmp_path: Path, framework_rows: DataFrame[table.ProcessedTable]
+) -> SystemConfig:
+    """Write the field with frameworks to disk, as a script would."""
+    raw = tmp_path / "frameworks_raw.csv"
+    framework_rows.to_csv(raw, index=False)
+    (tmp_path / "frameworks.py").write_text("# The script that wrote the table.\n")
+    out = tmp_path / "frameworks.csv"
+    store.write(out, framework_rows, raw=[raw], script=tmp_path / "frameworks.py")
+    return SystemConfig(
+        processed=out,
+        elements={s: ElementConfig(charge=c, atoms=(0, 6)) for s, c in CHARGES.items()},
+        candidates=CandidatesConfig(max_atoms=8),
     )
