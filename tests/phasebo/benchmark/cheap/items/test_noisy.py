@@ -95,7 +95,8 @@ def test_bias_moves_only_its_frameworks_points(framework_rows, framework_points)
     moved = draw(biased) - draw(plain)
     wurtzite = np.array([f == "wurtzite" for f in framework_points.frameworks])
     assert moved[wurtzite].mean() > 20
-    assert moved[~wurtzite].mean() < moved[wurtzite].mean()
+    # Raising wurtzite can only raise the hull, so no other point rises.
+    assert moved[~wurtzite].max() <= 1e-6
 
 
 def test_noisy_source_refuses_a_bias_for_a_framework_not_in_the_field(

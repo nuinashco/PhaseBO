@@ -3,7 +3,12 @@
 import numpy as np
 import pytest
 
-from phasebo.bo.surrogate.base import CheapEnergies, SurrogateFactory
+from phasebo.bo.surrogate.base import (
+    CheapEnergies,
+    SurrogateFactory,
+    build_gp,
+    fit_mll,
+)
 
 NEED_CHEAP = ["multitask", "multifidelity", "delta", "joint"]
 
@@ -97,3 +102,30 @@ def test_a_new_surrogate_refuses_categories_unless_it_declares_them(
             framework_points.energies_mev[pool],
             categories=framework_points.categories,
         )
+
+
+def test_a_gp_with_categories_does_not_order_them():
+    import torch
+
+    rng = np.random.default_rng(0)
+    coords, labels = rng.random((30, 1)), rng.integers(0, 3, 30)
+    energies = np.sin(6 * coords[:, 0]) + np.array([0.0, 1.0, -0.5])[labels]
+    unseen, unseen_labels = rng.random((10, 1)), rng.integers(0, 3, 10)
+
+    def predict(relabel):
+        x = torch.as_tensor(np.column_stack([coords, relabel[labels]]))
+        model = build_gp(
+            x,
+            torch.as_tensor(energies)[:, None],
+            kernel="matern52",
+            noise_mev=None,
+            categories=[1],
+        )
+        fit_mll(model)
+        at = torch.as_tensor(np.column_stack([unseen, relabel[unseen_labels]]))
+        with torch.no_grad():
+            return model.posterior(at).mean.numpy().ravel()
+
+    # Swapping labels 0 and 1 changes distances between ordered numbers, not labels.
+    swapped = predict(np.array([1, 0, 2]))
+    assert swapped == pytest.approx(predict(np.arange(3)), abs=1e-6)
