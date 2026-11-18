@@ -38,18 +38,15 @@ class MultiTaskSurrogate(Surrogate[MultiTaskConfig]):
 
     needs_cheap: ClassVar[bool] = True
 
-    def fit(
+    def _fit(
         self,
         inputs: np.ndarray,
         energies_mev: np.ndarray,
         *,
-        cheap: CheapEnergies | None = None,
-        categories: Sequence[int] = (),
+        cheap: CheapEnergies | None,
+        categories: Sequence[int],
     ) -> Fit:
         known = require_cheap(cheap, f"surrogate {self.kind!r}")
-        if categories:
-            msg = f"surrogate {self.kind!r} cannot model categories"
-            raise ValueError(msg)
         x, g = stack_sources(inputs, energies_mev, cheap=known)
         with quiet_gpytorch():
             from botorch.models import MultiTaskGP

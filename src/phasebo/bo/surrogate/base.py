@@ -66,7 +66,6 @@ class Surrogate[C: SurrogateConfig](Configurable[C], ABC):
     needs_cheap: ClassVar[bool] = False
     handles_categories: ClassVar[bool] = False
 
-    @abstractmethod
     def fit(
         self,
         inputs: np.ndarray,
@@ -76,6 +75,21 @@ class Surrogate[C: SurrogateConfig](Configurable[C], ABC):
         categories: Sequence[int] = (),
     ) -> Fit:
         """Return the model fitted to energies above the hull at `inputs` (meV/atom)."""
+        if categories and not self.handles_categories:
+            msg = f"surrogate {self.config.kind!r} cannot model categories"
+            raise ValueError(msg)
+        return self._fit(inputs, energies_mev, cheap=cheap, categories=categories)
+
+    @abstractmethod
+    def _fit(
+        self,
+        inputs: np.ndarray,
+        energies_mev: np.ndarray,
+        *,
+        cheap: CheapEnergies | None,
+        categories: Sequence[int],
+    ) -> Fit:
+        """Return the model `fit` describes, its `categories` already checked."""
 
 
 class SurrogateFactory(ConfigurableFactory[Surrogate[Any]]):

@@ -84,3 +84,16 @@ def test_a_surrogate_without_categories_refuses_them(framework_points, kind):
             cheap=cheap,
             categories=framework_points.categories,
         )
+
+
+def test_a_new_surrogate_refuses_categories_unless_it_declares_them(
+    framework_points, recording_surrogate
+):
+    pool = framework_points.pool
+
+    with pytest.raises(ValueError, match="cannot model categories"):
+        recording_surrogate.fit(
+            framework_points.inputs[pool],
+            framework_points.energies_mev[pool],
+            categories=framework_points.categories,
+        )

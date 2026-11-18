@@ -17,13 +17,13 @@ class RecordingSurrogate(Surrogate[SurrogateConfig]):
     sizes: list[int] = field(factory=list)
     cheap_sizes: list[int] = field(factory=list)
 
-    def fit(
+    def _fit(
         self,
         inputs: np.ndarray,
         energies_mev: np.ndarray,
         *,
-        cheap: CheapEnergies | None = None,
-        categories: Sequence[int] = (),
+        cheap: CheapEnergies | None,
+        categories: Sequence[int],
     ) -> Fit:
         self.sizes.append(len(inputs))
         self.cheap_sizes.append(0 if cheap is None else len(cheap.energies_mev))

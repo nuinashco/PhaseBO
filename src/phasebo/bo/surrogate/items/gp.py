@@ -43,13 +43,13 @@ class GPSurrogate(Surrogate[GPConfig]):
 
     handles_categories: ClassVar[bool] = True
 
-    def fit(
+    def _fit(
         self,
         inputs: np.ndarray,
         energies_mev: np.ndarray,
         *,
-        cheap: CheapEnergies | None = None,
-        categories: Sequence[int] = (),
+        cheap: CheapEnergies | None,
+        categories: Sequence[int],
     ) -> Fit:
         import torch
 
