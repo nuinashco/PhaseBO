@@ -9,6 +9,7 @@ from typing import Any, ClassVar, Literal
 import numpy as np
 from attrs import define, field, frozen
 
+from nuikit.errors import ConfigError
 from nuikit.registry import Configurable, ConfigurableFactory, KindConfig
 
 type KernelName = Literal["matern12", "matern32", "matern52", "rbf"]
@@ -217,7 +218,15 @@ def quiet_gpytorch() -> Iterator[None]:
 def fit_mll(model: Any) -> None:
     """Fit `model`'s hyperparameters to its exact marginal likelihood."""
     with quiet_gpytorch():
+        from botorch.exceptions.errors import ModelFittingError
         from botorch.fit import fit_gpytorch_mll
         from gpytorch.mlls import ExactMarginalLogLikelihood
+        from linear_operator.utils.errors import NotPSDError
 
-        fit_gpytorch_mll(ExactMarginalLogLikelihood(model.likelihood, model))
+        try:
+            fit_gpytorch_mll(ExactMarginalLogLikelihood(model.likelihood, model))
+        except (ModelFittingError, NotPSDError) as error:
+            raise ConfigError(
+                "the surrogate could not be fitted to these energies; set "
+                "bo.surrogate.noise_mev above 0, or null to fit it"
+            ) from error

@@ -3,6 +3,8 @@
 import numpy as np
 import pytest
 
+from nuikit.errors import ConfigError
+
 from phasebo.bo.surrogate.base import (
     CheapEnergies,
     SurrogateFactory,
@@ -53,8 +55,8 @@ def test_a_surrogate_with_categories_tells_frameworks_of_one_composition_apart(
     pool = framework_points.pool
     seen = pool
     inputs = framework_points.inputs
-    # Errors that vary by point: a constant one makes joint's zero-noise covariance
-    # singular, since DFT is then exactly cheap plus a constant.
+    # Errors that vary by point: with a constant one, DFT is exactly cheap plus a
+    # constant, and joint's zero-noise fit fails for about a third of torch seeds.
     error_mev = np.random.default_rng(0).normal(scale=5.0, size=len(pool))
     cheap = CheapEnergies(
         inputs=inputs[pool],
@@ -129,3 +131,34 @@ def test_a_gp_with_categories_does_not_order_them():
     # Swapping labels 0 and 1 changes distances between ordered numbers, not labels.
     swapped = predict(np.array([1, 0, 2]))
     assert swapped == pytest.approx(predict(np.arange(3)), abs=1e-6)
+
+
+def failing_with(monkeypatch, error):
+    def fit(*_args, **_kwargs):
+        raise error
+
+    monkeypatch.setattr("botorch.fit.fit_gpytorch_mll", fit)
+
+
+def test_a_fit_that_fails_asks_for_a_noise_above_zero(points, monkeypatch):
+    from botorch.exceptions.errors import ModelFittingError
+
+    failing_with(monkeypatch, ModelFittingError("All attempts failed."))
+    surrogate = SurrogateFactory.from_config({"kind": "gp"})
+    seen = points.pool[:3]
+
+    with pytest.raises(ConfigError, match=r"set bo\.surrogate\.noise_mev above 0"):
+        surrogate.fit(points.coords[seen], points.energies_mev[seen])
+
+
+def test_a_covariance_that_is_not_positive_definite_asks_for_a_noise_above_zero(
+    points, monkeypatch
+):
+    from linear_operator.utils.errors import NotPSDError
+
+    failing_with(monkeypatch, NotPSDError("Matrix not positive definite."))
+    surrogate = SurrogateFactory.from_config({"kind": "gp"})
+    seen = points.pool[:3]
+
+    with pytest.raises(ConfigError, match=r"set bo\.surrogate\.noise_mev above 0"):
+        surrogate.fit(points.coords[seen], points.energies_mev[seen])

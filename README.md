@@ -95,13 +95,14 @@ beside its DFT energy, so their agreement can be measured.
 | `table` | another fidelity of the processed table (`benchmark.cheap.fidelity`, `nn` by default, which `system=LiSnSCl_multifidel` has), the same in every game; energies above the hull are used as the table gives them, without rebuilding the hull |
 | `noisy` | the modelled total energies with a random error per cell (`random_mev`), a smooth one shared by nearby compositions (`smooth_mev`, `lengthscale`, `kernel`) and a fixed one per framework (`bias_mev`, e.g. `'+benchmark.cheap.bias_mev={cubic:30,wurtzite:-15}'`), then the hull rebuilt; drawn anew in every game, the same for every setting of one seed; needs total energies (`system=LiSnSCl`, the fake fields) |
 
-Four surrogates use the cheap energies and predict DFT's: `multitask` (BoTorch's multi-task GP, which learns
-how far DFT follows the cheap energies), `multifidelity` (its multi-fidelity GP, the source as an input), `delta`
-(the cheap energy plus a GP of its error, fitted where DFT is known) and `joint` (one GP of both sources, the
-source as a category). Only `delta` and `joint`, like `gp`, model fields with frameworks. All assume zero noise by
-default, as the cheap model's output is as deterministic as DFT's. `bo/acquisition=screen` is their baseline: DFT
-in cheap order, never learning from DFT. Each refuses to run without a cheap source, and `phasebo-suggest` has none
-yet.
+Four surrogates use the cheap energies and predict DFT's: `multitask` (BoTorch's multi-task GP, which learns how far
+DFT follows the cheap energies), `multifidelity` (its multi-fidelity GP, the source as an input), `delta` (the cheap
+energy plus a GP of its error, fitted where DFT is known) and `joint` (one GP of both sources, the source as a
+category). Only `delta` and `joint`, like `gp`, model fields with frameworks. All assume zero noise by default, as
+the cheap model's output is as deterministic as DFT's; a fit that then fails, as `joint` can when the cheap energy
+is exactly DFT's plus a constant, stops the run and asks for `bo.surrogate.noise_mev` above 0 or `null`.
+`bo/acquisition=screen` is their baseline: DFT in cheap order, never learning from DFT. Each refuses to run without
+a cheap source, and `phasebo-suggest` has none yet.
 
 ```bash
 uv run phasebo-benchmark benchmark/cheap=noisy bo/surrogate=multitask
