@@ -187,7 +187,7 @@ src/phasebo/<domain>/<family>/
 
 `<Family>Factory.from_config({"kind": ..., ...})` validates against the item's config and builds it. A metric
 returns a `Score`: a headline the command prints, values for `metrics.json` and the W&B summary, and curves over
-`Replays.evaluations`. A value or curve `x` comes with a bar `x/<bar>`, a key of `BARS`: `x/random`, random
+`Replays.evaluations`. A value or curve `x` comes with a bar `x/<bar>`, a `Bar`: `x/random`, random
 picking's exact value, or where random picking has none another bar, such as the map's `winner/most_common`, the
 most common winner's share. `metrics.json` and `plot_run.py` keep the bars, while W&B gets BO's values alone, since
 there a run of the random batch rule is the comparison. Each metric also sets `reading`, plain words on its curves that the W&B view prints above them; a

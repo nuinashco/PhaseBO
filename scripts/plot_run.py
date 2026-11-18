@@ -22,7 +22,7 @@ from pymatgen.core import Composition
 from nuikit.errors import ConfigError, DataError, cli_boundary
 
 from phasebo import paths
-from phasebo.benchmark.metric.base import BARS, is_bar
+from phasebo.benchmark.metric.base import Bar, is_bar
 from phasebo.config import SystemConfig
 from phasebo.data import store
 from phasebo.field.points import Points
@@ -142,10 +142,10 @@ def _save_curves(
         # None marks a point where the curve is undefined; matplotlib skips NaN.
         values = np.array(curves[name], dtype=float)
         axes.plot(evaluations, values, "-", marker="o", ms=3, label="BO")
-        for bar, label in BARS.items():
+        for bar in Bar:
             if f"{name}/{bar}" in curves:
                 bar_values = np.array(curves[f"{name}/{bar}"], dtype=float)
-                axes.plot(evaluations, bar_values, "--", label=label)
+                axes.plot(evaluations, bar_values, "--", label=bar.label)
         axes.set_title(name, fontsize=10)
         axes.set_xlabel("Evaluations after the start")
         axes.legend(fontsize=8)

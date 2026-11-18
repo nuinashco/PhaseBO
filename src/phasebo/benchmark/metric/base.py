@@ -2,6 +2,7 @@
 
 from abc import ABC, abstractmethod
 from collections.abc import Mapping
+from enum import StrEnum
 from typing import Any, ClassVar, Literal
 
 import numpy as np
@@ -12,12 +13,20 @@ from nuikit.registry import Configurable, ConfigurableFactory, KindConfig
 from phasebo.benchmark.replay import Replays
 
 
+class Bar(StrEnum):
+    """What a curve is measured against, as the suffix of its `x/<bar>` partner."""
+
+    RANDOM = "random"
+    MOST_COMMON = "most_common"
+
+    @property
+    def label(self) -> str:
+        """Return the bar's name in a plot legend."""
+        return {Bar.RANDOM: "random", Bar.MOST_COMMON: "always the most common"}[self]
+
+
 class MetricConfig(KindConfig):
     """Settings of a benchmark metric."""
-
-
-# Each bar's suffix, and the label a plot gives it.
-BARS = {"random": "random", "most_common": "always the most common"}
 
 
 @frozen
@@ -25,7 +34,7 @@ class Score:
     """What a metric measured: a line to print, named values, and curves.
 
     Each curve has one value per entry of `Replays.evaluations`, None where it is
-    undefined, and a curve `x` comes with a bar `x/<bar>`, a key of `BARS`: random
+    undefined, and a curve `x` comes with a bar `x/<bar>`, a `Bar`: random
     picking's exact value, or where random picking has none the one `reading` names.
     """
 
@@ -129,7 +138,7 @@ def pair(
 
 def is_bar(name: str) -> bool:
     """Return whether the curve or value `name` is another's bar."""
-    return "/" in name and name.rsplit("/", 1)[1] in BARS
+    return "/" in name and name.rsplit("/", 1)[1] in set(Bar)
 
 
 def to_json(scores: Mapping[str, Score], evaluations: list[int]) -> dict[str, Any]:
